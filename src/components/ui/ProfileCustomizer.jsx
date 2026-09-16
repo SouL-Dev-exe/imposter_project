@@ -67,6 +67,12 @@ export function ProfileSettingsModal({ isOpen, onClose }) {
   const [success, setSuccess]     = useState(false);
   const [error, setError]         = useState('');
 
+  // ── Derived XP / Level values ──────────────────────────────────────────────
+  const level    = profile?.level ?? 1;
+  const xp       = profile?.xp    ?? 0;
+  const xpNeeded = level * 100;  // 100 XP per level
+  const xpPct    = Math.min(Math.round((xp / xpNeeded) * 100), 100);
+
   // Seed local state from the profile whenever we open the modal
   useEffect(() => {
     if (isOpen && profile) {
@@ -141,6 +147,31 @@ export function ProfileSettingsModal({ isOpen, onClose }) {
               <h2 className="text-xl font-bold text-white flex items-center gap-2">
                 ⚙️ Customize Profile
               </h2>
+
+              {/* Level & XP Badge */}
+              <div className="flex items-center gap-3 bg-slate-800/60 p-3 rounded-xl border border-white/10">
+                <div className="flex flex-col items-center shrink-0">
+                  <span className="text-[10px] uppercase tracking-widest text-indigo-400 font-bold mb-0.5">Level</span>
+                  <span className="px-2.5 py-1 bg-indigo-600 text-white font-extrabold rounded-lg text-sm shadow-inner">
+                    Lv. {level}
+                  </span>
+                </div>
+                <div className="h-8 w-px bg-white/10 shrink-0" />
+                <div className="flex flex-col flex-1">
+                  <div className="flex justify-between text-xs text-white/50 mb-1.5">
+                    <span>XP Progress</span>
+                    <span className="font-bold text-white/70">{xp} / {xpNeeded} XP</span>
+                  </div>
+                  <div className="w-full bg-white/10 h-2 rounded-full overflow-hidden">
+                    <motion.div
+                      className="bg-gradient-to-r from-indigo-500 to-violet-500 h-full rounded-full"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${xpPct}%` }}
+                      transition={{ duration: 0.6, ease: 'easeOut' }}
+                    />
+                  </div>
+                </div>
+              </div>
 
               {/* Live Avatar Preview */}
               <div className="flex flex-col items-center gap-2">
