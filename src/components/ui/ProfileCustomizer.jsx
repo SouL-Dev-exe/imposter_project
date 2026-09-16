@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '../../store/authStore';
 import { Button } from './Button';
+import { getPlayerMilestone } from '../../utils/milestones';
 
 // ─── Avatar Styles (Dicebear v9.x – all free) ─────────────────────────────────
 const AVATAR_STYLES = [
@@ -67,11 +68,12 @@ export function ProfileSettingsModal({ isOpen, onClose }) {
   const [success, setSuccess]     = useState(false);
   const [error, setError]         = useState('');
 
-  // ── Derived XP / Level values ──────────────────────────────────────────────
-  const level    = profile?.level ?? 1;
-  const xp       = profile?.xp    ?? 0;
-  const xpNeeded = level * 100;  // 100 XP per level
-  const xpPct    = Math.min(Math.round((xp / xpNeeded) * 100), 100);
+  // ── Derived XP / Level / Milestone values ─────────────────────────────────
+  const level     = profile?.level ?? 1;
+  const xp        = profile?.xp    ?? 0;
+  const xpNeeded  = level * 100;  // 100 XP per level
+  const xpPct     = Math.min(Math.round((xp / xpNeeded) * 100), 100);
+  const milestone = getPlayerMilestone(level);
 
   // Seed local state from the profile whenever we open the modal
   useEffect(() => {
@@ -148,23 +150,30 @@ export function ProfileSettingsModal({ isOpen, onClose }) {
                 ⚙️ Customize Profile
               </h2>
 
-              {/* Level & XP Badge */}
-              <div className="flex items-center gap-3 bg-slate-800/60 p-3 rounded-xl border border-white/10">
-                <div className="flex flex-col items-center shrink-0">
-                  <span className="text-[10px] uppercase tracking-widest text-indigo-400 font-bold mb-0.5">Level</span>
-                  <span className="px-2.5 py-1 bg-indigo-600 text-white font-extrabold rounded-lg text-sm shadow-inner">
-                    Lv. {level}
+              {/* Level, XP & Milestone Rank Badge */}
+              <div className={`p-3.5 rounded-xl border ${milestone.border} ${milestone.bg} space-y-2.5 transition-all shadow-inner`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2.5 py-1 bg-indigo-600 text-white font-extrabold rounded-lg text-xs shadow-inner">
+                      Lv. {level}
+                    </span>
+                    <span className={`font-extrabold text-xs sm:text-sm tracking-wide ${milestone.color}`}>
+                      {milestone.title}
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-bold tracking-wider px-2 py-0.5 rounded-full bg-white/10 text-white/80 border border-white/10 flex items-center gap-1">
+                    ✨ {milestone.perk}
                   </span>
                 </div>
-                <div className="h-8 w-px bg-white/10 shrink-0" />
-                <div className="flex flex-col flex-1">
-                  <div className="flex justify-between text-xs text-white/50 mb-1.5">
+
+                <div className="flex flex-col">
+                  <div className="flex justify-between text-xs text-white/60 mb-1 font-medium">
                     <span>XP Progress</span>
-                    <span className="font-bold text-white/70">{xp} / {xpNeeded} XP</span>
+                    <span className="font-bold text-white/90">{xp} / {xpNeeded} XP</span>
                   </div>
-                  <div className="w-full bg-white/10 h-2 rounded-full overflow-hidden">
+                  <div className="w-full bg-black/40 h-2 rounded-full overflow-hidden p-0.5 border border-white/10">
                     <motion.div
-                      className="bg-gradient-to-r from-indigo-500 to-violet-500 h-full rounded-full"
+                      className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 h-full rounded-full"
                       initial={{ width: 0 }}
                       animate={{ width: `${xpPct}%` }}
                       transition={{ duration: 0.6, ease: 'easeOut' }}

@@ -6,6 +6,7 @@ import { useAuthStore } from '../store/authStore';
 import { useMultiplayerStore } from '../store/multiplayerStore';
 import { LiveChat } from '../components/game/LiveChat';
 import { ReactionPanel } from '../components/game/ReactionPanel';
+import { getPlayerMilestone } from '../utils/milestones';
 
 export default function OnlineLobby() {
   const navigate = useNavigate();
@@ -126,19 +127,30 @@ export default function OnlineLobby() {
           
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             <AnimatePresence>
-              {players.map((p) => (
-                <motion.div
-                  key={p.id}
-                  layout
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  className="bg-white/5 border border-white/10 rounded-2xl p-3 flex flex-col items-center gap-2 relative overflow-hidden"
-                >
-                  <img src={p.avatar_url} alt={p.username} className="w-16 h-16 rounded-full bg-white/10 border-2 border-white/20" />
-                  <p className="text-white font-bold text-sm truncate w-full text-center">{p.username}</p>
-                </motion.div>
-              ))}
+              {players.map((p) => {
+                const milestone = getPlayerMilestone(p.level || 1);
+                return (
+                  <motion.div
+                    key={p.id}
+                    layout
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    className={`border rounded-2xl p-3 flex flex-col items-center gap-1.5 relative overflow-hidden transition-all ${milestone.bg} ${milestone.border}`}
+                  >
+                    <div className="relative">
+                      <img src={p.avatar_url} alt={p.username} className="w-14 h-14 rounded-full bg-white/10 border-2 border-white/20 shadow-md" />
+                      <span className="absolute -bottom-1 -right-1 px-1.5 py-0.5 bg-indigo-600 text-white font-extrabold rounded-md text-[9px] shadow-md border border-white/20">
+                        Lv.{p.level || 1}
+                      </span>
+                    </div>
+                    <p className="text-white font-bold text-xs truncate w-full text-center">{p.username}</p>
+                    <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-black/40 border border-white/10 ${milestone.color}`}>
+                      {milestone.title}
+                    </span>
+                  </motion.div>
+                );
+              })}
             </AnimatePresence>
             
             {/* Empty slots */}
