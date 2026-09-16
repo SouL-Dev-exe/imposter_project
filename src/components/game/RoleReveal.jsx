@@ -113,7 +113,7 @@ export function RoleReveal({ player, gameMode, onDone }) {
 
       {/* Role card */}
       <motion.div
-        className={`w-full rounded-2xl border ${cfg.border} bg-gradient-to-br ${cfg.color} p-0.5 shadow-2xl`}
+        className="w-full rounded-2xl border border-white/20 bg-gradient-to-br from-slate-700 to-zinc-800 p-0.5 shadow-2xl"
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ delay: 0.1 }}
