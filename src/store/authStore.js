@@ -93,14 +93,16 @@ export const useAuthStore = create((set, get) => ({
   },
 
   guestLogin: (username) => {
+    const guestId = crypto.randomUUID();
     const guestProfile = {
-      id: 'guest_' + Math.random().toString(36).substring(2, 9),
+      id: guestId,
       username,
-      avatar_url: `https://api.dicebear.com/9.x/bottts/svg?seed=${username}`,
+      avatar_url: `https://api.dicebear.com/9.x/bottts/svg?seed=${encodeURIComponent(username)}`,
+      isGuest: true,
       created_at: new Date().toISOString()
     };
     localStorage.setItem('guest_profile', JSON.stringify(guestProfile));
-    set({ profile: guestProfile, isGuest: true, user: { id: guestProfile.id }, session: null });
+    set({ profile: guestProfile, isGuest: true, user: { id: guestId }, session: null });
     return { success: true };
   },
 
