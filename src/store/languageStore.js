@@ -29,6 +29,7 @@ export const useLanguageStore = create(
   persist(
     (set, get) => ({
       language: savedLang,
+      isRTL: savedLang === 'ar',
 
       setLanguage: (lang) => {
         const nextLang = lang === 'ar' ? 'ar' : 'en';
@@ -36,7 +37,7 @@ export const useLanguageStore = create(
           document.documentElement.dir = nextLang === 'ar' ? 'rtl' : 'ltr';
           document.documentElement.lang = nextLang;
         }
-        set({ language: nextLang });
+        set({ language: nextLang, isRTL: nextLang === 'ar' });
       },
 
       toggleLanguage: () => {
@@ -44,9 +45,37 @@ export const useLanguageStore = create(
         get().setLanguage(next);
       },
 
-      t: () => {
+      t: (keyPath, params = {}) => {
         const lang = get().language;
-        return TRANSLATIONS[lang] || TRANSLATIONS.en;
+        const dict = TRANSLATIONS[lang] || TRANSLATIONS.en;
+
+        // If no keyPath is given (e.g. const strings = t()), return the entire dictionary
+        if (!keyPath) return dict;
+
+        if (typeof keyPath !== 'string') return '';
+
+        const keys = keyPath.split('.');
+        let val = dict;
+        for (const k of keys) {
+          val = val?.[k];
+          if (val === undefined) break;
+        }
+
+        // Fallback to English if missing in current language
+        if (val === undefined) {
+          let fallback = TRANSLATIONS.en;
+          for (const k of keys) {
+            fallback = fallback?.[k];
+            if (fallback === undefined) break;
+          }
+          val = fallback;
+        }
+
+        if (typeof val !== 'string') {
+          return typeof val === 'number' ? String(val) : (val ?? keyPath);
+        }
+
+        return val.replace(/\{(\w+)\}/g, (_, k) => (params[k] !== undefined ? params[k] : `{${k}}`));
       },
     }),
     {
