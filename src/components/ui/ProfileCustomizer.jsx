@@ -2,17 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '../../store/authStore';
 import { Button } from './Button';
-import { getPlayerMilestone } from '../../utils/milestones';
-
-// ─── Avatar Styles (Dicebear v9.x – all free) ─────────────────────────────────
-const AVATAR_STYLES = [
-  { value: 'bottts',       label: '🤖 Bottts (Robots)' },
-  { value: 'adventurer',   label: '🧝 Adventurer' },
-  { value: 'avataaars',    label: '🧑 Avataaars' },
-  { value: 'identicon',    label: '🔷 Identicon' },
-  { value: 'pixel-art',    label: '🕹️ Pixel Art' },
-  { value: 'thumbs',       label: '👍 Thumbs' },
-];
+import { getPlayerMilestone, ALL_AVATAR_STYLES, getUnlockedAvatarStyles } from '../../utils/milestones';
 
 function makeAvatarUrl(style, seed) {
   return `https://api.dicebear.com/9.x/${style}/svg?seed=${encodeURIComponent(seed || 'guest')}`;
@@ -20,7 +10,7 @@ function makeAvatarUrl(style, seed) {
 
 // Detect style from an existing avatar URL so the select stays in sync
 function detectStyle(avatarUrl) {
-  for (const s of AVATAR_STYLES) {
+  for (const s of ALL_AVATAR_STYLES) {
     if (avatarUrl && avatarUrl.includes(`/${s.value}/`)) return s.value;
   }
   return 'bottts';
@@ -73,7 +63,8 @@ export function ProfileSettingsModal({ isOpen, onClose }) {
   const xp        = profile?.xp    ?? 0;
   const xpNeeded  = level * 100;  // 100 XP per level
   const xpPct     = Math.min(Math.round((xp / xpNeeded) * 100), 100);
-  const milestone = getPlayerMilestone(level);
+  const milestone      = getPlayerMilestone(level);
+  const unlockedStyles = getUnlockedAvatarStyles(level);
 
   // Seed local state from the profile whenever we open the modal
   useEffect(() => {
@@ -209,28 +200,56 @@ export function ProfileSettingsModal({ isOpen, onClose }) {
                 />
               </div>
 
-              {/* Avatar Style Selector */}
+              {/* Avatar Style Selector (Level-Gated) */}
               <div>
-                <label className="block text-sm text-white/60 mb-1 font-medium uppercase tracking-wider text-xs">Avatar Style</label>
+                <div className="flex justify-between items-center mb-1">
+                  <label className="text-white/60 font-medium uppercase tracking-wider text-xs">Avatar Style</label>
+                  <span className="text-[10px] text-white/40">Level required to unlock</span>
+                </div>
                 <div className="grid grid-cols-3 gap-2">
-                  {AVATAR_STYLES.map((s) => (
-                    <button
-                      key={s.value}
-                      onClick={() => setStyle(s.value)}
-                      className={`flex flex-col items-center gap-1.5 p-2 rounded-xl border text-xs font-semibold transition-all ${
-                        style === s.value
-                          ? 'border-indigo-500 bg-indigo-600/20 text-white scale-105 shadow-md shadow-indigo-900/30'
-                          : 'border-white/10 bg-white/5 text-white/50 hover:bg-white/10 hover:text-white'
-                      }`}
-                    >
-                      <img
-                        src={makeAvatarUrl(s.value, username || 'preview')}
-                        alt={s.label}
-                        className="w-10 h-10 rounded-full bg-white/10"
-                      />
-                      <span className="leading-tight text-center truncate w-full text-[10px]">{s.label.split(' ').slice(1).join(' ')}</span>
-                    </button>
-                  ))}
+                  {ALL_AVATAR_STYLES.map((s) => {
+                    const isUnlocked = unlockedStyles.includes(s.value);
+                    const isSelected = style === s.value;
+
+                    return (
+                      <button
+                        key={s.value}
+                        type="button"
+                        onClick={() => isUnlocked && setStyle(s.value)}
+                        disabled={!isUnlocked}
+                        className={`relative flex flex-col items-center gap-1 p-2 rounded-xl border text-xs font-semibold transition-all ${
+                          isSelected
+                            ? 'border-indigo-500 bg-indigo-600/20 text-white scale-105 shadow-md shadow-indigo-900/30'
+                            : isUnlocked
+                            ? 'border-white/10 bg-white/5 text-white/70 hover:bg-white/10 hover:text-white'
+                            : 'border-white/5 bg-white/5 opacity-40 cursor-not-allowed'
+                        }`}
+                      >
+                        <div className="relative">
+                          <img
+                            src={makeAvatarUrl(s.value, username || 'preview')}
+                            alt={s.label}
+                            className={`w-10 h-10 rounded-full bg-white/10 object-cover ${!isUnlocked ? 'filter grayscale brightness-75' : ''}`}
+                          />
+                          {!isUnlocked && (
+                            <div className="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center text-xs shadow-inner">
+                              🔒
+                            </div>
+                          )}
+                        </div>
+                        <span className="leading-tight text-center truncate w-full text-[10px]">
+                          {s.label}
+                        </span>
+                        {!isUnlocked ? (
+                          <span className="text-[9px] text-amber-400 font-bold bg-amber-500/10 px-1.5 py-0.2 rounded border border-amber-500/20">
+                            Lv. {s.minLevel}
+                          </span>
+                        ) : (
+                          <span className="text-[9px] text-emerald-400 font-bold">Unlocked</span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 

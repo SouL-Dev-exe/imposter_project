@@ -39,3 +39,23 @@ export function getPlayerMilestone(level) {
     LEVEL_MILESTONES[LEVEL_MILESTONES.length - 1]
   );
 }
+
+// ─── Level-Gated Avatar Styles ───────────────────────────────────────────────
+export const ALL_AVATAR_STYLES = [
+  { value: 'bottts',     label: '🤖 Bottts',     minLevel: 1 },
+  { value: 'identicon',  label: '🔷 Identicon',  minLevel: 1 },
+  { value: 'adventurer', label: '🧝 Adventurer', minLevel: 5 },
+  { value: 'avataaars',  label: '🧑 Avataaars',  minLevel: 10 },
+  { value: 'thumbs',     label: '👍 Thumbs',     minLevel: 15 },
+  { value: 'pixel-art',  label: '🕹️ Pixel Art', minLevel: 25 },
+];
+
+/**
+ * Returns an array of unlocked style value strings based on player level.
+ * @param {number} playerLevel
+ */
+export function getUnlockedAvatarStyles(playerLevel) {
+  const level = playerLevel || 1;
+  return ALL_AVATAR_STYLES.filter((s) => level >= s.minLevel).map((s) => s.value);
+}
+
