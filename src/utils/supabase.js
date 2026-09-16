@@ -91,3 +91,41 @@ export async function savePackToCloud(pack) {
     return null;
   }
 }
+
+// ─── Admin secret (change this to your own password) ─────────────────────────
+// This is checked client-side before sending the DELETE request.
+const ADMIN_PASSWORD = 'soul2025admin';
+
+/**
+ * Delete a cloud word pack from Supabase.
+ * Requires the correct admin password to proceed.
+ *
+ * @param {string} supabaseId - The raw UUID of the pack in Supabase
+ * @param {string} inputPassword - The password entered by the user in the UI
+ * @returns {Promise<{ success: boolean, error?: string }>}
+ */
+export async function deletePackFromCloud(supabaseId, inputPassword) {
+  if (!inputPassword || inputPassword !== ADMIN_PASSWORD) {
+    return { success: false, error: 'Incorrect admin password.' };
+  }
+
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/word_packs?id=eq.${encodeURIComponent(supabaseId)}`,
+      {
+        method: 'DELETE',
+        headers: BASE_HEADERS,
+      }
+    );
+
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`HTTP ${res.status}: ${errText}`);
+    }
+
+    return { success: true };
+  } catch (err) {
+    console.error('[Supabase] Failed to delete pack:', err.message);
+    return { success: false, error: 'Failed to delete. Check your connection.' };
+  }
+}

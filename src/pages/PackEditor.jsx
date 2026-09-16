@@ -214,7 +214,7 @@ export default function PackEditor() {
   const {
     customPacks, cloudPacks, cloudStatus,
     addPack, updatePack, deletePack, addPair, updatePair, deletePair,
-    exportPack, importPack, publishPackToCloud, syncCloudPacks,
+    exportPack, importPack, publishPackToCloud, syncCloudPacks, deleteCloudPack,
   } = usePackStore();
 
   const [selectedPackId, setSelectedPackId] = useState(null);
@@ -225,9 +225,30 @@ export default function PackEditor() {
   const [importSuccess, setImportSuccess] = useState('');
   const [publishStatus, setPublishStatus] = useState({}); // { [packId]: 'loading'|'success'|'error', message }
   const [activeTab, setActiveTab] = useState('custom'); // 'custom' | 'cloud' | 'builtin'
+
+  // Delete cloud pack state
+  const [deleteCloudTarget, setDeleteCloudTarget] = useState(null); // { supabaseId, packName }
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteError, setDeleteError] = useState('');
+  const [isDeletingCloud, setIsDeletingCloud] = useState(false);
+
   const fileInputRef = useRef(null);
 
   const selectedPack = customPacks.find((p) => p.id === selectedPackId);
+
+  const handleDeleteCloudPack = async () => {
+    if (!deleteCloudTarget) return;
+    setIsDeletingCloud(true);
+    setDeleteError('');
+    const res = await deleteCloudPack(deleteCloudTarget.supabaseId, deleteCloudTarget.packName, deletePassword);
+    setIsDeletingCloud(false);
+    if (res.success) {
+      setDeleteCloudTarget(null);
+      setDeletePassword('');
+    } else {
+      setDeleteError(res.error || 'Failed to delete pack.');
+    }
+  };
 
   const handleCreatePack = () => {
     if (!newPackName.trim()) return;
@@ -462,6 +483,18 @@ export default function PackEditor() {
                     <p className="text-white/40 text-xs">{pack.pairs.length} pairs · Cloud</p>
                   </div>
                   <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full border border-blue-500/30">☁️ Global</span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDeleteCloudTarget({ supabaseId: pack.supabaseId, packName: pack.name });
+                      setDeletePassword('');
+                      setDeleteError('');
+                    }}
+                    title="Delete Cloud Pack (Admin)"
+                    className="p-1.5 text-white/30 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors text-sm"
+                  >
+                    🗑️
+                  </button>
                 </div>
                 <AnimatePresence>
                   {selectedPackId === pack.id && (
@@ -604,6 +637,67 @@ export default function PackEditor() {
               Create Pack
             </Button>
             <Button variant="ghost" onClick={() => setShowNewPackModal(false)}>Cancel</Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Delete Cloud Pack Password Modal */}
+      <Modal
+        isOpen={Boolean(deleteCloudTarget)}
+        onClose={() => {
+          if (!isDeletingCloud) {
+            setDeleteCloudTarget(null);
+            setDeletePassword('');
+            setDeleteError('');
+          }
+        }}
+        title="🔒 Delete Cloud Pack"
+      >
+        <div className="space-y-4">
+          <p className="text-white/70 text-sm">
+            You are deleting <span className="font-bold text-white">"{deleteCloudTarget?.packName}"</span> from the global cloud database.
+          </p>
+          <div>
+            <label className="text-white/60 text-xs uppercase tracking-wider block mb-2">Admin Password Required</label>
+            <input
+              type="password"
+              value={deletePassword}
+              onChange={(e) => setDeletePassword(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleDeleteCloudPack()}
+              placeholder="Enter admin password..."
+              className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white
+                         placeholder-white/30 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/30 text-sm"
+              autoFocus
+            />
+          </div>
+
+          {deleteError && (
+            <p className="text-red-400 text-xs font-semibold bg-red-500/10 border border-red-500/20 rounded-lg p-2.5">
+              ⚠️ {deleteError}
+            </p>
+          )}
+
+          <div className="flex gap-3 pt-2">
+            <Button
+              variant="primary"
+              onClick={handleDeleteCloudPack}
+              disabled={!deletePassword.trim() || isDeletingCloud}
+              className="!bg-red-600 hover:!bg-red-700"
+              fullWidth
+            >
+              {isDeletingCloud ? 'Deleting...' : 'Delete Pack'}
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setDeleteCloudTarget(null);
+                setDeletePassword('');
+                setDeleteError('');
+              }}
+              disabled={isDeletingCloud}
+            >
+              Cancel
+            </Button>
           </div>
         </div>
       </Modal>

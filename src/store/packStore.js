@@ -7,7 +7,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { generateId } from '../utils/gameLogic';
-import { fetchCloudPacks, savePackToCloud } from '../utils/supabase';
+import { fetchCloudPacks, savePackToCloud, deletePackFromCloud } from '../utils/supabase';
 
 export const usePackStore = create(
   persist(
@@ -48,6 +48,21 @@ export const usePackStore = create(
         // Re-fetch so everyone sees the new pack
         await get().syncCloudPacks();
         return { success: true };
+      },
+
+      /**
+       * Delete a cloud pack by its Supabase UUID (password-protected).
+       * Returns { success: boolean, error?: string }
+       */
+      deleteCloudPack: async (supabaseId, packName, inputPassword) => {
+        const result = await deletePackFromCloud(supabaseId, inputPassword);
+        if (result.success) {
+          // Remove from local cloudPacks state immediately (no re-fetch needed)
+          set((s) => ({
+            cloudPacks: s.cloudPacks.filter((p) => p.supabaseId !== supabaseId),
+          }));
+        }
+        return result;
       },
 
       // ─── Local CRUD ──────────────────────────────────────────────────────────
