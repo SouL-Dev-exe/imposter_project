@@ -11,22 +11,22 @@ const ROLE_CONFIG = {
   [ROLES.CIVILIAN]: {
     label: 'Civilian',
     emoji: '👤',
-    color: 'from-blue-600 to-cyan-600',
-    border: 'border-blue-500/50',
+    color: 'from-slate-700 to-zinc-800',
+    border: 'border-white/20',
     description: 'Your mission: Give clues without being too obvious!',
   },
   [ROLES.IMPOSTOR]: {
     label: 'Impostor',
     emoji: '🕵️',
-    color: 'from-red-700 to-rose-700',
-    border: 'border-red-500/50',
+    color: 'from-slate-700 to-zinc-800',
+    border: 'border-white/20',
     description: 'Blend in. Listen carefully. Do not get caught!',
   },
   [ROLES.MR_WHITE]: {
     label: 'Mr. White',
     emoji: '❓',
-    color: 'from-gray-600 to-slate-700',
-    border: 'border-gray-400/50',
+    color: 'from-slate-700 to-zinc-800',
+    border: 'border-white/20',
     description: 'You have NO word. Improvise and stay vague!',
   },
 };
