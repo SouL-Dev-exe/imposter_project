@@ -2,6 +2,7 @@
  * PackEditor.jsx — Full CRUD UI for custom word packs.
  * Create, edit, delete packs and word pairs.
  * Export packs as JSON, import JSON files from friends.
+ * Publish to Supabase cloud so all players see them globally.
  */
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -191,17 +192,39 @@ function AddPairForm({ onAdd }) {
   );
 }
 
+// ─── Cloud status badge ───────────────────────────────────────────────────────
+function CloudStatusBadge({ status }) {
+  const cfg = {
+    loading: { text: 'Syncing…', cls: 'bg-blue-500/20 text-blue-400 border-blue-500/40' },
+    synced:  { text: '☁️ Cloud Synced', cls: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40' },
+    offline: { text: '📴 Offline Mode', cls: 'bg-amber-500/20 text-amber-400 border-amber-500/40' },
+    error:   { text: '⚠️ Sync Error', cls: 'bg-red-500/20 text-red-400 border-red-500/40' },
+    idle:    { text: '', cls: '' },
+  }[status] || { text: '', cls: '' };
+
+  if (!cfg.text) return null;
+  return (
+    <span className={`text-xs px-2 py-0.5 rounded-full border ${cfg.cls}`}>{cfg.text}</span>
+  );
+}
+
 // ─── Main page ────────────────────────────────────────────────────────────────
 export default function PackEditor() {
   const navigate = useNavigate();
-  const { customPacks, addPack, updatePack, deletePack, addPair, updatePair, deletePair, exportPack, importPack } = usePackStore();
+  const {
+    customPacks, cloudPacks, cloudStatus,
+    addPack, updatePack, deletePack, addPair, updatePair, deletePair,
+    exportPack, importPack, publishPackToCloud, syncCloudPacks,
+  } = usePackStore();
+
   const [selectedPackId, setSelectedPackId] = useState(null);
   const [showNewPackModal, setShowNewPackModal] = useState(false);
   const [newPackName, setNewPackName] = useState('');
   const [newPackIcon, setNewPackIcon] = useState('📦');
   const [importError, setImportError] = useState('');
   const [importSuccess, setImportSuccess] = useState('');
-  const [activeTab, setActiveTab] = useState('custom'); // 'custom' | 'builtin'
+  const [publishStatus, setPublishStatus] = useState({}); // { [packId]: 'loading'|'success'|'error', message }
+  const [activeTab, setActiveTab] = useState('custom'); // 'custom' | 'cloud' | 'builtin'
   const fileInputRef = useRef(null);
 
   const selectedPack = customPacks.find((p) => p.id === selectedPackId);
@@ -232,6 +255,18 @@ export default function PackEditor() {
     e.target.value = '';
   };
 
+  const handlePublish = async (packId) => {
+    setPublishStatus((s) => ({ ...s, [packId]: { state: 'loading' } }));
+    const result = await publishPackToCloud(packId);
+    if (result.success) {
+      setPublishStatus((s) => ({ ...s, [packId]: { state: 'success', message: '☁️ Published!' } }));
+      setTimeout(() => setPublishStatus((s) => ({ ...s, [packId]: null })), 3000);
+    } else {
+      setPublishStatus((s) => ({ ...s, [packId]: { state: 'error', message: result.error } }));
+      setTimeout(() => setPublishStatus((s) => ({ ...s, [packId]: null })), 5000);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col px-4 py-6 max-w-lg mx-auto gap-4">
       {/* Header */}
@@ -243,6 +278,8 @@ export default function PackEditor() {
           <h1 className="text-2xl font-black text-white">📦 Word Packs</h1>
           <p className="text-white/40 text-xs">Create & manage your custom word sets</p>
         </div>
+        {/* Cloud status */}
+        <CloudStatusBadge status={cloudStatus} />
         {/* Import button */}
         <Button variant="secondary" size="sm" onClick={() => fileInputRef.current?.click()} icon="⬆️">
           Import
@@ -278,6 +315,7 @@ export default function PackEditor() {
       <div className="flex rounded-xl bg-white/5 p-1 gap-1">
         {[
           { id: 'custom', label: `My Packs (${customPacks.length})` },
+          { id: 'cloud', label: `☁️ Cloud (${cloudPacks.length})` },
           { id: 'builtin', label: `Built-in (${DEFAULT_PACKS.length})` },
         ].map((tab) => (
           <button
@@ -295,7 +333,7 @@ export default function PackEditor() {
         ))}
       </div>
 
-      {/* Pack list */}
+      {/* ── My Packs tab ── */}
       {activeTab === 'custom' && (
         <div className="space-y-3">
           {customPacks.length === 0 ? (
@@ -305,40 +343,66 @@ export default function PackEditor() {
               <p className="text-xs">Create your first pack or import one!</p>
             </div>
           ) : (
-            customPacks.map((pack) => (
-              <Card
-                key={pack.id}
-                className={`p-4 cursor-pointer transition-all
-                  ${selectedPackId === pack.id ? 'border-violet-500 bg-violet-600/10' : ''}
-                `}
-                onClick={() => setSelectedPackId(selectedPackId === pack.id ? null : pack.id)}
-                animate={false}
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-3xl">{pack.icon}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-white font-bold">{pack.name}</p>
-                    <p className="text-white/40 text-xs">{pack.pairs.length} word pairs</p>
+            customPacks.map((pack) => {
+              const ps = publishStatus[pack.id];
+              return (
+                <Card
+                  key={pack.id}
+                  className={`p-4 cursor-pointer transition-all
+                    ${selectedPackId === pack.id ? 'border-violet-500 bg-violet-600/10' : ''}
+                  `}
+                  onClick={() => setSelectedPackId(selectedPackId === pack.id ? null : pack.id)}
+                  animate={false}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-3xl">{pack.icon}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white font-bold">{pack.name}</p>
+                      <p className="text-white/40 text-xs">{pack.pairs.length} word pairs</p>
+                    </div>
+                    <div className="flex gap-2 items-center">
+                      {/* Publish to cloud */}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handlePublish(pack.id); }}
+                        disabled={ps?.state === 'loading'}
+                        title="Publish to Cloud"
+                        className={`text-sm transition-all px-2 py-0.5 rounded-lg border
+                          ${ps?.state === 'success'
+                            ? 'text-emerald-400 border-emerald-500/40 bg-emerald-500/10'
+                            : ps?.state === 'error'
+                            ? 'text-red-400 border-red-500/40 bg-red-500/10'
+                            : 'text-blue-400 border-blue-500/40 bg-blue-500/10 hover:bg-blue-500/20'
+                          }
+                          ${ps?.state === 'loading' ? 'opacity-50 cursor-not-allowed' : ''}
+                        `}
+                      >
+                        {ps?.state === 'loading' ? '⏳' : ps?.state === 'success' ? '✅' : ps?.state === 'error' ? '❌' : '☁️'}
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); exportPack(pack.id); }}
+                        className="text-violet-400 hover:text-violet-300 transition-colors text-sm"
+                        title="Export"
+                      >
+                        ⬇️
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); if (window.confirm(`Delete "${pack.name}"?`)) { deletePack(pack.id); if (selectedPackId === pack.id) setSelectedPackId(null); } }}
+                        className="text-white/30 hover:text-red-400 transition-colors text-sm"
+                        title="Delete"
+                      >
+                        🗑️
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={(e) => { e.stopPropagation(); exportPack(pack.id); }}
-                      className="text-violet-400 hover:text-violet-300 transition-colors text-sm"
-                      title="Export"
-                    >
-                      ⬇️
-                    </button>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); if (window.confirm(`Delete "${pack.name}"?`)) { deletePack(pack.id); if (selectedPackId === pack.id) setSelectedPackId(null); } }}
-                      className="text-white/30 hover:text-red-400 transition-colors text-sm"
-                      title="Delete"
-                    >
-                      🗑️
-                    </button>
-                  </div>
-                </div>
-              </Card>
-            ))
+                  {/* Publish feedback inline */}
+                  {ps?.message && (
+                    <p className={`text-xs mt-1.5 font-medium ${ps.state === 'success' ? 'text-emerald-400' : 'text-red-400'}`}>
+                      {ps.message}
+                    </p>
+                  )}
+                </Card>
+              );
+            })
           )}
 
           {/* Create new pack */}
@@ -354,6 +418,77 @@ export default function PackEditor() {
         </div>
       )}
 
+      {/* ── Cloud Packs tab ── */}
+      {activeTab === 'cloud' && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <p className="text-white/40 text-xs">Global packs created by all players</p>
+            <button
+              onClick={() => syncCloudPacks()}
+              disabled={cloudStatus === 'loading'}
+              className="text-xs text-blue-400 hover:text-blue-300 transition-colors disabled:opacity-50"
+            >
+              {cloudStatus === 'loading' ? '⏳ Syncing…' : '🔄 Refresh'}
+            </button>
+          </div>
+
+          {cloudStatus === 'loading' && cloudPacks.length === 0 ? (
+            <div className="text-center py-12 text-white/30 space-y-2">
+              <div className="text-5xl animate-pulse">☁️</div>
+              <p className="font-bold">Loading cloud packs…</p>
+            </div>
+          ) : cloudPacks.length === 0 ? (
+            <div className="text-center py-12 text-white/30 space-y-2">
+              <div className="text-5xl">☁️</div>
+              <p className="font-bold">No cloud packs yet</p>
+              <p className="text-xs">
+                {cloudStatus === 'offline'
+                  ? 'No internet connection. Showing cached data.'
+                  : 'Publish your own packs to see them here!'}
+              </p>
+            </div>
+          ) : (
+            cloudPacks.map((pack) => (
+              <Card
+                key={pack.id}
+                className={`p-4 cursor-pointer ${selectedPackId === pack.id ? 'border-blue-500 bg-blue-600/10' : ''}`}
+                onClick={() => setSelectedPackId(selectedPackId === pack.id ? null : pack.id)}
+                animate={false}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-3xl">{pack.icon}</span>
+                  <div className="flex-1">
+                    <p className="text-white font-bold">{pack.name}</p>
+                    <p className="text-white/40 text-xs">{pack.pairs.length} pairs · Cloud</p>
+                  </div>
+                  <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full border border-blue-500/30">☁️ Global</span>
+                </div>
+                <AnimatePresence>
+                  {selectedPackId === pack.id && (
+                    <motion.div
+                      className="mt-3 space-y-1.5"
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                    >
+                      {pack.pairs.map((pair) => (
+                        <div key={pair.id} className="flex items-center gap-2 text-sm px-2 py-1.5 bg-white/5 rounded-lg">
+                          <span className="text-blue-300 font-bold flex-1">{pair.wordA}</span>
+                          <span className="text-white/30 text-xs">vs</span>
+                          <span className="text-red-300 font-bold flex-1">{pair.wordB}</span>
+                          <span className="text-white/30 text-xs">{pair.category}</span>
+                        </div>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </Card>
+            ))
+          )}
+        </div>
+      )}
+
+      {/* ── Built-in tab ── */}
       {activeTab === 'builtin' && (
         <div className="space-y-3">
           {DEFAULT_PACKS.map((pack) => (
@@ -395,7 +530,7 @@ export default function PackEditor() {
         </div>
       )}
 
-      {/* Pack editor — shown when a custom pack is selected */}
+      {/* ── Pack pair editor (custom tab only) ── */}
       <AnimatePresence>
         {selectedPack && activeTab === 'custom' && (
           <motion.div
@@ -408,9 +543,20 @@ export default function PackEditor() {
               <h3 className="text-white font-bold text-lg">
                 {selectedPack.icon} {selectedPack.name}
               </h3>
-              <Button variant="secondary" size="sm" onClick={() => exportPack(selectedPack.id)} icon="⬇️">
-                Export
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="secondary" size="sm" onClick={() => exportPack(selectedPack.id)} icon="⬇️">
+                  Export
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => handlePublish(selectedPack.id)}
+                  disabled={publishStatus[selectedPack.id]?.state === 'loading'}
+                  icon="☁️"
+                >
+                  Publish
+                </Button>
+              </div>
             </div>
 
             {/* Pairs */}

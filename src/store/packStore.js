@@ -1,27 +1,65 @@
 /**
  * packStore.js
  * Zustand store for custom word packs.
- * Persisted to localStorage.
+ * Persisted to localStorage with optional Supabase cloud sync.
  */
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { generateId } from '../utils/gameLogic';
+import { fetchCloudPacks, savePackToCloud } from '../utils/supabase';
 
 export const usePackStore = create(
   persist(
     (set, get) => ({
-      customPacks: [], // Array of custom pack objects
+      customPacks: [],   // Locally created packs (persisted to localStorage)
+      cloudPacks: [],    // Read-only packs fetched from Supabase
+      cloudStatus: 'idle', // 'idle' | 'loading' | 'synced' | 'error' | 'offline'
+
+      // ─── Cloud sync ──────────────────────────────────────────────────────────
 
       /**
-       * Add a new empty custom pack.
+       * Fetch global packs from Supabase on app launch.
+       * Falls back to localStorage (cloudPacks stays stale but usable).
        */
+      syncCloudPacks: async () => {
+        set({ cloudStatus: 'loading' });
+        const packs = await fetchCloudPacks();
+        if (packs.length > 0) {
+          set({ cloudPacks: packs, cloudStatus: 'synced' });
+        } else {
+          // fetchCloudPacks already logged the error; keep existing cloudPacks
+          set((s) => ({ cloudStatus: s.cloudPacks.length > 0 ? 'synced' : 'offline' }));
+        }
+      },
+
+      /**
+       * Push a finished local pack to Supabase, then refresh the cloudPacks list.
+       * Returns { success: boolean, error?: string }
+       */
+      publishPackToCloud: async (packId) => {
+        const pack = get().customPacks.find((p) => p.id === packId);
+        if (!pack) return { success: false, error: 'Pack not found.' };
+        if (pack.pairs.length === 0) return { success: false, error: 'Pack has no word pairs.' };
+
+        const saved = await savePackToCloud(pack);
+        if (!saved) return { success: false, error: 'Failed to upload pack. Check your connection.' };
+
+        // Re-fetch so everyone sees the new pack
+        await get().syncCloudPacks();
+        return { success: true };
+      },
+
+      // ─── Local CRUD ──────────────────────────────────────────────────────────
+
+      /** Add a new empty custom pack. */
       addPack: (name, icon = '📦') => {
         const newPack = {
           id: `custom-${generateId()}`,
           name,
           icon,
           builtin: false,
+          cloud: false,
           pairs: [],
           createdAt: Date.now(),
         };
@@ -29,9 +67,7 @@ export const usePackStore = create(
         return newPack.id;
       },
 
-      /**
-       * Update a pack's metadata.
-       */
+      /** Update a pack's metadata. */
       updatePack: (packId, updates) =>
         set((s) => ({
           customPacks: s.customPacks.map((p) =>
@@ -39,17 +75,13 @@ export const usePackStore = create(
           ),
         })),
 
-      /**
-       * Delete a custom pack.
-       */
+      /** Delete a custom pack. */
       deletePack: (packId) =>
         set((s) => ({
           customPacks: s.customPacks.filter((p) => p.id !== packId),
         })),
 
-      /**
-       * Add a word pair to a pack.
-       */
+      /** Add a word pair to a pack. */
       addPair: (packId, wordA, wordB, category) => {
         const newPair = { id: `pair-${generateId()}`, wordA, wordB, category };
         set((s) => ({
@@ -59,9 +91,7 @@ export const usePackStore = create(
         }));
       },
 
-      /**
-       * Update an existing word pair.
-       */
+      /** Update an existing word pair. */
       updatePair: (packId, pairId, updates) =>
         set((s) => ({
           customPacks: s.customPacks.map((p) =>
@@ -76,9 +106,7 @@ export const usePackStore = create(
           ),
         })),
 
-      /**
-       * Delete a word pair from a pack.
-       */
+      /** Delete a word pair from a pack. */
       deletePair: (packId, pairId) =>
         set((s) => ({
           customPacks: s.customPacks.map((p) =>
@@ -88,9 +116,7 @@ export const usePackStore = create(
           ),
         })),
 
-      /**
-       * Export a pack as a downloadable JSON file.
-       */
+      /** Export a pack as a downloadable JSON file. */
       exportPack: (packId) => {
         const pack = get().customPacks.find((p) => p.id === packId);
         if (!pack) return;
@@ -114,18 +140,16 @@ export const usePackStore = create(
           reader.onload = (e) => {
             try {
               const data = JSON.parse(e.target.result);
-              // Validate structure
               if (!data.name || !Array.isArray(data.pairs)) {
                 reject(new Error('Invalid pack format: missing name or pairs array.'));
                 return;
               }
-              // Assign a new local ID and mark as custom
               const imported = {
                 ...data,
                 id: `custom-${generateId()}`,
                 builtin: false,
+                cloud: false,
                 createdAt: Date.now(),
-                // Ensure all pairs have unique IDs
                 pairs: data.pairs.map((pair) => ({
                   ...pair,
                   id: `pair-${generateId()}`,
@@ -147,6 +171,11 @@ export const usePackStore = create(
     }),
     {
       name: 'undercover-custom-packs',
+      // Only persist local custom packs and cached cloud packs to localStorage
+      partialize: (state) => ({
+        customPacks: state.customPacks,
+        cloudPacks: state.cloudPacks,
+      }),
     }
   )
 );

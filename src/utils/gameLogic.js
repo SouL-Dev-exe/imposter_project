@@ -38,10 +38,18 @@ export function shuffle(arr) {
  * @param {string|null} packId - specific pack id or null for random
  * @param {Array} customPacks - user's custom packs from localStorage
  */
-export function pickRandomPair(packId, customPacks = []) {
+export function pickRandomPair(packId, customPacks = [], cloudPacks = []) {
   const allPairs = [...ALL_BUILTIN_PAIRS];
-  // Merge custom pack pairs
-  customPairs: for (const cp of customPacks) {
+
+  // Merge custom pack pairs (locally created)
+  for (const cp of customPacks) {
+    for (const pair of cp.pairs) {
+      allPairs.push({ ...pair, packId: cp.id, packName: cp.name });
+    }
+  }
+
+  // Merge cloud pack pairs (from Supabase)
+  for (const cp of cloudPacks) {
     for (const pair of cp.pairs) {
       allPairs.push({ ...pair, packId: cp.id, packName: cp.name });
     }

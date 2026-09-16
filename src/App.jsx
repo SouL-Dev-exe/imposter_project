@@ -1,7 +1,9 @@
 /**
  * App.jsx — Root component with HashRouter routing.
  * Hash routing is required for GitHub Pages static hosting.
+ * Syncs cloud packs from Supabase on launch.
  */
+import { useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import Home from './pages/Home';
@@ -11,8 +13,16 @@ import Clues from './pages/Clues';
 import Vote from './pages/Vote';
 import Result from './pages/Result';
 import PackEditor from './pages/PackEditor';
+import { usePackStore } from './store/packStore';
 
 function App() {
+  const syncCloudPacks = usePackStore((s) => s.syncCloudPacks);
+
+  // Fetch global cloud packs once on app load
+  useEffect(() => {
+    syncCloudPacks();
+  }, []);
+
   return (
     <HashRouter>
       <div className="min-h-screen bg-gray-950 text-white font-sans antialiased">
@@ -42,3 +52,4 @@ function App() {
 }
 
 export default App;
+

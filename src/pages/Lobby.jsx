@@ -49,12 +49,12 @@ export default function Lobby() {
     setPlayerNames, setGameMode, setOptions, setSelectedPackId, startGame,
   } = useGameStore();
 
-  const { customPacks } = usePackStore();
+  const { customPacks, cloudPacks } = usePackStore();
 
   const [nameInput, setNameInput] = useState('');
   const [error, setError] = useState('');
 
-  const allPacks = [...DEFAULT_PACKS, ...customPacks];
+  const allPacks = [...DEFAULT_PACKS, ...customPacks, ...cloudPacks];
 
   const addPlayer = () => {
     const trimmed = nameInput.trim();
@@ -85,7 +85,7 @@ export default function Lobby() {
       setError(`Need at least ${MIN_PLAYERS} players.`);
       return;
     }
-    const pair = pickRandomPair(selectedPackId, customPacks);
+    const pair = pickRandomPair(selectedPackId, customPacks, cloudPacks);
     const players = assignRoles(playerNames, gameMode, options, pair);
     startGame(players, pair);
     navigate('/reveal');
