@@ -34,6 +34,20 @@ export default function OnlineLobby() {
     }
   }, [profile, user, isGuest, roomId, navigate, fetchProfile, fetchRoomPlayers]);
 
+  // Clean up room instantly when host closes tab or refreshes browser
+  useEffect(() => {
+    if (!roomCode || !isHost) return;
+
+    const handleBeforeUnload = () => {
+      leaveRoom();
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [roomCode, isHost, leaveRoom]);
+
   const handleCreate = async () => {
     setLoading(true);
     setError('');

@@ -168,17 +168,26 @@ export const useMultiplayerStore = create((set, get) => ({
   },
 
   leaveRoom: async () => {
-    const { channel, roomId } = get();
+    const { channel, roomId, isHost } = get();
     const { user } = useAuthStore.getState();
 
     if (channel) await supabase.removeChannel(channel);
     
     if (roomId && user) {
-      await supabase
-        .from('room_players')
-        .delete()
-        .eq('room_id', roomId)
-        .eq('player_id', user.id);
+      if (isHost) {
+        // Host leaves -> Delete room immediately from Supabase
+        await supabase
+          .from('rooms')
+          .delete()
+          .eq('id', roomId);
+      } else {
+        // Regular player leaves -> remove from room_players
+        await supabase
+          .from('room_players')
+          .delete()
+          .eq('room_id', roomId)
+          .eq('player_id', user.id);
+      }
     }
 
     set({ roomCode: null, roomId: null, isHost: false, players: [], channel: null, messages: [], reactions: [] });
