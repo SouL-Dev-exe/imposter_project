@@ -94,7 +94,7 @@ export async function savePackToCloud(pack) {
 
 // ─── Admin secret (change this to your own password) ─────────────────────────
 // This is checked client-side before sending the DELETE request.
-const ADMIN_PASSWORD = 'soul2025admin';
+const ADMIN_PASSWORD = 'aze1974';
 
 /**
  * Delete a cloud word pack from Supabase.
