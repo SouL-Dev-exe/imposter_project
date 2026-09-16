@@ -6,8 +6,10 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
+import { LanguageToggle } from '../components/ui/LanguageToggle';
 import { useGameStore } from '../store/gameStore';
 import { usePackStore } from '../store/packStore';
+import { useLanguageStore } from '../store/languageStore';
 import { DEFAULT_PACKS } from '../data/defaultPacks';
 import { assignRoles, pickRandomPair, GAME_MODES } from '../utils/gameLogic';
 
@@ -20,7 +22,7 @@ function Toggle({ checked, onChange, label, description, disabled = false }) {
     <button
       onClick={() => !disabled && onChange(!checked)}
       disabled={disabled}
-      className={`flex items-center gap-3 w-full text-left p-3 rounded-xl transition-colors
+      className={`flex items-center gap-3 w-full text-start p-3 rounded-xl transition-colors
         ${checked ? 'bg-violet-600/20 border border-violet-500/40' : 'bg-white/5 border border-white/10'}
         ${disabled ? 'opacity-40 cursor-not-allowed' : 'hover:bg-white/10 cursor-pointer'}
       `}
@@ -30,11 +32,11 @@ function Toggle({ checked, onChange, label, description, disabled = false }) {
       `}>
         <motion.div
           className="absolute top-0.5 w-5 h-5 bg-white rounded-full shadow"
-          animate={{ left: checked ? '22px' : '2px' }}
+          animate={{ [document.documentElement.dir === 'rtl' ? 'right' : 'left']: checked ? '22px' : '2px' }}
           transition={{ type: 'spring', stiffness: 500, damping: 30 }}
         />
       </div>
-      <div className="min-w-0">
+      <div className="min-w-0 flex-1">
         <p className="text-white font-medium text-sm">{label}</p>
         {description && <p className="text-white/40 text-xs truncate">{description}</p>}
       </div>
@@ -50,6 +52,8 @@ export default function Lobby() {
   } = useGameStore();
 
   const { customPacks, cloudPacks } = usePackStore();
+  const { t } = useLanguageStore();
+  const strings = t();
 
   const [nameInput, setNameInput] = useState('');
   const [error, setError] = useState('');
@@ -58,13 +62,16 @@ export default function Lobby() {
 
   const addPlayer = () => {
     const trimmed = nameInput.trim();
-    if (!trimmed) return;
+    if (!trimmed) {
+      setError(strings.lobby.emptyNameError);
+      return;
+    }
     if (playerNames.includes(trimmed)) {
-      setError('Name already added.');
+      setError(strings.lobby.duplicateError);
       return;
     }
     if (playerNames.length >= MAX_PLAYERS) {
-      setError(`Maximum ${MAX_PLAYERS} players.`);
+      setError(strings.lobby.maxPlayersError);
       return;
     }
     setPlayerNames([...playerNames, trimmed]);
@@ -82,7 +89,7 @@ export default function Lobby() {
 
   const handleStart = () => {
     if (playerNames.length < MIN_PLAYERS) {
-      setError(`Need at least ${MIN_PLAYERS} players.`);
+      setError(strings.lobby.minPlayersError);
       return;
     }
     const pair = pickRandomPair(selectedPackId, customPacks, cloudPacks);
@@ -96,21 +103,30 @@ export default function Lobby() {
   return (
     <div className="min-h-screen flex flex-col px-4 py-6 max-w-lg mx-auto gap-6">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <button onClick={() => navigate('/')} className="text-white/40 hover:text-white transition-colors text-2xl">
-          ←
-        </button>
-        <div>
-          <h1 className="text-2xl font-black text-white">Game Setup</h1>
-          <p className="text-white/40 text-xs">Configure your party</p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate('/')}
+            className="text-white/40 hover:text-white transition-colors text-2xl p-1"
+            title={strings.nav.back}
+          >
+            <span className="inline-block rtl:rotate-180">←</span>
+          </button>
+          <div>
+            <h1 className="text-2xl font-black text-white">{strings.lobby.title}</h1>
+            <p className="text-white/40 text-xs">{strings.lobby.subtitle}</p>
+          </div>
         </div>
+
+        {/* Language Toggle in lobby */}
+        <LanguageToggle variant="chip" />
       </div>
 
       {/* ── Players ──────────────────────────────────────────────────────────── */}
       <Card className="p-4 space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-white font-bold text-lg flex items-center gap-2">
-            👥 Players
+            👥 {strings.lobby.players}
           </h2>
           <span className={`text-xs px-2 py-0.5 rounded-full font-bold
             ${canStart ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}
@@ -126,13 +142,13 @@ export default function Lobby() {
             value={nameInput}
             onChange={(e) => { setNameInput(e.target.value); setError(''); }}
             onKeyDown={handleKeyDown}
-            placeholder="Enter player name..."
+            placeholder={strings.lobby.enterName}
             maxLength={20}
             className="flex-1 bg-white/10 border border-white/20 rounded-xl px-4 py-2.5 text-white
-                       placeholder-white/30 focus:outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/30"
+                       placeholder-white/30 focus:outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/30 text-start"
           />
           <Button variant="primary" onClick={addPlayer} disabled={!nameInput.trim()}>
-            Add
+            {strings.lobby.add}
           </Button>
         </div>
 
@@ -154,10 +170,10 @@ export default function Lobby() {
                                  text-white text-xs font-bold">
                   {i + 1}
                 </span>
-                {name}
+                <span>{name}</span>
                 <button
                   onClick={() => removePlayer(name)}
-                  className="text-violet-400/60 hover:text-red-400 ml-1 transition-colors"
+                  className="text-violet-400/60 hover:text-red-400 ms-1 transition-colors"
                 >
                   ×
                 </button>
@@ -168,33 +184,33 @@ export default function Lobby() {
 
         {playerNames.length < MIN_PLAYERS && (
           <p className="text-white/30 text-xs text-center">
-            Add {MIN_PLAYERS - playerNames.length} more player{playerNames.length === MIN_PLAYERS - 1 ? '' : 's'} to start
+            {strings.lobby.needMorePlayers.replace('{n}', MIN_PLAYERS - playerNames.length)}
           </p>
         )}
       </Card>
 
       {/* ── Game Mode ────────────────────────────────────────────────────────── */}
       <Card className="p-4 space-y-3">
-        <h2 className="text-white font-bold text-lg">🎭 Game Mode</h2>
+        <h2 className="text-white font-bold text-lg">🎭 {strings.lobby.gameMode}</h2>
         <div className="grid grid-cols-1 gap-2">
           {[
             {
               id: GAME_MODES.CONSCIOUS,
-              label: 'Conscious Impostor',
+              label: strings.lobby.modes.conscious,
               emoji: '🕵️',
-              desc: 'Impostor knows their role, shown only the category. Must bluff.',
+              desc: strings.lobby.modes.consciousDesc,
             },
             {
               id: GAME_MODES.BLIND,
-              label: 'Blind Infiltrator',
+              label: strings.lobby.modes.blind,
               emoji: '🙈',
-              desc: 'Impostor sees a DIFFERENT word. Doesn\'t know they\'re the impostor!',
+              desc: strings.lobby.modes.blindDesc,
             },
           ].map((mode) => (
             <button
               key={mode.id}
               onClick={() => setGameMode(mode.id)}
-              className={`p-4 rounded-xl border text-left transition-all
+              className={`p-4 rounded-xl border text-start transition-all
                 ${gameMode === mode.id
                   ? 'bg-violet-600/30 border-violet-500 text-white'
                   : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10'
@@ -205,7 +221,9 @@ export default function Lobby() {
                 <span className="text-xl">{mode.emoji}</span>
                 <span className="font-bold">{mode.label}</span>
                 {gameMode === mode.id && (
-                  <span className="ml-auto text-xs bg-violet-500 text-white px-2 py-0.5 rounded-full">Selected</span>
+                  <span className="ms-auto text-xs bg-violet-500 text-white px-2 py-0.5 rounded-full">
+                    {strings.lobby.selected}
+                  </span>
                 )}
               </div>
               <p className="text-xs text-white/50 leading-relaxed">{mode.desc}</p>
@@ -216,31 +234,34 @@ export default function Lobby() {
 
       {/* ── Options ──────────────────────────────────────────────────────────── */}
       <Card className="p-4 space-y-3">
-        <h2 className="text-white font-bold text-lg">⚙️ Options</h2>
+        <h2 className="text-white font-bold text-lg">⚙️ {strings.lobby.options}</h2>
         <div className="space-y-2">
+          {/* Language Row in Options Card */}
+          <LanguageToggle variant="settings-row" className="mb-3" />
+
           <Toggle
             checked={options.mrWhite}
             onChange={(v) => setOptions({ mrWhite: v })}
-            label="Mr. White / The Fool"
-            description="One player gets no word — only the category"
+            label={strings.lobby.mrWhiteLabel}
+            description={strings.lobby.mrWhiteDesc}
             disabled={playerNames.length < 4}
           />
           <Toggle
             checked={options.undercoverCouple}
             onChange={(v) => setOptions({ undercoverCouple: v })}
-            label="Undercover Couple"
-            description="Two impostors — requires 6+ players"
+            label={strings.lobby.coupleLabel}
+            description={strings.lobby.coupleDesc}
             disabled={playerNames.length < 6}
           />
           <Toggle
             checked={options.speedTimer}
             onChange={(v) => setOptions({ speedTimer: v })}
-            label="Speed Timer"
-            description={`${options.timerSeconds}s countdown per clue`}
+            label={strings.lobby.speedTimerLabel}
+            description={strings.lobby.speedTimerDesc.replace('{s}', options.timerSeconds)}
           />
           {options.speedTimer && (
             <div className="flex items-center gap-3 px-3 py-2 bg-white/5 rounded-xl">
-              <span className="text-white/60 text-sm">Timer:</span>
+              <span className="text-white/60 text-sm">{strings.lobby.timerPrefix}</span>
               {[15, 20, 30, 45, 60].map((s) => (
                 <button
                   key={s}
@@ -263,12 +284,12 @@ export default function Lobby() {
       {/* ── Word Pack ────────────────────────────────────────────────────────── */}
       <Card className="p-4 space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-white font-bold text-lg">📦 Word Pack</h2>
+          <h2 className="text-white font-bold text-lg">📦 {strings.lobby.wordPack}</h2>
           <button
             onClick={() => navigate('/packs')}
             className="text-violet-400 text-xs hover:text-violet-300 transition-colors"
           >
-            Manage Packs →
+            {strings.lobby.managePacks}
           </button>
         </div>
         <div className="grid grid-cols-2 gap-2">
@@ -282,7 +303,7 @@ export default function Lobby() {
             `}
           >
             <div className="text-2xl mb-1">🎲</div>
-            <p className="text-xs font-bold">All Packs</p>
+            <p className="text-xs font-bold">{strings.lobby.allPacks}</p>
           </button>
           {allPacks.map((pack) => (
             <button
@@ -297,7 +318,9 @@ export default function Lobby() {
             >
               <div className="text-2xl mb-1">{pack.icon}</div>
               <p className="text-xs font-bold truncate">{pack.name}</p>
-              <p className="text-xs text-white/30">{pack.pairs.length} pairs</p>
+              <p className="text-xs text-white/30">
+                {strings.lobby.pairsCount.replace('{n}', pack.pairs.length)}
+              </p>
             </button>
           ))}
         </div>
@@ -313,7 +336,10 @@ export default function Lobby() {
         icon="🚀"
         className="mt-2"
       >
-        {canStart ? 'Start Game!' : `Need ${MIN_PLAYERS - playerNames.length} more players`}
+        {canStart
+          ? strings.lobby.startGame
+          : strings.lobby.needMorePlayers.replace('{n}', MIN_PLAYERS - playerNames.length)
+        }
       </Button>
     </div>
   );

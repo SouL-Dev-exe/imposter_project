@@ -7,7 +7,9 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RoleReveal } from '../components/game/RoleReveal';
 import { Button } from '../components/ui/Button';
+import { LanguageToggle } from '../components/ui/LanguageToggle';
 import { useGameStore } from '../store/gameStore';
+import { useLanguageStore } from '../store/languageStore';
 
 export default function Reveal() {
   const navigate = useNavigate();
@@ -15,6 +17,9 @@ export default function Reveal() {
     players, currentRevealIndex, gameMode,
     markRevealed, goToClues,
   } = useGameStore();
+
+  const { t } = useLanguageStore();
+  const strings = t();
 
   // Guard: redirect if no game session
   useEffect(() => {
@@ -39,10 +44,20 @@ export default function Reveal() {
 
   return (
     <div className="min-h-screen flex flex-col px-4 py-6 max-w-lg mx-auto">
-      {/* Header */}
+      {/* Top Header with Progress and Language Toggle */}
       <div className="mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <button
+            onClick={() => navigate('/lobby')}
+            className="text-white/40 hover:text-white transition-colors text-sm"
+          >
+            <span className="inline-block rtl:rotate-180">←</span> {strings.nav.back}
+          </button>
+          <LanguageToggle variant="chip" />
+        </div>
+
         <div className="flex items-center gap-2 mb-2">
-          <div className="flex gap-1">
+          <div className="flex gap-1 flex-1">
             {players.map((p, i) => (
               <div
                 key={p.id}
@@ -60,8 +75,10 @@ export default function Reveal() {
         </div>
         <p className="text-white/40 text-xs text-center">
           {allRevealed
-            ? 'All players have viewed their roles'
-            : `${currentRevealIndex + 1} of ${players.length} players`}
+            ? strings.reveal.allViewed
+            : strings.reveal.viewedCount
+                .replace('{current}', currentRevealIndex + 1)
+                .replace('{total}', players.length)}
         </p>
       </div>
 
@@ -94,16 +111,15 @@ export default function Reveal() {
             >
               <div className="text-7xl">🎉</div>
               <div>
-                <h2 className="text-3xl font-black text-white mb-2">Everyone's Ready!</h2>
-                <p className="text-white/60 text-sm">
-                  All {players.length} players have seen their secret roles.
-                  <br />Time to give your clues!
+                <h2 className="text-3xl font-black text-white mb-2">{strings.reveal.everyoneReady}</h2>
+                <p className="text-white/60 text-sm whitespace-pre-line">
+                  {strings.reveal.allSeenDesc.replace('{n}', players.length)}
                 </p>
               </div>
 
               {/* Player roll summary */}
               <div className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-2">
-                <p className="text-white/40 text-xs uppercase tracking-wider mb-3">Players</p>
+                <p className="text-white/40 text-xs uppercase tracking-wider mb-3">{strings.reveal.playersLabel}</p>
                 <div className="flex flex-wrap gap-2 justify-center">
                   {players.map((p) => (
                     <div
@@ -124,7 +140,7 @@ export default function Reveal() {
                 onClick={handleGoToClues}
                 icon="💬"
               >
-                Start Clue Round
+                {strings.reveal.startClueRound}
               </Button>
             </motion.div>
           )}

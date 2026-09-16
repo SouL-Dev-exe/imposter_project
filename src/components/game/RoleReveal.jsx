@@ -6,40 +6,48 @@ import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ROLES } from '../../utils/gameLogic';
 import { useAudio } from '../../hooks/useAudio';
-
-const ROLE_CONFIG = {
-  [ROLES.CIVILIAN]: {
-    label: 'Civilian',
-    emoji: '👤',
-    color: 'from-slate-700 to-zinc-800',
-    border: 'border-white/20',
-    description: 'Your mission: Give clues without being too obvious!',
-  },
-  [ROLES.IMPOSTOR]: {
-    label: 'Impostor',
-    emoji: '🕵️',
-    color: 'from-slate-700 to-zinc-800',
-    border: 'border-white/20',
-    description: 'Blend in. Listen carefully. Do not get caught!',
-  },
-  [ROLES.MR_WHITE]: {
-    label: 'Mr. White',
-    emoji: '❓',
-    color: 'from-slate-700 to-zinc-800',
-    border: 'border-white/20',
-    description: 'You have NO word. Improvise and stay vague!',
-  },
-};
+import { useLanguageStore } from '../../store/languageStore';
 
 export function RoleReveal({ player, gameMode, onDone }) {
   const [holding, setHolding] = useState(false);
   const [revealed, setRevealed] = useState(false);
   const [holdProgress, setHoldProgress] = useState(0);
   const { playReveal } = useAudio();
-  const holdTimerRef = useState(null);
+  const { t } = useLanguageStore();
+  const strings = t();
   const intervalRef = useState(null);
 
-  const cfg = ROLE_CONFIG[player.role] || ROLE_CONFIG[ROLES.CIVILIAN];
+  const getRoleConfig = () => {
+    switch (player.role) {
+      case ROLES.IMPOSTOR:
+        return {
+          label: strings.roles.impostor,
+          emoji: strings.roles.impostorEmoji,
+          color: 'from-slate-700 to-zinc-800',
+          border: 'border-white/20',
+          description: strings.roles.impostorDesc,
+        };
+      case ROLES.MR_WHITE:
+        return {
+          label: strings.roles.mrWhite,
+          emoji: strings.roles.mrWhiteEmoji,
+          color: 'from-slate-700 to-zinc-800',
+          border: 'border-white/20',
+          description: strings.roles.mrWhiteDesc,
+        };
+      case ROLES.CIVILIAN:
+      default:
+        return {
+          label: strings.roles.civilian,
+          emoji: strings.roles.civilianEmoji,
+          color: 'from-slate-700 to-zinc-800',
+          border: 'border-white/20',
+          description: strings.roles.civilianDesc,
+        };
+    }
+  };
+
+  const cfg = getRoleConfig();
 
   const handleHoldStart = useCallback(() => {
     setHolding(true);
@@ -66,33 +74,33 @@ export function RoleReveal({ player, gameMode, onDone }) {
   const getWordDisplay = () => {
     if (player.role === ROLES.CIVILIAN) {
       return {
-        label: 'Your Secret Word',
+        label: strings.reveal.secretWord,
         word: player.word,
-        sub: `Category: ${player.category}`,
+        sub: strings.reveal.categoryPrefix.replace('{category}', player.category),
       };
     }
     if (player.role === ROLES.IMPOSTOR) {
       if (gameMode === 'conscious') {
         return {
-          label: 'You Are The Impostor!',
+          label: strings.roles.impostor,
           word: null,
-          sub: `Category Hint: ${player.category}`,
-          hint: 'Bluff your way to victory 😈',
+          sub: strings.reveal.categoryHintPrefix.replace('{category}', player.category),
+          hint: strings.reveal.bluffHint,
         };
       }
       // Blind impostor: sees Word B
       return {
-        label: 'Your Secret Word',
+        label: strings.reveal.secretWord,
         word: player.word,
-        sub: `Category: ${player.category}`,
+        sub: strings.reveal.categoryPrefix.replace('{category}', player.category),
       };
     }
     if (player.role === ROLES.MR_WHITE) {
       return {
-        label: 'Mr. White',
+        label: strings.roles.mrWhite,
         word: null,
-        sub: `Category: ${player.category}`,
-        hint: 'No word for you — stay mysterious!',
+        sub: strings.reveal.categoryPrefix.replace('{category}', player.category),
+        hint: strings.reveal.mrWhiteHint,
       };
     }
   };
@@ -107,7 +115,7 @@ export function RoleReveal({ player, gameMode, onDone }) {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <p className="text-white/60 text-sm uppercase tracking-widest mb-1">Now viewing</p>
+        <p className="text-white/60 text-sm uppercase tracking-widest mb-1">{strings.reveal.nowViewing}</p>
         <h2 className="text-3xl font-bold text-white">{player.name}</h2>
       </motion.div>
 
@@ -130,8 +138,8 @@ export function RoleReveal({ player, gameMode, onDone }) {
                 exit={{ opacity: 0 }}
               >
                 <div className="text-6xl">🔒</div>
-                <p className="text-white/50 text-sm">Hold the button below to reveal your role</p>
-                <p className="text-white/30 text-xs">Make sure no one else is watching!</p>
+                <p className="text-white/50 text-sm">{strings.reveal.holdInstruction}</p>
+                <p className="text-white/30 text-xs">{strings.reveal.privacyWarning}</p>
               </motion.div>
             ) : (
               /* Revealed state */
@@ -148,7 +156,7 @@ export function RoleReveal({ player, gameMode, onDone }) {
                   {info.word ? (
                     <p className="text-4xl font-black text-white mt-1 tracking-tight">{info.word}</p>
                   ) : (
-                    <p className="text-2xl font-bold text-white/80 mt-1 italic">No Word</p>
+                    <p className="text-2xl font-bold text-white/80 mt-1 italic">{strings.reveal.noWord}</p>
                   )}
                 </div>
                 <p className="text-white/50 text-sm">{info.sub}</p>
@@ -174,7 +182,7 @@ export function RoleReveal({ player, gameMode, onDone }) {
             />
           </div>
           <motion.button
-            className="w-full py-4 rounded-xl bg-violet-600/30 border border-violet-500/50 text-violet-300 font-semibold text-lg select-none touch-none"
+            className="w-full py-4 rounded-xl bg-violet-600/30 border border-violet-500/50 text-violet-300 font-semibold text-lg select-none touch-none cursor-pointer"
             onMouseDown={handleHoldStart}
             onMouseUp={handleHoldEnd}
             onMouseLeave={handleHoldEnd}
@@ -182,19 +190,19 @@ export function RoleReveal({ player, gameMode, onDone }) {
             onTouchEnd={handleHoldEnd}
             whileTap={{ scale: 0.97 }}
           >
-            {holding ? '👁️ Revealing...' : '🔒 Hold to Reveal'}
+            {holding ? `👁️ ${strings.reveal.revealing}` : `🔒 ${strings.reveal.holdToReveal}`}
           </motion.button>
         </div>
       ) : (
         <motion.button
-          className="w-full py-4 rounded-xl bg-emerald-600 text-white font-bold text-lg"
+          className="w-full py-4 rounded-xl bg-emerald-600 text-white font-bold text-lg cursor-pointer"
           onClick={onDone}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           whileTap={{ scale: 0.97 }}
           transition={{ delay: 0.5 }}
         >
-          ✅ Got it! Pass the device →
+          {strings.reveal.gotItPass}
         </motion.button>
       )}
     </div>

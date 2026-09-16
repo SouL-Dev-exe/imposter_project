@@ -8,7 +8,9 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '../components/ui/Button';
 import { Timer } from '../components/ui/Timer';
+import { LanguageToggle } from '../components/ui/LanguageToggle';
 import { useGameStore } from '../store/gameStore';
+import { useLanguageStore } from '../store/languageStore';
 
 export default function Clues() {
   const navigate = useNavigate();
@@ -17,9 +19,11 @@ export default function Clues() {
     nextClueTurn, goToVote,
   } = useGameStore();
 
+  const { t } = useLanguageStore();
+  const strings = t();
+
   const [timerKey, setTimerKey] = useState(0);
   const [showTimer, setShowTimer] = useState(false);
-  const [roundsDone, setRoundsDone] = useState(0);
 
   const activePlayers = players.filter((p) => !p.isEliminated);
   const totalPlayers = activePlayers.length;
@@ -60,12 +64,17 @@ export default function Clues() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-white/40 text-xs uppercase tracking-widest">Round {currentRound}</p>
-          <h1 className="text-2xl font-black text-white">Clue Phase</h1>
+          <p className="text-white/40 text-xs uppercase tracking-widest">
+            {strings.clues.title.replace('{round}', currentRound)}
+          </p>
+          <h1 className="text-2xl font-black text-white">{strings.clues.title.replace('{round}', currentRound)}</h1>
         </div>
-        <div className="text-right">
-          <p className="text-white/40 text-xs">Player</p>
-          <p className="text-violet-400 font-bold">{clueIndexInRound + 1}/{totalPlayers}</p>
+        <div className="flex items-center gap-3">
+          <div className="text-end">
+            <p className="text-white/40 text-xs">{strings.reveal.playersLabel}</p>
+            <p className="text-violet-400 font-bold">{clueIndexInRound + 1}/{totalPlayers}</p>
+          </div>
+          <LanguageToggle variant="chip" />
         </div>
       </div>
 
@@ -92,13 +101,15 @@ export default function Clues() {
 
           {/* Player name */}
           <div className="text-center">
-            <p className="text-white/50 text-sm uppercase tracking-widest mb-1">It's your turn</p>
-            <h2 className="text-4xl font-black text-white">{currentPlayer.name}</h2>
-            <p className="text-white/40 text-sm mt-2">
-              Give one word or short phrase as a clue
+            <p className="text-white/50 text-sm uppercase tracking-widest mb-1">
+              {strings.clues.whoseTurn.replace('{name}', currentPlayer.name)}
             </p>
-            <p className="text-white/20 text-xs mt-1">
-              Don't be too obvious. Don't be too vague.
+            <h2 className="text-4xl font-black text-white">{currentPlayer.name}</h2>
+            <p className="text-white/70 text-sm mt-2 font-medium">
+              {strings.clues.giveClueInstruction}
+            </p>
+            <p className="text-white/30 text-xs mt-1">
+              {strings.clues.dontBeObvious}
             </p>
           </div>
 
@@ -112,9 +123,7 @@ export default function Clues() {
                 key={timerKey}
                 seconds={options.timerSeconds}
                 running={true}
-                onEnd={() => {
-                  // Auto-advance or signal
-                }}
+                onEnd={() => {}}
                 size={120}
               />
             </motion.div>
@@ -122,7 +131,9 @@ export default function Clues() {
 
           {/* Player list mini-tracker */}
           <div className="w-full bg-white/5 border border-white/10 rounded-xl p-3">
-            <p className="text-white/30 text-xs uppercase tracking-wider mb-2 text-center">Turn order</p>
+            <p className="text-white/30 text-xs uppercase tracking-wider mb-2 text-center">
+              {strings.clues.order}
+            </p>
             <div className="flex flex-wrap gap-2 justify-center">
               {activePlayers.map((p, i) => (
                 <div
@@ -153,7 +164,7 @@ export default function Clues() {
           onClick={handleNext}
           icon="➡️"
         >
-          Next Player
+          {strings.clues.nextPlayer}
         </Button>
 
         <Button
@@ -163,7 +174,7 @@ export default function Clues() {
           onClick={handleGoVote}
           icon="🗳️"
         >
-          Start Voting Round
+          {strings.clues.finishRoundGoVote}
         </Button>
       </div>
     </div>

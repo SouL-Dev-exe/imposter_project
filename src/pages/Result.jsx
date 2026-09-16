@@ -7,21 +7,17 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '../components/ui/Button';
 import { FinalGuess } from '../components/game/FinalGuess';
-import { Modal } from '../components/ui/Modal';
+import { LanguageToggle } from '../components/ui/LanguageToggle';
 import { useGameStore } from '../store/gameStore';
+import { useLanguageStore } from '../store/languageStore';
 import { useAudio } from '../hooks/useAudio';
 import { ROLES } from '../utils/gameLogic';
-
-const ROLE_LABELS = {
-  [ROLES.CIVILIAN]: { label: 'Civilian', emoji: '👤', color: 'text-blue-400' },
-  [ROLES.IMPOSTOR]: { label: 'Impostor', emoji: '🕵️', color: 'text-red-400' },
-  [ROLES.MR_WHITE]: { label: 'Mr. White', emoji: '❓', color: 'text-gray-400' },
-};
 
 export default function Result() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isFinalGuessPhase = searchParams.get('phase') === 'final_guess';
+  const { t, isRTL } = useLanguageStore();
 
   const {
     players, winner, eliminatedPlayer, wordPair, gameMode,
@@ -32,6 +28,12 @@ export default function Result() {
   const [showFinalGuess, setShowFinalGuess] = useState(isFinalGuessPhase);
   const [finalGuessResolved, setFinalGuessResolved] = useState(false);
   const [revealRoles, setRevealRoles] = useState(false);
+
+  const ROLE_LABELS = {
+    [ROLES.CIVILIAN]: { label: t('roles.civilian'), emoji: '👤', color: 'text-blue-400' },
+    [ROLES.IMPOSTOR]: { label: t('roles.impostor'), emoji: '🕵️', color: 'text-red-400' },
+    [ROLES.MR_WHITE]: { label: t('roles.mrWhite'), emoji: '❓', color: 'text-gray-400' },
+  };
 
   useEffect(() => {
     if (!players || players.length === 0) {
@@ -71,15 +73,15 @@ export default function Result() {
   const winnerInfo = {
     civilians: {
       emoji: '🎊',
-      title: 'Civilians Win!',
-      subtitle: 'The impostor has been unmasked.',
+      title: t('result.civiliansWin'),
+      subtitle: t('result.civiliansSubtitle'),
       gradient: 'from-blue-600 to-cyan-600',
       glow: 'shadow-blue-900/50',
     },
     impostors: {
       emoji: '🏆',
-      title: 'Impostor Wins!',
-      subtitle: 'The deception was flawless.',
+      title: t('result.impostorWins'),
+      subtitle: t('result.impostorSubtitle'),
       gradient: 'from-red-700 to-rose-700',
       glow: 'shadow-red-900/50',
     },
@@ -89,6 +91,11 @@ export default function Result() {
 
   return (
     <div className="min-h-screen flex flex-col px-4 py-6 max-w-lg mx-auto gap-5">
+      {/* Top action bar */}
+      <div className="flex justify-end">
+        <LanguageToggle variant="chip" />
+      </div>
+
       {/* Final Guess Phase (before winner is decided) */}
       {isFinalGuessPhase && !finalGuessResolved && (
         <AnimatePresence>
@@ -150,21 +157,21 @@ export default function Result() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <p className="text-white/40 text-xs uppercase tracking-wider">The Secret Words</p>
+          <p className="text-white/40 text-xs uppercase tracking-wider">{t('result.secretWords')}</p>
           <div className="flex items-center justify-center gap-4">
             <div className="text-center">
-              <p className="text-white/40 text-xs mb-1">Civilians</p>
+              <p className="text-white/40 text-xs mb-1">{t('result.civilians')}</p>
               <p className="text-2xl font-black text-blue-400">{wordPair.wordA}</p>
             </div>
             <div className="text-white/20 text-xl">vs</div>
             <div className="text-center">
-              <p className="text-white/40 text-xs mb-1">Impostor</p>
+              <p className="text-white/40 text-xs mb-1">{t('result.impostor')}</p>
               <p className="text-2xl font-black text-red-400">
-                {gameMode === 'blind' ? wordPair.wordB : '(none)'}
+                {gameMode === 'blind' ? wordPair.wordB : t('result.none')}
               </p>
             </div>
           </div>
-          <p className="text-white/30 text-xs">Category: {wordPair.category}</p>
+          <p className="text-white/30 text-xs">{t('result.categoryPrefix', { category: wordPair.category })}</p>
         </motion.div>
       )}
 
@@ -179,7 +186,7 @@ export default function Result() {
           className="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-white/60
                      hover:bg-white/10 hover:text-white transition-all text-sm font-medium"
         >
-          {revealRoles ? '🙈 Hide Roles' : '👁️ Reveal All Roles'}
+          {revealRoles ? t('result.hideRoles') : t('result.revealRoles')}
         </button>
 
         <AnimatePresence>
@@ -196,16 +203,16 @@ export default function Result() {
                   <motion.div
                     key={p.id}
                     className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl px-4 py-3"
-                    initial={{ opacity: 0, x: -20 }}
+                    initial={{ opacity: 0, x: isRTL ? 20 : -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.07 }}
                   >
                     <span className="text-xl">{roleCfg.emoji}</span>
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 text-start">
                       <p className="text-white font-bold">{p.name}</p>
                       <p className={`text-xs ${roleCfg.color}`}>{roleCfg.label}</p>
                     </div>
-                    <div className="text-right">
+                    <div className="text-end">
                       <p className="text-white/70 text-sm font-medium">
                         {p.role === ROLES.IMPOSTOR && gameMode === 'blind'
                           ? wordPair?.wordB
@@ -230,10 +237,10 @@ export default function Result() {
         transition={{ delay: 0.6 }}
       >
         <Button variant="primary" fullWidth size="xl" onClick={handlePlayAgain} icon="🔄">
-          Play Again
+          {t('result.playAgain')}
         </Button>
         <Button variant="ghost" fullWidth size="md" onClick={handleHome}>
-          Back to Home
+          {t('result.home')}
         </Button>
       </motion.div>
     </div>

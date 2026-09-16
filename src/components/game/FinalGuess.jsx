@@ -6,8 +6,10 @@ import { motion } from 'framer-motion';
 import { Button } from '../ui/Button';
 import { evaluateFinalGuess, generateFinalGuessChoices } from '../../utils/gameLogic';
 import { useAudio } from '../../hooks/useAudio';
+import { useLanguageStore } from '../../store/languageStore';
 
 export function FinalGuess({ eliminatedPlayer, secretWord, wordPair, onResult }) {
+  const { t } = useLanguageStore();
   const [selectedWord, setSelectedWord] = useState('');
   const [customWord, setCustomWord] = useState('');
   const [submitted, setSubmitted] = useState(false);
@@ -52,10 +54,12 @@ export function FinalGuess({ eliminatedPlayer, secretWord, wordPair, onResult })
           {/* Dramatic header */}
           <div className="space-y-2">
             <div className="text-5xl">🕵️</div>
-            <h3 className="text-2xl font-black text-white">One Last Chance!</h3>
+            <h3 className="text-2xl font-black text-white">{t('finalGuess.title')}</h3>
             <p className="text-white/60 text-sm">
-              <span className="text-red-400 font-bold">{eliminatedPlayer?.name || 'Impostor'}</span>, you've been caught!
-              <br />Select the civilians' secret word to steal the victory:
+              <span className="text-red-400 font-bold">
+                {t('finalGuess.caughtDesc', { name: eliminatedPlayer?.name || 'Impostor' })}
+              </span>
+              <br />{t('finalGuess.selectInstruction')}
             </p>
           </div>
 
@@ -78,7 +82,9 @@ export function FinalGuess({ eliminatedPlayer, secretWord, wordPair, onResult })
                     }
                   `}
                 >
-                  <span className="text-xs opacity-50 font-normal uppercase tracking-wider mb-1">Option {index + 1}</span>
+                  <span className="text-xs opacity-50 font-normal uppercase tracking-wider mb-1">
+                    {t('finalGuess.option', { n: index + 1 })}
+                  </span>
                   <span>{word}</span>
                 </motion.button>
               );
@@ -95,7 +101,7 @@ export function FinalGuess({ eliminatedPlayer, secretWord, wordPair, onResult })
               size="xl"
               icon="🎯"
             >
-              Confirm Final Choice
+              {t('finalGuess.confirmChoice')}
             </Button>
 
             {/* Custom word toggle / fallback */}
@@ -108,7 +114,7 @@ export function FinalGuess({ eliminatedPlayer, secretWord, wordPair, onResult })
                   setSelectedWord('');
                 }}
                 onKeyDown={(e) => e.key === 'Enter' && handleSubmit(customWord)}
-                placeholder="Or type a custom word..."
+                placeholder={t('finalGuess.customWordPlaceholder')}
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white/80
                            placeholder-white/30 text-center font-medium focus:outline-none focus:border-amber-500/50"
               />
@@ -124,18 +130,18 @@ export function FinalGuess({ eliminatedPlayer, secretWord, wordPair, onResult })
         >
           <div className="text-7xl">{isCorrect ? '🏆' : '💀'}</div>
           <h3 className={`text-3xl font-black ${isCorrect ? 'text-amber-400' : 'text-red-400'}`}>
-            {isCorrect ? 'Impostor Wins!' : 'Wrong Choice!'}
+            {isCorrect ? t('finalGuess.impostorWins') : t('finalGuess.wrongChoice')}
           </h3>
           <p className="text-white/80 text-base font-medium">
             {isCorrect ? (
               <>
-                You selected <span className="text-amber-300 font-bold">"{finalChoice}"</span> — Correct! 🎉
-                <br /><span className="text-xs text-white/60 mt-1 block">The impostor steals the victory!</span>
+                {t('finalGuess.correctNotice', { choice: finalChoice })}
+                <br /><span className="text-xs text-white/60 mt-1 block">{t('finalGuess.stealsVictory')}</span>
               </>
             ) : (
               <>
-                You selected <span className="text-red-300 font-bold">"{finalChoice}"</span>.
-                <br />The secret word was <span className="text-emerald-400 font-bold">"{secretWord}"</span>. Civilians win! 🎊
+                {t('finalGuess.wrongNotice', { choice: finalChoice })}
+                <br />{t('finalGuess.secretWordWas', { word: secretWord })}
               </>
             )}
           </p>

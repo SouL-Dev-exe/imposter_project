@@ -8,12 +8,15 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '../components/ui/Button';
 import { VotePanel } from '../components/game/VotePanel';
+import { LanguageToggle } from '../components/ui/LanguageToggle';
 import { useGameStore } from '../store/gameStore';
+import { useLanguageStore } from '../store/languageStore';
 import { tallyVotes, checkWinCondition } from '../utils/gameLogic';
 import { useAudio } from '../hooks/useAudio';
 
 export default function Vote() {
   const navigate = useNavigate();
+  const { t, isRTL } = useLanguageStore();
   const {
     players, votes, options,
     castVote, setEliminatedPlayer, setPhase, setWinner,
@@ -74,14 +77,21 @@ export default function Vote() {
   return (
     <div className="min-h-screen flex flex-col px-4 py-6 max-w-lg mx-auto gap-4">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <button onClick={() => navigate('/clues')} className="text-white/40 hover:text-white text-2xl">
-          ←
-        </button>
-        <div>
-          <h1 className="text-2xl font-black text-white">🗳️ Voting</h1>
-          <p className="text-white/40 text-xs">Vote in secret — pass the device</p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate('/clues')}
+            className="text-white/40 hover:text-white text-2xl transition-transform rtl:rotate-180"
+            aria-label="Back"
+          >
+            ←
+          </button>
+          <div>
+            <h1 className="text-2xl font-black text-white">{t('vote.title')}</h1>
+            <p className="text-white/40 text-xs">{t('vote.passTheDevice')}</p>
+          </div>
         </div>
+        <LanguageToggle variant="chip" />
       </div>
 
       <AnimatePresence mode="wait">
@@ -105,7 +115,9 @@ export default function Vote() {
               ))}
             </div>
             <p className="text-white/40 text-xs text-center">
-              {allVoted ? 'All votes cast!' : `${voteIndex + 1} of ${activePlayers.length} players voting`}
+              {allVoted
+                ? t('vote.allVotesCast')
+                : t('vote.playersVotingCount', { current: voteIndex + 1, total: activePlayers.length })}
             </p>
 
             {!allVoted && currentVoter ? (
@@ -113,9 +125,9 @@ export default function Vote() {
                 <motion.div
                   key={`voter-${voteIndex}`}
                   className="w-full bg-white/5 border border-white/10 rounded-2xl p-5"
-                  initial={{ x: 40, opacity: 0 }}
+                  initial={{ x: isRTL ? -40 : 40, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
-                  exit={{ x: -40, opacity: 0 }}
+                  exit={{ x: isRTL ? 40 : -40, opacity: 0 }}
                 >
                   <VotePanel
                     players={activePlayers}
@@ -133,8 +145,8 @@ export default function Vote() {
               >
                 <div className="text-7xl">📊</div>
                 <div className="text-center">
-                  <h2 className="text-2xl font-black text-white">All Votes In!</h2>
-                  <p className="text-white/60 text-sm mt-1">Ready to reveal the results?</p>
+                  <h2 className="text-2xl font-black text-white">{t('vote.allVotesIn')}</h2>
+                  <p className="text-white/60 text-sm mt-1">{t('vote.readyToReveal')}</p>
                 </div>
                 <Button
                   variant="danger"
@@ -143,7 +155,7 @@ export default function Vote() {
                   onClick={handleRevealResults}
                   icon="🔍"
                 >
-                  Reveal Results
+                  {t('vote.revealResults')}
                 </Button>
               </motion.div>
             ) : null}
@@ -157,7 +169,7 @@ export default function Vote() {
             animate={{ opacity: 1 }}
           >
             <div className="text-center space-y-2">
-              <h2 className="text-2xl font-black text-white">Vote Results</h2>
+              <h2 className="text-2xl font-black text-white">{t('vote.voteResults')}</h2>
             </div>
 
             {/* Tally bars */}
@@ -172,7 +184,7 @@ export default function Vote() {
                     <motion.div
                       key={name}
                       className="space-y-1"
-                      initial={{ opacity: 0, x: -20 }}
+                      initial={{ opacity: 0, x: isRTL ? 20 : -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.2 }}
                     >
@@ -180,7 +192,9 @@ export default function Vote() {
                         <span className={`font-bold ${isElim ? 'text-red-400' : 'text-white'}`}>
                           {isElim ? '🎯 ' : ''}{name}
                         </span>
-                        <span className="text-white/60">{count} vote{count !== 1 ? 's' : ''}</span>
+                        <span className="text-white/60">
+                          {count} {count === 1 ? t('vote.voteSingle') : t('vote.votesPlural')}
+                        </span>
                       </div>
                       <div className="h-2 bg-white/10 rounded-full overflow-hidden">
                         <motion.div
@@ -210,14 +224,14 @@ export default function Vote() {
               {isTie ? (
                 <>
                   <div className="text-4xl mb-2">🤝</div>
-                  <p className="text-amber-400 font-black text-xl">It's a Tie!</p>
-                  <p className="text-white/60 text-sm mt-1">Nobody is eliminated. Play another clue round!</p>
+                  <p className="text-amber-400 font-black text-xl">{t('vote.tieTitle')}</p>
+                  <p className="text-white/60 text-sm mt-1">{t('vote.tieSubtitle')}</p>
                 </>
               ) : (
                 <>
                   <div className="text-4xl mb-2">⚡</div>
-                  <p className="text-red-400 font-black text-xl">{eliminated} is eliminated!</p>
-                  <p className="text-white/60 text-sm mt-1">The group has decided.</p>
+                  <p className="text-red-400 font-black text-xl">{t('vote.eliminatedTitle', { name: eliminated })}</p>
+                  <p className="text-white/60 text-sm mt-1">{t('vote.eliminatedSubtitle')}</p>
                 </>
               )}
             </motion.div>
@@ -229,7 +243,7 @@ export default function Vote() {
               onClick={handleProceed}
               icon="➡️"
             >
-              {isTie ? 'Continue to Clues' : 'See What Happens →'}
+              {isTie ? t('vote.continueToClues') : t('vote.seeWhatHappens')}
             </Button>
           </motion.div>
         )}

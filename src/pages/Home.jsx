@@ -4,8 +4,10 @@ import { motion } from 'framer-motion';
 import { Button } from '../components/ui/Button';
 import { useGameStore } from '../store/gameStore';
 import { useAuthStore } from '../store/authStore';
+import { useLanguageStore } from '../store/languageStore';
 import { AuthModal } from '../components/ui/AuthModal';
 import { ProfileCustomizer } from '../components/ui/ProfileCustomizer';
+import { LanguageToggle } from '../components/ui/LanguageToggle';
 
 const floatVariants = {
   animate: {
@@ -34,6 +36,8 @@ export default function Home() {
   const navigate = useNavigate();
   const { currentPhase } = useGameStore();
   const { profile } = useAuthStore();
+  const { language, t } = useLanguageStore();
+  const strings = t();
   
   const [showAuthModal, setShowAuthModal] = useState(false);
 
@@ -58,11 +62,21 @@ export default function Home() {
     }
   };
 
+  const featuresList = [
+    { icon: '🎭', title: strings.home.features.modes, desc: strings.home.features.modesDesc },
+    { icon: '📱', title: strings.home.features.passPlay, desc: strings.home.features.passPlayDesc },
+    { icon: '🌐', title: strings.home.features.online, desc: strings.home.features.onlineDesc },
+    { icon: '🎨', title: strings.home.features.customPacks, desc: strings.home.features.customPacksDesc },
+  ];
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 relative overflow-hidden">
-      {/* Top right profile customizer */}
-      <div className="absolute top-4 right-4 z-50">
-        <ProfileCustomizer />
+      {/* Top action bar: Language toggle on start, Profile on end */}
+      <div className="absolute top-4 inset-x-4 flex items-center justify-between z-50 pointer-events-auto">
+        <LanguageToggle variant="chip" />
+        <div className="ms-auto flex items-center gap-2">
+          <ProfileCustomizer />
+        </div>
       </div>
 
       {/* Animated background orbs */}
@@ -100,12 +114,12 @@ export default function Home() {
         <motion.div variants={fadeUp} className="text-center space-y-2">
           <h1 className="text-5xl font-black tracking-tight">
             <span className="bg-gradient-to-r from-violet-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-              Undercover
+              {strings.home.title}
             </span>
           </h1>
-          <p className="text-xl text-white/60 font-medium">The party deception game</p>
+          <p className="text-xl text-white/60 font-medium">{strings.home.tagline}</p>
           <p className="text-white/40 text-sm">
-            3–10 players · Online or Offline · Free forever
+            {strings.home.subtitle}
           </p>
         </motion.div>
 
@@ -113,12 +127,12 @@ export default function Home() {
         <motion.div variants={fadeUp} className="w-full space-y-3">
           {hasActiveGame && (
             <Button variant="warning" fullWidth size="xl" onClick={handleResume} icon="▶️">
-              Resume Local Game
+              {strings.home.resumeGame}
             </Button>
           )}
           
           <Button variant="primary" fullWidth size="xl" onClick={handleOnlineClick} icon="🌐">
-            Play Online (Private Room)
+            {strings.home.playOnline}
           </Button>
 
           <Button
@@ -128,7 +142,7 @@ export default function Home() {
             onClick={() => navigate('/lobby')}
             icon="📱"
           >
-            Local 1-Phone (Cafe Mode)
+            {strings.home.localMode}
           </Button>
           
           <Button
@@ -137,15 +151,15 @@ export default function Home() {
             onClick={() => navigate('/packs')}
             icon="📦"
           >
-            Word Packs
+            {strings.home.wordPacks}
           </Button>
         </motion.div>
 
         {/* Features grid */}
         <motion.div variants={fadeUp} className="grid grid-cols-2 gap-3 w-full">
-          {FEATURES.map((f) => (
+          {featuresList.map((f, idx) => (
             <div
-              key={f.title}
+              key={idx}
               className="bg-white/5 border border-white/10 rounded-xl p-3 text-center space-y-1"
             >
               <div className="text-2xl">{f.icon}</div>
@@ -157,7 +171,7 @@ export default function Home() {
 
         {/* Footer */}
         <motion.p variants={fadeUp} className="text-white/20 text-xs text-center">
-          Built for GitHub Pages · All data stays on your device
+          {strings.home.footer}
         </motion.p>
       </motion.div>
       

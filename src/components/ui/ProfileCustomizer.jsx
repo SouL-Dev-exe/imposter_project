@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '../../store/authStore';
 import { Button } from './Button';
 import RankBadge from './RankBadge';
+import { LanguageToggle } from './LanguageToggle';
 import { getPlayerMilestone, ALL_AVATAR_STYLES, getUnlockedAvatarStyles } from '../../utils/milestones';
 
 function makeAvatarUrl(style, seed) {
@@ -255,6 +256,11 @@ export function ProfileSettingsModal({ isOpen, onClose }) {
                     );
                   })}
                 </div>
+              </div>
+
+              {/* Language Settings Row */}
+              <div>
+                <LanguageToggle variant="settings-row" />
               </div>
 
               {/* Error / Success Messages */}
