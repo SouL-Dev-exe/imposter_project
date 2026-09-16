@@ -1,17 +1,9 @@
-/**
- * supabase.js — Lightweight Supabase client using raw fetch (no npm package).
- *
- * NOTE: The SUPABASE_URL must be your actual project URL.
- * Replace "YOUR_PROJECT_URL_HERE" with your real Supabase project URL,
- * e.g. "https://abcdefghijklmnop.supabase.co"
- */
+import { createClient } from '@supabase/supabase-js';
+
 const SUPABASE_URL = 'https://noztwscjkhhegabziyzj.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_i8KhOXwhz26lqXnBCPlSgg__28Pu8Dy';
 
-const BASE_HEADERS = {
-  apikey: SUPABASE_ANON_KEY,
-  Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-};
+export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 /**
  * Fetch all global word packs from Supabase.
@@ -19,13 +11,11 @@ const BASE_HEADERS = {
  */
 export async function fetchCloudPacks() {
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/word_packs?select=*`, {
-      headers: BASE_HEADERS,
-    });
+    const { data: rows, error } = await supabase
+      .from('word_packs')
+      .select('*');
 
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-    const rows = await res.json();
+    if (error) throw error;
 
     // Normalise each Supabase row into the same shape used by the app
     return rows.map((row) => ({
@@ -69,22 +59,13 @@ export async function savePackToCloud(pack) {
   };
 
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/word_packs`, {
-      method: 'POST',
-      headers: {
-        ...BASE_HEADERS,
-        'Content-Type': 'application/json',
-        Prefer: 'return=representation',
-      },
-      body: JSON.stringify(payload),
-    });
+    const { data: rows, error } = await supabase
+      .from('word_packs')
+      .insert([payload])
+      .select();
 
-    if (!res.ok) {
-      const errText = await res.text();
-      throw new Error(`HTTP ${res.status}: ${errText}`);
-    }
+    if (error) throw error;
 
-    const rows = await res.json();
     return rows?.[0] ?? null;
   } catch (err) {
     console.error('[Supabase] Failed to save pack to cloud:', err.message);
@@ -110,18 +91,12 @@ export async function deletePackFromCloud(supabaseId, inputPassword) {
   }
 
   try {
-    const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/word_packs?id=eq.${encodeURIComponent(supabaseId)}`,
-      {
-        method: 'DELETE',
-        headers: BASE_HEADERS,
-      }
-    );
+    const { error } = await supabase
+      .from('word_packs')
+      .delete()
+      .eq('id', supabaseId);
 
-    if (!res.ok) {
-      const errText = await res.text();
-      throw new Error(`HTTP ${res.status}: ${errText}`);
-    }
+    if (error) throw error;
 
     return { success: true };
   } catch (err) {

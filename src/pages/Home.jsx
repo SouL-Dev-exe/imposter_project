@@ -1,10 +1,11 @@
-/**
- * Home.jsx — Landing page with animated hero and navigation.
- */
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '../components/ui/Button';
 import { useGameStore } from '../store/gameStore';
+import { useAuthStore } from '../store/authStore';
+import { AuthModal } from '../components/ui/AuthModal';
+import { ProfileCustomizer } from '../components/ui/ProfileCustomizer';
 
 const floatVariants = {
   animate: {
@@ -25,13 +26,16 @@ const fadeUp = {
 const FEATURES = [
   { icon: '🎭', title: 'Two Game Modes', desc: 'Conscious Impostor or Blind Infiltrator' },
   { icon: '📱', title: 'Pass & Play', desc: 'One device, no internet needed' },
+  { icon: '🌐', title: 'Play Online', desc: 'Private rooms with friends' },
   { icon: '🎨', title: 'Custom Packs', desc: 'Create, share & import word packs' },
-  { icon: '⏱️', title: 'Speed Timer', desc: 'Optional 30s countdown per clue' },
 ];
 
 export default function Home() {
   const navigate = useNavigate();
-  const { currentPhase, resetGame } = useGameStore();
+  const { currentPhase } = useGameStore();
+  const { profile } = useAuthStore();
+  
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   const hasActiveGame =
     currentPhase !== 'home' && currentPhase !== 'lobby' && currentPhase !== 'result';
@@ -46,8 +50,21 @@ export default function Home() {
     navigate(routes[currentPhase] || '/lobby');
   };
 
+  const handleOnlineClick = () => {
+    if (!profile) {
+      setShowAuthModal(true);
+    } else {
+      navigate('/online');
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 relative overflow-hidden">
+      {/* Top right profile customizer */}
+      <div className="absolute top-4 right-4 z-50">
+        <ProfileCustomizer />
+      </div>
+
       {/* Animated background orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
@@ -88,7 +105,7 @@ export default function Home() {
           </h1>
           <p className="text-xl text-white/60 font-medium">The party deception game</p>
           <p className="text-white/40 text-sm">
-            3–10 players · No internet required · Free forever
+            3–10 players · Online or Offline · Free forever
           </p>
         </motion.div>
 
@@ -96,22 +113,27 @@ export default function Home() {
         <motion.div variants={fadeUp} className="w-full space-y-3">
           {hasActiveGame && (
             <Button variant="warning" fullWidth size="xl" onClick={handleResume} icon="▶️">
-              Resume Game
+              Resume Local Game
             </Button>
           )}
-          <Button
-            variant="primary"
-            fullWidth
-            size="xl"
-            onClick={() => navigate('/lobby')}
-            icon="🎮"
-          >
-            New Game
+          
+          <Button variant="primary" fullWidth size="xl" onClick={handleOnlineClick} icon="🌐">
+            Play Online (Private Room)
           </Button>
+
           <Button
             variant="secondary"
             fullWidth
             size="lg"
+            onClick={() => navigate('/lobby')}
+            icon="📱"
+          >
+            Local 1-Phone (Cafe Mode)
+          </Button>
+          
+          <Button
+            variant="ghost"
+            fullWidth
             onClick={() => navigate('/packs')}
             icon="📦"
           >
@@ -138,6 +160,8 @@ export default function Home() {
           Built for GitHub Pages · All data stays on your device
         </motion.p>
       </motion.div>
+      
+      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
     </div>
   );
 }

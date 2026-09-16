@@ -8,24 +8,28 @@ import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import Home from './pages/Home';
 import Lobby from './pages/Lobby';
+import OnlineLobby from './pages/OnlineLobby';
 import Reveal from './pages/Reveal';
 import Clues from './pages/Clues';
 import Vote from './pages/Vote';
 import Result from './pages/Result';
 import PackEditor from './pages/PackEditor';
 import { usePackStore } from './store/packStore';
+import { useAuthStore } from './store/authStore';
 
 function App() {
   const syncCloudPacks = usePackStore((s) => s.syncCloudPacks);
+  const initAuth = useAuthStore((s) => s.initAuth);
 
-  // Fetch global cloud packs once on app load
+  // Fetch global cloud packs and init auth once on app load
   useEffect(() => {
     syncCloudPacks();
+    initAuth();
   }, []);
 
   return (
     <HashRouter>
-      <div className="min-h-screen bg-gray-950 text-white font-sans antialiased">
+      <div className="min-h-screen bg-gray-950 text-white font-sans antialiased flex flex-col">
         {/* Subtle global noise texture */}
         <div
           className="fixed inset-0 pointer-events-none opacity-[0.015] z-0"
@@ -33,10 +37,11 @@ function App() {
             backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
           }}
         />
-        <div className="relative z-10">
+        <div className="relative z-10 flex-1 flex flex-col">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/lobby" element={<Lobby />} />
+            <Route path="/online" element={<OnlineLobby />} />
             <Route path="/reveal" element={<Reveal />} />
             <Route path="/clues" element={<Clues />} />
             <Route path="/vote" element={<Vote />} />
