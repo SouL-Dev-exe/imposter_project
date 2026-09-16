@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '../../store/authStore';
 import { Button } from './Button';
+import RankBadge from './RankBadge';
 import { getPlayerMilestone, ALL_AVATAR_STYLES, getUnlockedAvatarStyles } from '../../utils/milestones';
 
 function makeAvatarUrl(style, seed) {
@@ -142,19 +143,22 @@ export function ProfileSettingsModal({ isOpen, onClose }) {
               </h2>
 
               {/* Level, XP & Milestone Rank Badge */}
-              <div className={`p-3.5 rounded-xl border ${milestone.border} ${milestone.bg} space-y-2.5 transition-all shadow-inner`}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="px-2.5 py-1 bg-indigo-600 text-white font-extrabold rounded-lg text-xs shadow-inner">
-                      Lv. {level}
-                    </span>
-                    <span className={`font-extrabold text-xs sm:text-sm tracking-wide ${milestone.color}`}>
-                      {milestone.title}
-                    </span>
+              <div className={`p-4 rounded-2xl border ${milestone.border} ${milestone.bg} space-y-3 transition-all shadow-inner`}>
+                <div className="flex items-center gap-3">
+                  <RankBadge milestone={milestone} className="w-12 h-12 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className={`font-extrabold text-sm sm:text-base tracking-wide truncate ${milestone.color}`}>
+                        {milestone.title}
+                      </span>
+                      <span className="px-2 py-0.5 bg-black/40 text-slate-200 font-extrabold rounded-md text-xs border border-white/10 shrink-0">
+                        Lv. {level}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-400 mt-0.5 truncate">
+                      Perk: <span className="font-medium text-slate-200">{milestone.perk}</span>
+                    </p>
                   </div>
-                  <span className="text-[10px] font-bold tracking-wider px-2 py-0.5 rounded-full bg-white/10 text-white/80 border border-white/10 flex items-center gap-1">
-                    ✨ {milestone.perk}
-                  </span>
                 </div>
 
                 <div className="flex flex-col">
@@ -162,7 +166,7 @@ export function ProfileSettingsModal({ isOpen, onClose }) {
                     <span>XP Progress</span>
                     <span className="font-bold text-white/90">{xp} / {xpNeeded} XP</span>
                   </div>
-                  <div className="w-full bg-black/40 h-2 rounded-full overflow-hidden p-0.5 border border-white/10">
+                  <div className="w-full bg-black/40 h-2.5 rounded-full overflow-hidden p-0.5 border border-white/10">
                     <motion.div
                       className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 h-full rounded-full"
                       initial={{ width: 0 }}
