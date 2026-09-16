@@ -1,16 +1,43 @@
-# React + Vite
+# 🕵️ Undercover / Pretender — Party Game Web App
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A fully functional, responsive, serverless web application for the popular party game **Undercover / Pretender**, built with **React**, **Vite**, **Tailwind CSS v4**, and **Framer Motion**.
 
-Currently, two official plugins are available:
+Designed for free deployment on **GitHub Pages**.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## ✨ Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **📱 Pass & Play Mode (Single Device):** Pass phone/laptop around; secret role cards flip to reveal assigned words in private.
+- **📡 Peer-to-Peer Multi-Device Sync:** Play across multiple devices over serverless WebRTC data channels via PeerJS with QR Code room join.
+- **🎭 Dynamic Roles:** Civilians, Impostors/Undercover, and Mr. White with custom secret word distribution.
+- **📊 Anonymous Pass & Play Voting:** Interactive tallying with tie-breaker sudden-death rounds.
+- **🎯 Impostor Multiple-Choice Final Guess:** Caught impostors get one last chance to guess the civilian word from candidate choices to steal the win!
+- **📦 Built-in & Custom Pack Editor:** Pre-packaged categories + in-app editor to create/edit custom word packs with JSON import/export.
+- **🔊 Web Audio API Synthesizer:** Custom sound effects without external file dependencies.
+- **🎉 Victory Celebration:** Canvas confetti bursts on win.
 
-## Expanding the Oxlint configuration
+---
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+## 🚀 Free GitHub Pages Deployment (Quick Guide)
+
+1. Create a new empty repository on GitHub: **[https://github.com/new](https://github.com/new)**
+   - Name: `imposter_project` (or any repository name)
+   - Do NOT check "Initialize with README".
+
+2. Connect your local repository and push:
+   ```bash
+   git remote add origin https://github.com/YOUR_USERNAME/imposter_project.git
+   git push -u origin main
+   ```
+
+3. Deploy to GitHub Pages:
+   ```bash
+   npm run deploy
+   ```
+
+4. **Your Live Game URL will be:**
+   `https://YOUR_USERNAME.github.io/imposter_project/`
+
+*(Alternatively, GitHub Actions workflow is pre-configured in `.github/workflows/deploy.yml` — pushing to `main` will automatically build and publish your site!)*
+
