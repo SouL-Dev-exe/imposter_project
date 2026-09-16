@@ -10,20 +10,29 @@ import { getPlayerMilestone } from '../utils/milestones';
 
 export default function OnlineLobby() {
   const navigate = useNavigate();
-  const { profile } = useAuthStore();
+  const { profile, user, isGuest, fetchProfile } = useAuthStore();
   const { 
-    roomCode, isHost, players, 
-    createRoom, joinRoom, leaveRoom 
+    roomCode, roomId, isHost, players, 
+    createRoom, joinRoom, leaveRoom, fetchRoomPlayers 
   } = useMultiplayerStore();
 
   const [joinCode, setJoinCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // If user somehow gets here without a profile, kick them back
+  // If user somehow gets here without a profile, kick them back & force fresh fetch
   useEffect(() => {
-    if (!profile) navigate('/');
-  }, [profile, navigate]);
+    if (!profile) {
+      navigate('/');
+      return;
+    }
+    if (user?.id && !isGuest && fetchProfile) {
+      fetchProfile(user.id);
+    }
+    if (roomId && fetchRoomPlayers) {
+      fetchRoomPlayers(roomId);
+    }
+  }, [profile, user, isGuest, roomId, navigate, fetchProfile, fetchRoomPlayers]);
 
   const handleCreate = async () => {
     setLoading(true);

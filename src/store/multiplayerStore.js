@@ -88,23 +88,22 @@ export const useMultiplayerStore = create((set, get) => ({
   },
 
   fetchRoomPlayers: async (roomId) => {
+    const { user, isGuest, fetchProfile } = useAuthStore.getState();
+    if (user?.id && !isGuest && fetchProfile) {
+      await fetchProfile(user.id);
+    }
+
     const { data, error } = await supabase
       .from('room_players')
       .select(`
         player_id,
-        profiles:player_id (id, username, avatar_url)
+        profiles:player_id (id, username, avatar_url, level, xp)
       `)
       .eq('room_id', roomId);
 
     if (data) {
       // Map it to a cleaner array of profile objects
       const mappedPlayers = data.map(rp => rp.profiles).filter(Boolean);
-      
-      // Merge with any guest players that might just be sending presence
-      // For a pure DB approach, guests must also be inserted into room_players/profiles.
-      // Assuming guests insert mock rows or we rely on Realtime Presence for full list.
-      // For simplicity based on prompt, we use the DB rows.
-      
       set({ players: mappedPlayers });
     }
   },
