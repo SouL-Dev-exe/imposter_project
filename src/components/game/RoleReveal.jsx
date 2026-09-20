@@ -35,6 +35,15 @@ export function RoleReveal({ player, gameMode, onDone }) {
           border: 'border-white/20',
           description: strings.roles.mrWhiteDesc,
         };
+      case ROLES.FAKE_IMPOSTOR:
+      case 'fake_impostor':
+        return {
+          label: strings.roles.fake_impostor || strings.roles.fakeImpostor || 'Fake Impostor',
+          emoji: strings.roles.fakeImpostorEmoji || '🎭',
+          color: 'from-slate-700 to-zinc-800',
+          border: 'border-white/20',
+          description: strings.roles.fakeImpostorDesc,
+        };
       case ROLES.CIVILIAN:
       default:
         return {
@@ -101,6 +110,14 @@ export function RoleReveal({ player, gameMode, onDone }) {
         word: null,
         sub: strings.reveal.categoryPrefix.replace('{category}', player.category),
         hint: strings.reveal.mrWhiteHint,
+      };
+    }
+    if (player.role === ROLES.FAKE_IMPOSTOR || player.role === 'fake_impostor') {
+      return {
+        label: strings.roles.fake_impostor || strings.roles.fakeImpostor || 'Fake Impostor',
+        word: player.word,
+        sub: strings.reveal.categoryPrefix.replace('{category}', player.category),
+        hint: strings.roles.fakeImpostorDesc,
       };
     }
   };

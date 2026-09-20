@@ -1,7 +1,7 @@
 /**
  * Lobby.jsx — Game setup: players, mode, options, word pack.
  */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '../components/ui/Button';
@@ -59,6 +59,13 @@ export default function Lobby() {
   const [error, setError] = useState('');
 
   const allPacks = [...DEFAULT_PACKS, ...customPacks, ...cloudPacks];
+
+  // Disable fake impostor automatically if player count drops below 6
+  useEffect(() => {
+    if (playerNames.length < 6 && options.fakeImpostor) {
+      setOptions({ fakeImpostor: false });
+    }
+  }, [playerNames.length, options.fakeImpostor, setOptions]);
 
   const addPlayer = () => {
     const trimmed = nameInput.trim();
@@ -253,6 +260,24 @@ export default function Lobby() {
             description={strings.lobby.coupleDesc}
             disabled={playerNames.length < 6}
           />
+          {/* Fake Impostor Toggle */}
+          <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10">
+            <div>
+              <div className="font-semibold text-sm flex items-center gap-2">
+                <span>🎭 {t('lobby.rules.fakeImpostor') || 'Fake Impostor'}</span>
+              </div>
+              <p className="text-xs text-slate-400">
+                {t('lobby.rules.fakeImpostorDesc') || 'Tries to get voted out to win (Requires 6+ players)'}
+              </p>
+            </div>
+            <input
+              type="checkbox"
+              disabled={playerNames.length < 6}
+              checked={Boolean(options.fakeImpostor && playerNames.length >= 6)}
+              onChange={(e) => setOptions({ ...options, fakeImpostor: e.target.checked })}
+              className="w-5 h-5 accent-violet-500 rounded cursor-pointer disabled:opacity-40"
+            />
+          </div>
           <Toggle
             checked={options.speedTimer}
             onChange={(v) => setOptions({ speedTimer: v })}

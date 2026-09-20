@@ -15,6 +15,7 @@ const initialState = {
   options: {
     mrWhite: false,
     undercoverCouple: false,
+    fakeImpostor: false,
     speedTimer: false,
     timerSeconds: 30,
   },

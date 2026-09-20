@@ -13,6 +13,7 @@ export const ROLES = {
   CIVILIAN: 'civilian',
   IMPOSTOR: 'impostor',
   MR_WHITE: 'mrwhite',
+  FAKE_IMPOSTOR: 'fake_impostor',
 };
 
 // ─── Game modes ──────────────────────────────────────────────────────────────
@@ -66,63 +67,78 @@ export function pickRandomPair(packId, customPacks = [], cloudPacks = []) {
 /**
  * Assign roles to players and set their secret words.
  *
- * @param {string[]} playerNames
- * @param {'conscious'|'blind'} gameMode
- * @param {{ mrWhite: boolean, undercoverCouple: boolean }} options
- * @param {object} wordPair  - { wordA, wordB, category }
- * @returns {object[]} players with { name, role, word, category, hasRevealed: false }
+ * @param {string[]|object[]} playerNames
+ * @param {'conscious'|'blind'|object} gameModeOrOptions
+ * @param {object} [optionsOrWordPair]
+ * @param {object} [maybeWordPair]
+ * @returns {object[]} players with { id, name, role, word, category, hasRevealed: false, isEliminated: false }
  */
-export function assignRoles(playerNames, gameMode, options, wordPair) {
-  const count = playerNames.length;
-  const roles = new Array(count).fill(ROLES.CIVILIAN);
+export function assignRoles(playerNames, gameModeOrOptions, optionsOrWordPair, maybeWordPair) {
+  let gameMode = GAME_MODES.CONSCIOUS;
+  let options = {};
+  let wordPair = {};
 
-  // Determine how many impostors
-  let impostorCount = 1;
-  if (options.undercoverCouple && count >= 6) {
-    impostorCount = 2;
+  if (maybeWordPair !== undefined) {
+    gameMode = gameModeOrOptions;
+    options = optionsOrWordPair || {};
+    wordPair = maybeWordPair || {};
+  } else {
+    options = gameModeOrOptions || {};
+    wordPair = optionsOrWordPair || {};
+    gameMode = options.gameMode || GAME_MODES.CONSCIOUS;
   }
 
-  // Optionally add Mr. White
-  let mrWhiteIndex = -1;
+  const total = playerNames.length;
+  let roles = [];
 
-  // Assign impostor positions
-  const shuffledIndices = shuffle([...Array(count).keys()]);
-  const impostorIndices = shuffledIndices.slice(0, impostorCount);
-  for (const idx of impostorIndices) {
-    roles[idx] = ROLES.IMPOSTOR;
+  // Determine how many special roles exist
+  if (options.undercoverCouple && total >= 6) {
+    roles.push(ROLES.IMPOSTOR, ROLES.IMPOSTOR);
+  } else {
+    roles.push(ROLES.IMPOSTOR);
   }
 
-  // Assign Mr. White (must not be an impostor)
-  if (options.mrWhite && count >= 4) {
-    const remaining = shuffledIndices.slice(impostorCount);
-    if (remaining.length > 0) {
-      mrWhiteIndex = remaining[0];
-      roles[mrWhiteIndex] = ROLES.MR_WHITE;
-    }
+  if (options.mrWhite && total >= 4) {
+    roles.push(ROLES.MR_WHITE);
   }
 
-  // Build player objects
-  const players = playerNames.map((name, i) => {
-    const role = roles[i];
-    let word = '';
+  // Add Fake Impostor if enabled and 6+ players
+  if (options.fakeImpostor && total >= 6) {
+    roles.push(ROLES.FAKE_IMPOSTOR);
+  }
 
-    if (role === ROLES.CIVILIAN) {
-      word = wordPair.wordA;
-    } else if (role === ROLES.IMPOSTOR) {
-      if (gameMode === GAME_MODES.CONSCIOUS) {
-        // Conscious impostor: told they are the impostor, shown only category
-        word = ''; // displayed as "YOU ARE THE IMPOSTOR"
+  // Fill the rest with Civilians
+  while (roles.length < total) {
+    roles.push(ROLES.CIVILIAN);
+  }
+
+  // Shuffle roles randomly
+  roles = shuffle(roles);
+
+  return playerNames.map((player, index) => {
+    const role = roles[index];
+    let word = wordPair.wordA; // Default Civilian word
+
+    if (role === ROLES.IMPOSTOR) {
+      if (gameMode === GAME_MODES.CONSCIOUS && options.gameMode !== GAME_MODES.BLIND) {
+        word = '';
       } else {
-        // Blind impostor: sees the other word
         word = wordPair.wordB;
       }
     } else if (role === ROLES.MR_WHITE) {
-      word = ''; // Blank / category only
+      word = '';
+    } else if (role === ROLES.FAKE_IMPOSTOR || role === 'fake_impostor') {
+      // Fake Impostor gets wordB so they receive a related secondary word to bluff with
+      word = wordPair.wordB;
     }
 
+    const playerName = typeof player === 'object' ? player.name : player;
+    const playerId = typeof player === 'object' && player.id ? player.id : `player-${index}`;
+
     return {
-      id: `player-${i}`,
-      name,
+      ...(typeof player === 'object' ? player : {}),
+      id: playerId,
+      name: playerName,
       role,
       word,
       category: wordPair.category,
@@ -130,8 +146,6 @@ export function assignRoles(playerNames, gameMode, options, wordPair) {
       isEliminated: false,
     };
   });
-
-  return players;
 }
 
 /**
@@ -161,7 +175,7 @@ export function tallyVotes(votes) {
  * @param {object[]} players  - all player objects
  * @param {string|null} eliminatedName  - name of eliminated player (null = tie)
  * @param {'conscious'|'blind'} gameMode
- * @returns {{ phase: 'impostor_final_guess'|'civilians_win'|'impostors_win'|'continue', eliminatedPlayer: object|null }}
+ * @returns {{ phase: 'fake_impostor_win'|'impostor_final_guess'|'civilians_win'|'impostors_win'|'continue', eliminatedPlayer: object|null }}
  */
 export function checkWinCondition(players, eliminatedName, gameMode) {
   if (!eliminatedName) {
@@ -171,6 +185,11 @@ export function checkWinCondition(players, eliminatedName, gameMode) {
 
   const eliminatedPlayer = players.find((p) => p.name === eliminatedName);
   if (!eliminatedPlayer) return { phase: 'continue', eliminatedPlayer: null };
+
+  // Fake Impostor instant win
+  if (eliminatedPlayer.role === ROLES.FAKE_IMPOSTOR || eliminatedPlayer.role === 'fake_impostor') {
+    return { phase: 'fake_impostor_win', eliminatedPlayer };
+  }
 
   const isImpostor =
     eliminatedPlayer.role === ROLES.IMPOSTOR ||

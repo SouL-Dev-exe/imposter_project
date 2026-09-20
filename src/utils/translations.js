@@ -42,6 +42,10 @@ export const TRANSLATIONS = {
       mrWhite: 'Mr. White',
       mrWhiteEmoji: '❓',
       mrWhiteDesc: 'You have NO word. Improvise and stay vague!',
+      fake_impostor: 'Fake Impostor',
+      fakeImpostor: 'Fake Impostor',
+      fakeImpostorEmoji: '🎭',
+      fakeImpostorDesc: 'Act suspicious! If everyone votes you out, you win alone!',
     },
     lobby: {
       title: 'Game Setup',
@@ -61,6 +65,12 @@ export const TRANSLATIONS = {
         blindDesc: "Impostor sees a DIFFERENT word. Doesn't know they're the impostor!",
       },
       options: 'Options',
+      rules: {
+        fakeImpostor: 'Fake Impostor Mode',
+        fakeImpostorDesc: 'Adds a player whose goal is to get voted out (6+ players required).',
+      },
+      fakeImpostorLabel: 'Fake Impostor Mode',
+      fakeImpostorDesc: 'Adds a player whose goal is to get voted out (6+ players required).',
       mrWhiteLabel: 'Mr. White / The Fool',
       mrWhiteDesc: 'One player gets no word — only the category',
       coupleLabel: 'Undercover Couple',
@@ -137,6 +147,8 @@ export const TRANSLATIONS = {
       impostorSubtitle: 'The deception was flawless.',
       mrWhiteWins: 'Mr. White Wins! ❓',
       mrWhiteSubtitle: 'Master of mystery and bluffing.',
+      fakeImpostorWin: '🎭 The Fake Impostor Won!',
+      fakeImpostorWinDesc: 'They tricked everyone into voting them out!',
       secretWords: 'The Secret Words',
       civilians: 'Civilians',
       impostor: 'Impostor',
@@ -208,6 +220,10 @@ export const TRANSLATIONS = {
       mrWhite: 'مستر وايت',
       mrWhiteEmoji: '❓',
       mrWhiteDesc: 'ليس لديك أي كلمة! ارتجل وكن غامضاً!',
+      fake_impostor: 'المخادع المزيف',
+      fakeImpostor: 'المخادع المزيف',
+      fakeImpostorEmoji: '🎭',
+      fakeImpostorDesc: 'تظاهر بأنك المحتال! إذا صوت الجميع ضدك وطردوك، تفوز أنت وحدك!',
     },
     lobby: {
       title: 'إعداد اللعبة',
@@ -227,6 +243,12 @@ export const TRANSLATIONS = {
         blindDesc: 'يرى المخادع كلمة مختلفة ولا يعلم أنه هو المخادع!',
       },
       options: 'الخيارات المتقدمة',
+      rules: {
+        fakeImpostor: 'نمط المخادع المزيف',
+        fakeImpostorDesc: 'يضيف لاعباً هدفه أن يتم طرده في التصويت (يتطلب 6+ لاعبين).',
+      },
+      fakeImpostorLabel: 'نمط المخادع المزيف',
+      fakeImpostorDesc: 'يضيف لاعباً هدفه أن يتم طرده في التصويت (يتطلب 6+ لاعبين).',
       mrWhiteLabel: 'مستر وايت / المغفل',
       mrWhiteDesc: 'لاعب لا يملك كلمة على الإطلاق — يرى التصنيف فقط',
       coupleLabel: 'ثنائي الخداع',
@@ -303,6 +325,8 @@ export const TRANSLATIONS = {
       impostorSubtitle: 'كان الخداع متقناً ولا تشوبه شائبة.',
       mrWhiteWins: 'فاز مستر وايت! ❓',
       mrWhiteSubtitle: 'سيد الغموض والمراوغة ببراعة.',
+      fakeImpostorWin: '🎭 فاز المخادع المزيف!',
+      fakeImpostorWinDesc: 'لقد خدع الجميع وجعلهم يصوتون لطرده!',
       secretWords: 'الكلمات السرية',
       civilians: 'المواطنون',
       impostor: 'المخادع',
@@ -337,3 +361,5 @@ export const TRANSLATIONS = {
     }
   },
 };
+
+export const translations = TRANSLATIONS;

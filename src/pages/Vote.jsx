@@ -18,7 +18,7 @@ export default function Vote() {
   const navigate = useNavigate();
   const { t, isRTL } = useLanguageStore();
   const {
-    players, votes, options,
+    players, votes,
     castVote, setEliminatedPlayer, setPhase, setWinner,
   } = useGameStore();
 
@@ -60,9 +60,21 @@ export default function Vote() {
     }
 
     const eliminatedPlayer = players.find((p) => p.name === eliminated);
-    const outcome = checkWinCondition(players, eliminated, 'any');
+    handleElimination(eliminatedPlayer);
+  };
+
+  const handleElimination = (eliminatedPlayer) => {
     setEliminatedPlayer(eliminatedPlayer);
 
+    // 🎭 Instant Win Condition for Fake Impostor!
+    if (eliminatedPlayer?.role === 'fake_impostor') {
+      setWinner('fake_impostor');
+      setPhase('result');
+      navigate('/result');
+      return;
+    }
+
+    const outcome = checkWinCondition(players, eliminated, 'any');
     if (outcome.phase === 'impostor_final_guess') {
       setPhase('result');
       navigate('/result?phase=final_guess');

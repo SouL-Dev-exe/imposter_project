@@ -33,6 +33,7 @@ export default function Result() {
     [ROLES.CIVILIAN]: { label: t('roles.civilian'), emoji: '👤', color: 'text-blue-400' },
     [ROLES.IMPOSTOR]: { label: t('roles.impostor'), emoji: '🕵️', color: 'text-red-400' },
     [ROLES.MR_WHITE]: { label: t('roles.mrWhite'), emoji: '❓', color: 'text-gray-400' },
+    [ROLES.FAKE_IMPOSTOR]: { label: t('roles.fake_impostor'), emoji: '🎭', color: 'text-amber-400' },
   };
 
   useEffect(() => {
@@ -43,7 +44,7 @@ export default function Result() {
     // Play win/lose audio if we have a winner
     if (winner === 'civilians') {
       setTimeout(() => playWin(), 300);
-    } else if (winner === 'impostors') {
+    } else if (winner === 'impostors' || winner === 'fake_impostor') {
       setTimeout(() => playLose(), 300);
     }
   }, [winner]);
@@ -127,8 +128,21 @@ export default function Result() {
         </AnimatePresence>
       )}
 
+      {/* Fake Impostor Victory Banner */}
+      {winner === 'fake_impostor' && (
+        <div className="p-6 rounded-2xl bg-gradient-to-r from-amber-500/20 to-purple-600/20 border border-amber-500/40 text-center mb-6">
+          <div className="text-5xl mb-2">🎭</div>
+          <h2 className="text-2xl font-bold text-amber-400">
+            {t('result.fakeImpostorWin')}
+          </h2>
+          <p className="text-sm text-slate-300 mt-1">
+            {t('result.fakeImpostorWinDesc')}
+          </p>
+        </div>
+      )}
+
       {/* Winner reveal */}
-      {winner && info && (
+      {winner && winner !== 'fake_impostor' && info && (
         <motion.div
           className={`rounded-3xl bg-gradient-to-br ${info.gradient} p-1 shadow-2xl ${info.glow}`}
           initial={{ scale: 0.8, opacity: 0 }}
@@ -218,6 +232,8 @@ export default function Result() {
                           ? wordPair?.wordB
                           : p.role === ROLES.CIVILIAN
                           ? wordPair?.wordA
+                          : p.role === ROLES.FAKE_IMPOSTOR || p.role === 'fake_impostor'
+                          ? wordPair?.wordB
                           : '—'}
                       </p>
                     </div>
