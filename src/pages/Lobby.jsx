@@ -24,7 +24,7 @@ function Toggle({ checked, onChange, label, description, disabled = false }) {
       disabled={disabled}
       className={`flex items-center gap-3 w-full text-start p-3 rounded-xl transition-colors
         ${checked ? 'bg-violet-600/20 border border-violet-500/40' : 'bg-white/5 border border-white/10'}
-        ${disabled ? 'opacity-40 cursor-not-allowed' : 'hover:bg-white/10 cursor-pointer'}
+        ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white/10 cursor-pointer'}
       `}
     >
       <div className={`w-11 h-6 rounded-full relative transition-colors flex-shrink-0
@@ -38,7 +38,7 @@ function Toggle({ checked, onChange, label, description, disabled = false }) {
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-white font-medium text-sm">{label}</p>
-        {description && <p className="text-white/40 text-xs truncate">{description}</p>}
+        {description && <p className="text-white/40 text-xs">{description}</p>}
       </div>
     </button>
   );
@@ -260,24 +260,13 @@ export default function Lobby() {
             description={strings.lobby.coupleDesc}
             disabled={playerNames.length < 6}
           />
-          {/* Fake Impostor Toggle */}
-          <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10">
-            <div>
-              <div className="font-semibold text-sm flex items-center gap-2">
-                <span>🎭 {t('lobby.rules.fakeImpostor') || 'Fake Impostor'}</span>
-              </div>
-              <p className="text-xs text-slate-400">
-                {t('lobby.rules.fakeImpostorDesc') || 'Tries to get voted out to win (Requires 6+ players)'}
-              </p>
-            </div>
-            <input
-              type="checkbox"
-              disabled={playerNames.length < 6}
-              checked={Boolean(options.fakeImpostor && playerNames.length >= 6)}
-              onChange={(e) => setOptions({ ...options, fakeImpostor: e.target.checked })}
-              className="w-5 h-5 accent-violet-500 rounded cursor-pointer disabled:opacity-40"
-            />
-          </div>
+          <Toggle
+            checked={Boolean(options.fakeImpostor && playerNames.length >= 6)}
+            onChange={(v) => setOptions({ fakeImpostor: v })}
+            label={`🎭 ${t('lobby.rules.fakeImpostor') || strings.lobby.fakeImpostorLabel || 'Fake Impostor'}`}
+            description={t('lobby.rules.fakeImpostorDesc') || strings.lobby.fakeImpostorDesc || 'Tries to get voted out to win (Requires 6+ players)'}
+            disabled={playerNames.length < 6}
+          />
           <Toggle
             checked={options.speedTimer}
             onChange={(v) => setOptions({ speedTimer: v })}
