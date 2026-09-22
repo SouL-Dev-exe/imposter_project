@@ -20,7 +20,7 @@ export const TRANSLATIONS = {
       playOnline: 'Play Online (Private Room)',
       localMode: 'Local 1-Phone (Cafe Mode)',
       wordPacks: 'Word Packs',
-      footer: 'Built for GitHub Pages · All data stays on your device',
+      footer: 'Created by Soula · The Ultimate Party Deduction Game',
       features: {
         modes: 'Two Game Modes',
         modesDesc: 'Conscious Impostor or Blind Infiltrator',
