@@ -535,7 +535,9 @@ export default function PackEditor() {
                 <span className="text-3xl">{pack.icon}</span>
                 <div className="flex-1">
                   <p className="text-white font-bold">{pack.name}</p>
-                  <p className="text-white/40 text-xs">{pack.pairs.length} pairs · Read-only</p>
+                  <p className="text-white/40 text-xs">
+                    {pack.words ? `${pack.words.length} words` : `${pack.pairs.length} pairs`} · Read-only
+                  </p>
                 </div>
                 <span className="text-xs bg-violet-500/20 text-violet-400 px-2 py-0.5 rounded-full">Built-in</span>
               </div>
@@ -547,7 +549,19 @@ export default function PackEditor() {
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
                   >
-                    {pack.pairs.map((pair) => (
+                    {pack.words && pack.words.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 pt-1 pb-1">
+                        {pack.words.map((w, idx) => (
+                          <span
+                            key={idx}
+                            className="bg-white/10 text-white/90 text-xs px-2.5 py-1 rounded-lg border border-white/5"
+                          >
+                            {w}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {(pack.pairs || []).map((pair) => (
                       <div key={pair.id} className="flex items-center gap-2 text-sm px-2 py-1.5 bg-white/5 rounded-lg">
                         <span className="text-blue-300 font-bold flex-1">{pair.wordA}</span>
                         <span className="text-white/30 text-xs">vs</span>

@@ -6,7 +6,8 @@
  *  - Final guess evaluation
  */
 
-import { ALL_BUILTIN_PAIRS } from '../data/defaultPacks';
+import { ALL_BUILTIN_PAIRS } from '../data/defaultPacks.js';
+import { CATEGORY_POOLS } from '../data/categoryPools.js';
 
 // ─── Role types ──────────────────────────────────────────────────────────────
 export const ROLES = {
@@ -35,23 +36,69 @@ export function shuffle(arr) {
 }
 
 /**
+ * Random Pair Picker Logic from Dynamic Category Pools.
+ * Draws 2 unique words from the chosen category pool and randomizes wordA/wordB 50% of the time.
+ * @param {object|string} [categoryPool] - specific category pool or category name/id, or null for random
+ * @returns {{ wordA: string, wordB: string, category: string }}
+ */
+export function getRandomPairFromPool(categoryPool) {
+  // If categoryPool is a string, find matching pool by category name or id
+  let pool = categoryPool;
+  if (typeof categoryPool === 'string') {
+    pool = CATEGORY_POOLS.find(
+      (c) => c.category === categoryPool || c.id === categoryPool
+    );
+  }
+
+  // Pick a random category if none passed or not found
+  if (!pool || !pool.words || pool.words.length < 2) {
+    pool = CATEGORY_POOLS[Math.floor(Math.random() * CATEGORY_POOLS.length)];
+  }
+
+  // Shuffle words array and pick top 2
+  const shuffledWords = [...pool.words].sort(() => Math.random() - 0.5);
+
+  const wordA = shuffledWords[0];
+  const wordB = shuffledWords[1];
+
+  // Randomize assignment order so wordA isn't always Civilian
+  const flip = Math.random() < 0.5;
+
+  return {
+    wordA: flip ? wordA : wordB,
+    wordB: flip ? wordB : wordA,
+    category: pool.category,
+  };
+}
+
+/**
  * Pick a random word pair from the selected pack / all packs.
+ * Falls back to dynamic category pools if no static pairs exist.
  * @param {string|null} packId - specific pack id or null for random
  * @param {Array} customPacks - user's custom packs from localStorage
+ * @param {Array} cloudPacks - packs from Supabase
  */
 export function pickRandomPair(packId, customPacks = [], cloudPacks = []) {
+  // Check if packId corresponds to a category pool
+  const matchingPool = CATEGORY_POOLS.find(
+    (c) => c.id === packId || c.category === packId
+  );
+  if (matchingPool) {
+    return getRandomPairFromPool(matchingPool);
+  }
+
   const allPairs = [...ALL_BUILTIN_PAIRS];
 
   // Merge custom pack pairs (locally created)
   for (const cp of customPacks) {
-    for (const pair of cp.pairs) {
+    for (const pair of cp.pairs || []) {
       allPairs.push({ ...pair, packId: cp.id, packName: cp.name });
     }
   }
 
   // Merge cloud pack pairs (from Supabase)
   for (const cp of cloudPacks) {
-    for (const pair of cp.pairs) {
+    for (const pair of cp.pairs || []) {
       allPairs.push({ ...pair, packId: cp.id, packName: cp.name });
     }
   }
@@ -60,7 +107,11 @@ export function pickRandomPair(packId, customPacks = [], cloudPacks = []) {
   if (packId && packId !== 'all') {
     pool = allPairs.filter((p) => p.packId === packId);
   }
-  if (pool.length === 0) pool = allPairs;
+
+  if (pool.length === 0) {
+    return getRandomPairFromPool();
+  }
+
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
@@ -86,6 +137,10 @@ export function assignRoles(playerNames, gameModeOrOptions, optionsOrWordPair, m
     options = gameModeOrOptions || {};
     wordPair = optionsOrWordPair || {};
     gameMode = options.gameMode || GAME_MODES.CONSCIOUS;
+  }
+
+  if (!wordPair || !wordPair.wordA) {
+    wordPair = getRandomPairFromPool();
   }
 
   const total = playerNames.length;

@@ -11,7 +11,8 @@ import { useGameStore } from '../store/gameStore';
 import { usePackStore } from '../store/packStore';
 import { useLanguageStore } from '../store/languageStore';
 import { DEFAULT_PACKS } from '../data/defaultPacks';
-import { assignRoles, pickRandomPair, GAME_MODES } from '../utils/gameLogic';
+import { CATEGORY_POOLS } from '../data/categoryPools';
+import { assignRoles, pickRandomPair, getRandomPairFromPool, GAME_MODES } from '../utils/gameLogic';
 
 const MIN_PLAYERS = 3;
 const MAX_PLAYERS = 10;
@@ -52,8 +53,9 @@ export default function Lobby() {
   } = useGameStore();
 
   const { customPacks, cloudPacks } = usePackStore();
-  const { t } = useLanguageStore();
+  const { t, language } = useLanguageStore();
   const strings = t();
+  const isArabic = language === 'ar';
 
   const [nameInput, setNameInput] = useState('');
   const [error, setError] = useState('');
@@ -99,7 +101,21 @@ export default function Lobby() {
       setError(strings.lobby.minPlayersError);
       return;
     }
-    const pair = pickRandomPair(selectedPackId, customPacks, cloudPacks);
+    let pair;
+    const customOrCloudPack = [...customPacks, ...cloudPacks].find(
+      (p) => p.id === selectedPackId
+    );
+    if (
+      customOrCloudPack &&
+      customOrCloudPack.pairs &&
+      customOrCloudPack.pairs.length > 0
+    ) {
+      pair = pickRandomPair(selectedPackId, customPacks, cloudPacks);
+    } else {
+      pair = getRandomPairFromPool(
+        selectedPackId !== 'all' ? selectedPackId : null
+      );
+    }
     const players = assignRoles(playerNames, gameMode, options, pair);
     startGame(players, pair);
     navigate('/reveal');
@@ -306,7 +322,7 @@ export default function Lobby() {
             {strings.lobby.managePacks}
           </button>
         </div>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto pr-1">
           <button
             onClick={() => setSelectedPackId('all')}
             className={`p-3 rounded-xl border text-center transition-all
@@ -318,8 +334,29 @@ export default function Lobby() {
           >
             <div className="text-2xl mb-1">🎲</div>
             <p className="text-xs font-bold">{strings.lobby.allPacks}</p>
+            <p className="text-xs text-white/30">
+              {CATEGORY_POOLS.length} {isArabic ? 'تصنيفات' : 'categories'}
+            </p>
           </button>
-          {allPacks.map((pack) => (
+          {CATEGORY_POOLS.map((pool) => (
+            <button
+              key={pool.id}
+              onClick={() => setSelectedPackId(pool.id)}
+              className={`p-3 rounded-xl border text-center transition-all
+                ${selectedPackId === pool.id
+                  ? 'bg-violet-600/30 border-violet-500 text-white'
+                  : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
+                }
+              `}
+            >
+              <div className="text-2xl mb-1">{pool.icon}</div>
+              <p className="text-xs font-bold truncate">{pool.category}</p>
+              <p className="text-xs text-white/30">
+                {pool.words.length} {isArabic ? 'كلمة' : 'words'}
+              </p>
+            </button>
+          ))}
+          {[...customPacks, ...cloudPacks].map((pack) => (
             <button
               key={pack.id}
               onClick={() => setSelectedPackId(pack.id)}
@@ -330,10 +367,10 @@ export default function Lobby() {
                 }
               `}
             >
-              <div className="text-2xl mb-1">{pack.icon}</div>
+              <div className="text-2xl mb-1">{pack.icon || '📦'}</div>
               <p className="text-xs font-bold truncate">{pack.name}</p>
               <p className="text-xs text-white/30">
-                {strings.lobby.pairsCount.replace('{n}', pack.pairs.length)}
+                {strings.lobby.pairsCount.replace('{n}', pack.pairs?.length || 0)}
               </p>
             </button>
           ))}

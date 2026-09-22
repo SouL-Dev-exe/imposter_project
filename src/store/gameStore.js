@@ -6,6 +6,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { getRandomPairFromPool } from '../utils/gameLogic';
 
 // ─── Initial state ────────────────────────────────────────────────────────────
 const initialState = {
@@ -49,11 +50,17 @@ export const useGameStore = create(
       // ── Game lifecycle ───────────────────────────────────────────────────────
       /**
        * Start a new game: set players and word pair, move to reveal phase.
+       * Automatically draws dynamic pair from category pool if not provided.
        */
-      startGame: (players, wordPair) =>
-        set({
+      startGame: (players, wordPair) => {
+        const pair =
+          wordPair ||
+          getRandomPairFromPool(
+            get().selectedPackId !== 'all' ? get().selectedPackId : null
+          );
+        return set({
           players,
-          wordPair,
+          wordPair: pair,
           currentPhase: 'reveal',
           currentRevealIndex: 0,
           currentClueIndex: 0,
@@ -62,7 +69,8 @@ export const useGameStore = create(
           winner: null,
           finalGuessResult: null,
           roundNumber: 1,
-        }),
+        });
+      },
 
       /**
        * Mark the current player as having viewed their role.
