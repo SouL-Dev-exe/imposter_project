@@ -198,7 +198,7 @@ export const TRANSLATIONS = {
       playOnline: 'اللعب أونلاين (غرفة خاصة)',
       localMode: 'هاتف واحد (وضع التمرير)',
       wordPacks: 'حزم الكلمات',
-      footer: 'مصممة لـ GitHub Pages · جميع البيانات محفوظة على جهازك',
+      footer: 'صُنعت بواسطة Soula · لعبة الخداع والتخمين الجماعية الأفضل',
       features: {
         modes: 'وضعان للعب',
         modesDesc: 'مخادع يعلم دوره أو متسلل أعمى',
