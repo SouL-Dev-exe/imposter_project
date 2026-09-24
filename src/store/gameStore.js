@@ -20,6 +20,7 @@ const initialState = {
     speedTimer: false,
     timerSeconds: 30,
   },
+  discussionTime: 120, // seconds for the shared discussion timer (0 = unlimited)
   selectedPackId: 'all',        // 'all' | specific pack id (legacy support)
   selectedCategories: ['all'],  // ['all'] | string[] of selected category/pack IDs
 
@@ -46,6 +47,7 @@ export const useGameStore = create(
       setPlayerNames: (names) => set({ playerNames: names }),
       setGameMode: (mode) => set({ gameMode: mode }),
       setOptions: (opts) => set((s) => ({ options: { ...s.options, ...opts } })),
+      setDiscussionTime: (seconds) => set({ discussionTime: seconds }),
       setSelectedPackId: (id) =>
         set({
           selectedPackId: id,
@@ -176,6 +178,7 @@ export const useGameStore = create(
         options: state.options,
         selectedPackId: state.selectedPackId,
         selectedCategories: state.selectedCategories,
+        discussionTime: state.discussionTime,
         // Also persist active session so refresh works mid-game
         players: state.players,
         currentPhase: state.currentPhase,

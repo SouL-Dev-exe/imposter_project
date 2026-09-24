@@ -49,7 +49,8 @@ export default function Lobby() {
   const navigate = useNavigate();
   const {
     playerNames, gameMode, options, selectedCategories = ['all'],
-    setPlayerNames, setGameMode, setOptions, setSelectedCategories, startGame,
+    setPlayerNames, setGameMode, setOptions, setSelectedCategories, setDiscussionTime, startGame,
+    discussionTime,
   } = useGameStore();
 
   const { customPacks, cloudPacks } = usePackStore();
@@ -332,6 +333,44 @@ export default function Lobby() {
               ))}
             </div>
           )}
+
+          {/* ── Discussion Timer ── */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 p-3 bg-white/5 border border-white/10 rounded-xl">
+              <span className="text-xl">⏱️</span>
+              <div className="flex-1">
+                <p className="text-white font-medium text-sm">
+                  {isArabic ? 'مؤقت النقاش' : 'Discussion Timer'}
+                </p>
+                <p className="text-white/40 text-xs">
+                  {isArabic ? 'وقت المناقشة الجماعية' : 'Shared group discussion countdown'}
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2 px-1">
+              {[
+                { label: isArabic ? 'بلا حد' : 'Unlimited', value: 0 },
+                { label: '1m',  value: 60 },
+                { label: '2m',  value: 120 },
+                { label: '3m',  value: 180 },
+                { label: '4m',  value: 240 },
+                { label: '5m',  value: 300 },
+              ].map(({ label, value }) => (
+                <button
+                  key={value}
+                  onClick={() => setDiscussionTime(value)}
+                  className={`flex-1 min-w-[52px] py-2 rounded-xl text-sm font-bold transition-all border
+                    ${ (discussionTime ?? 120) === value
+                      ? 'bg-emerald-600/30 border-emerald-500 text-emerald-300 shadow-sm shadow-emerald-500/10'
+                      : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
+                    }
+                  `}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </Card>
 

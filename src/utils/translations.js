@@ -118,6 +118,12 @@ export const TRANSLATIONS = {
       nextPlayer: 'Next Player →',
       finishRoundGoVote: 'Finish Round & Vote →',
       order: 'Speaking Order',
+      // Discussion timer
+      discussionInProgress: 'Discussion in progress',
+      timerExpired: "Time's up! Move to voting.",
+      startNewRound: 'Start New Round',
+      finishAndVote: 'Finish Round & Vote',
+      unlimited: 'Unlimited',
     },
     vote: {
       title: '🗳️ Voting',
@@ -299,6 +305,12 @@ export const TRANSLATIONS = {
       nextPlayer: 'اللاعب التالي ←',
       finishRoundGoVote: 'إنهاء الجولة والتصويت ←',
       order: 'ترتيب الحديث',
+      // مؤقت النقاش
+      discussionInProgress: 'النقاش جارٍ',
+      timerExpired: 'انتهى الوقت! انتقل للتصويت.',
+      startNewRound: 'بدء جولة جديدة',
+      finishAndVote: 'إنهاء الجولة والتصويت',
+      unlimited: 'بلا حد',
     },
     vote: {
       title: '🗳️ التصويت',
