@@ -6,6 +6,23 @@ import RankBadge from './RankBadge';
 import { LanguageToggle } from './LanguageToggle';
 import { getPlayerMilestone, ALL_AVATAR_STYLES, getUnlockedAvatarStyles } from '../../utils/milestones';
 
+// Lock / unlock body scroll while modal is open
+function useBodyScrollLock(active) {
+  useEffect(() => {
+    if (active) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    };
+  }, [active]);
+}
+
 function makeAvatarUrl(style, seed) {
   return `https://api.dicebear.com/9.x/${style}/svg?seed=${encodeURIComponent(seed || 'guest')}`;
 }
@@ -112,11 +129,15 @@ export function ProfileSettingsModal({ isOpen, onClose }) {
     onClose();
   };
 
+  // Lock body scroll while open
+  useBodyScrollLock(isOpen);
+
   return (
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          // On mobile: anchored to bottom edge (sheet). On sm+: centered.
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -127,21 +148,57 @@ export function ProfileSettingsModal({ isOpen, onClose }) {
             onClick={onClose}
           />
 
-          {/* Panel */}
+          {/* Panel — flex column so we can split sticky header from scrollable body */}
           <motion.div
-            className="relative w-full max-w-md bg-gray-900 border border-white/10 rounded-2xl shadow-2xl shadow-black/60 overflow-hidden"
-            initial={{ scale: 0.85, opacity: 0, y: 20 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.85, opacity: 0, y: 20 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            className="
+              relative w-full max-w-md
+              flex flex-col
+              max-h-[90vh]
+              bg-gray-900 border border-white/10
+              rounded-t-2xl sm:rounded-2xl
+              shadow-2xl shadow-black/60
+              overflow-hidden
+            "
+            initial={{ y: '100%', opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: '100%', opacity: 0 }}
+            transition={{ type: 'spring', damping: 30, stiffness: 320 }}
           >
-            {/* Top gradient bar */}
-            <div className="h-1 w-full bg-gradient-to-r from-violet-500 via-indigo-500 to-pink-500" />
+            {/* ── Sticky header ── */}
+            <div className="shrink-0">
+              {/* Drag handle (mobile affordance) */}
+              <div className="flex justify-center pt-2.5 pb-1 sm:hidden">
+                <div className="w-10 h-1 rounded-full bg-white/20" />
+              </div>
+              {/* Gradient accent bar */}
+              <div className="h-1 w-full bg-gradient-to-r from-violet-500 via-indigo-500 to-pink-500" />
+              <div className="px-6 pt-5 pb-3 flex items-center justify-between">
+                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                  ⚙️ Customize Profile
+                </h2>
+                <button
+                  onClick={onClose}
+                  className="text-white/40 hover:text-white transition-colors text-xl leading-none p-1"
+                  aria-label="Close"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
 
-            <div className="p-6 space-y-5">
-              <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                ⚙️ Customize Profile
-              </h2>
+            {/* ── Scrollable body ── */}
+            <div
+              className="
+                flex-1 overflow-y-auto overscroll-contain
+                px-6 pb-6 space-y-5
+                [&::-webkit-scrollbar]:w-1.5
+                [&::-webkit-scrollbar-track]:bg-transparent
+                [&::-webkit-scrollbar-thumb]:bg-white/15
+                [&::-webkit-scrollbar-thumb]:rounded-full
+                [&::-webkit-scrollbar-thumb:hover]:bg-white/30
+              "
+              style={{ WebkitOverflowScrolling: 'touch' }}
+            >
 
               {/* Level, XP & Milestone Rank Badge */}
               <div className={`p-4 rounded-2xl border ${milestone.border} ${milestone.bg} space-y-3 transition-all shadow-inner`}>
@@ -292,7 +349,10 @@ export function ProfileSettingsModal({ isOpen, onClose }) {
                   Sign Out
                 </Button>
               </div>
-            </div>
+
+              {/* Safe-area bottom spacer for devices with home indicator */}
+              <div className="h-safe-bottom" style={{ paddingBottom: 'env(safe-area-inset-bottom, 12px)' }} />
+            </div>{/* end scrollable body */}
           </motion.div>
         </motion.div>
       )}
