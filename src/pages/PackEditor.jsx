@@ -12,6 +12,7 @@ import { Card } from '../components/ui/Card';
 import { Modal } from '../components/ui/Modal';
 import { usePackStore } from '../store/packStore';
 import { DEFAULT_PACKS } from '../data/defaultPacks';
+import Footer from '../components/Footer';
 
 // ─── Pack icon picker ─────────────────────────────────────────────────────────
 const ICONS = ['📦', '🎮', '🌟', '🔥', '🎯', '🧩', '🎪', '🦄', '🍀', '🎭', '🚀', '💎'];
@@ -675,6 +676,8 @@ export default function PackEditor() {
           </div>
         </div>
       </Modal>
+
+      <Footer className="mt-8 mb-4" />
     </div>
   );
 }

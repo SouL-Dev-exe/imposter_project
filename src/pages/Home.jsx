@@ -8,6 +8,8 @@ import { useLanguageStore } from '../store/languageStore';
 import { AuthModal } from '../components/ui/AuthModal';
 import { ProfileCustomizer } from '../components/ui/ProfileCustomizer';
 import { LanguageToggle } from '../components/ui/LanguageToggle';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 
 const floatVariants = {
   animate: {
@@ -71,13 +73,8 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 relative overflow-hidden">
-      {/* Top action bar: Language toggle on start, Profile on end */}
-      <div className="absolute top-4 inset-x-4 flex items-center justify-between z-50 pointer-events-auto">
-        <LanguageToggle variant="chip" />
-        <div className="ms-auto flex items-center gap-2">
-          <ProfileCustomizer />
-        </div>
-      </div>
+      {/* Top navigation menu */}
+      <Navbar className="absolute top-4 inset-x-4" />
 
       {/* Animated background orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -169,10 +166,10 @@ export default function Home() {
           ))}
         </motion.div>
 
-        {/* Footer */}
-        <motion.p variants={fadeUp} className="text-white/20 text-xs text-center">
-          {strings.home.footer}
-        </motion.p>
+        {/* Footer with developer attribution and Discord social link */}
+        <motion.div variants={fadeUp} className="w-full">
+          <Footer />
+        </motion.div>
       </motion.div>
       
       <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />

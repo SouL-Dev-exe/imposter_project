@@ -13,6 +13,7 @@ import { useLanguageStore } from '../store/languageStore';
 import { DEFAULT_PACKS } from '../data/defaultPacks';
 import { CATEGORY_POOLS } from '../data/categoryPools';
 import { assignRoles, pickRandomPair, GAME_MODES } from '../utils/gameLogic';
+import Footer from '../components/Footer';
 
 const MIN_PLAYERS = 3;
 const MAX_PLAYERS = 10;
@@ -494,6 +495,8 @@ export default function Lobby() {
           : strings.lobby.needMorePlayers.replace('{n}', MIN_PLAYERS - playerNames.length)
         }
       </Button>
+
+      <Footer className="mt-4" />
     </div>
   );
 }
