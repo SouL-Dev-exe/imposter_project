@@ -20,7 +20,8 @@ const initialState = {
     speedTimer: false,
     timerSeconds: 30,
   },
-  selectedPackId: 'all',    // 'all' | specific pack id
+  selectedPackId: 'all',        // 'all' | specific pack id (legacy support)
+  selectedCategories: ['all'],  // ['all'] | string[] of selected category/pack IDs
 
   // Active game session
   players: [],              // Full player objects with roles
@@ -45,7 +46,23 @@ export const useGameStore = create(
       setPlayerNames: (names) => set({ playerNames: names }),
       setGameMode: (mode) => set({ gameMode: mode }),
       setOptions: (opts) => set((s) => ({ options: { ...s.options, ...opts } })),
-      setSelectedPackId: (id) => set({ selectedPackId: id }),
+      setSelectedPackId: (id) =>
+        set({
+          selectedPackId: id,
+          selectedCategories: Array.isArray(id) ? id : [id],
+        }),
+      setSelectedCategories: (categories) => {
+        const cats = Array.isArray(categories) ? categories : [categories];
+        return set({
+          selectedCategories: cats,
+          selectedPackId:
+            cats.length === 1
+              ? cats[0]
+              : cats.includes('all')
+              ? 'all'
+              : cats[0] || 'all',
+        });
+      },
 
       // ── Game lifecycle ───────────────────────────────────────────────────────
       /**
@@ -53,11 +70,10 @@ export const useGameStore = create(
        * Automatically draws dynamic pair from category pool if not provided.
        */
       startGame: (players, wordPair) => {
+        const cats = get().selectedCategories || ['all'];
         const pair =
           wordPair ||
-          getRandomPairFromPool(
-            get().selectedPackId !== 'all' ? get().selectedPackId : null
-          );
+          getRandomPairFromPool(cats);
         return set({
           players,
           wordPair: pair,
@@ -142,6 +158,7 @@ export const useGameStore = create(
           gameMode: s.gameMode,
           options: s.options,
           selectedPackId: s.selectedPackId,
+          selectedCategories: s.selectedCategories || ['all'],
           currentPhase: 'lobby',
         })),
 
@@ -158,6 +175,7 @@ export const useGameStore = create(
         gameMode: state.gameMode,
         options: state.options,
         selectedPackId: state.selectedPackId,
+        selectedCategories: state.selectedCategories,
         // Also persist active session so refresh works mid-game
         players: state.players,
         currentPhase: state.currentPhase,

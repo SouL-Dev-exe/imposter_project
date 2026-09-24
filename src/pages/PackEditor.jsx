@@ -37,111 +37,66 @@ function IconPicker({ value, onChange }) {
   );
 }
 
-// ─── Pair row ─────────────────────────────────────────────────────────────────
-function PairRow({ pair, onUpdate, onDelete }) {
-  const [editing, setEditing] = useState(false);
-  const [local, setLocal] = useState({ ...pair });
-
-  const handleSave = () => {
-    if (!local.wordA.trim() || !local.wordB.trim()) return;
-    onUpdate(pair.id, local);
-    setEditing(false);
-  };
-
+// ─── Word tag ─────────────────────────────────────────────────────────────────
+function WordTag({ word, onDelete }) {
   return (
-    <motion.div
+    <motion.span
       layout
-      className="bg-white/5 border border-white/10 rounded-xl overflow-hidden"
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.8 }}
+      className="inline-flex items-center gap-1.5 bg-white/10 hover:bg-white/15 text-white text-xs font-medium px-3 py-1.5 rounded-xl border border-white/10 transition-colors select-none group"
     >
-      {!editing ? (
-        <div className="flex items-center gap-2 px-3 py-2.5">
-          <span className="text-sm font-bold text-blue-300 flex-1 truncate">{pair.wordA}</span>
-          <span className="text-white/30 text-xs">vs</span>
-          <span className="text-sm font-bold text-red-300 flex-1 truncate">{pair.wordB}</span>
-          <span className="text-white/30 text-xs mx-1">·</span>
-          <span className="text-white/40 text-xs truncate max-w-[70px]">{pair.category}</span>
-          <button
-            onClick={() => setEditing(true)}
-            className="ml-2 text-white/30 hover:text-white transition-colors text-sm"
-          >
-            ✏️
-          </button>
-          <button
-            onClick={() => onDelete(pair.id)}
-            className="text-white/30 hover:text-red-400 transition-colors text-sm"
-          >
-            🗑️
-          </button>
-        </div>
-      ) : (
-        <div className="p-3 space-y-2">
-          <div className="grid grid-cols-2 gap-2">
-            <input
-              value={local.wordA}
-              onChange={(e) => setLocal({ ...local, wordA: e.target.value })}
-              placeholder="Civilian word"
-              className="bg-blue-900/30 border border-blue-500/40 rounded-lg px-3 py-1.5 text-blue-300
-                         text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30"
-            />
-            <input
-              value={local.wordB}
-              onChange={(e) => setLocal({ ...local, wordB: e.target.value })}
-              placeholder="Impostor word"
-              className="bg-red-900/30 border border-red-500/40 rounded-lg px-3 py-1.5 text-red-300
-                         text-sm focus:outline-none focus:ring-2 focus:ring-red-500/30"
-            />
-          </div>
-          <input
-            value={local.category}
-            onChange={(e) => setLocal({ ...local, category: e.target.value })}
-            placeholder="Category (e.g. Hot Drinks)"
-            className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-white
-                       text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/30"
-          />
-          <div className="flex gap-2">
-            <button
-              onClick={handleSave}
-              className="flex-1 py-1.5 rounded-lg bg-emerald-600/30 border border-emerald-500/40
-                         text-emerald-400 text-sm font-bold hover:bg-emerald-600/50 transition-colors"
-            >
-              Save
-            </button>
-            <button
-              onClick={() => { setEditing(false); setLocal({ ...pair }); }}
-              className="px-3 py-1.5 rounded-lg bg-white/10 border border-white/20
-                         text-white/60 text-sm hover:bg-white/20 transition-colors"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
+      <span>{word}</span>
+      {onDelete && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(word);
+          }}
+          className="text-white/40 hover:text-red-400 hover:bg-white/20 rounded-full w-4 h-4 flex items-center justify-center text-xs transition-colors ml-0.5"
+          title="Remove word"
+        >
+          ×
+        </button>
       )}
-    </motion.div>
+    </motion.span>
   );
 }
 
-// ─── New pair form ────────────────────────────────────────────────────────────
-function AddPairForm({ onAdd }) {
-  const [wordA, setWordA] = useState('');
-  const [wordB, setWordB] = useState('');
-  const [category, setCategory] = useState('');
+// ─── New single-word form ─────────────────────────────────────────────────────
+function AddWordForm({ onAdd }) {
+  const [word, setWord] = useState('');
   const [open, setOpen] = useState(false);
+  const inputRef = useRef(null);
 
   const handleAdd = () => {
-    if (!wordA.trim() || !wordB.trim()) return;
-    onAdd(wordA.trim(), wordB.trim(), category.trim() || 'Custom');
-    setWordA(''); setWordB(''); setCategory('');
-    setOpen(false);
+    const trimmed = word.trim();
+    if (!trimmed) return;
+    onAdd(trimmed);
+    setWord('');
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAdd();
+    }
   };
 
   if (!open) {
     return (
       <button
+        type="button"
         onClick={() => setOpen(true)}
         className="w-full py-3 rounded-xl border border-dashed border-violet-500/40
-                   text-violet-400 text-sm font-bold hover:bg-violet-600/10 transition-colors"
+                   text-violet-400 text-sm font-bold hover:bg-violet-600/10 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
       >
-        + Add Word Pair
+        <span>+</span> Add Word
       </button>
     );
   }
@@ -152,41 +107,36 @@ function AddPairForm({ onAdd }) {
       initial={{ opacity: 0, height: 0 }}
       animate={{ opacity: 1, height: 'auto' }}
     >
-      <p className="text-violet-300 text-sm font-bold">New Word Pair</p>
-      <div className="grid grid-cols-2 gap-2">
-        <div>
-          <label className="text-blue-400/60 text-xs mb-1 block">Civilian Word (A)</label>
-          <input
-            value={wordA}
-            onChange={(e) => setWordA(e.target.value)}
-            placeholder="e.g. Coffee"
-            className="w-full bg-blue-900/30 border border-blue-500/40 rounded-lg px-3 py-2 text-blue-300
-                       text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30"
-          />
-        </div>
-        <div>
-          <label className="text-red-400/60 text-xs mb-1 block">Impostor Word (B)</label>
-          <input
-            value={wordB}
-            onChange={(e) => setWordB(e.target.value)}
-            placeholder="e.g. Tea"
-            className="w-full bg-red-900/30 border border-red-500/40 rounded-lg px-3 py-2 text-red-300
-                       text-sm focus:outline-none focus:ring-2 focus:ring-red-500/30"
-          />
-        </div>
+      <div className="flex items-center justify-between">
+        <p className="text-violet-300 text-sm font-bold">New Word</p>
+        <button
+          type="button"
+          onClick={() => setOpen(false)}
+          className="text-white/40 hover:text-white text-xs cursor-pointer"
+        >
+          Close
+        </button>
       </div>
-      <input
-        value={category}
-        onChange={(e) => setCategory(e.target.value)}
-        placeholder="Category (e.g. Hot Drinks)"
-        className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white
-                   text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/30"
-      />
+      <div>
+        <label className="text-white/60 text-xs mb-1 block">Word</label>
+        <input
+          ref={inputRef}
+          value={word}
+          onChange={(e) => setWord(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder="e.g. قهوة / Coffee"
+          autoFocus
+          className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white
+                     text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/30 placeholder-white/30"
+        />
+      </div>
       <div className="flex gap-2">
-        <Button variant="primary" onClick={handleAdd} disabled={!wordA.trim() || !wordB.trim()}>
-          Add Pair
+        <Button variant="primary" onClick={handleAdd} disabled={!word.trim()} size="sm">
+          Add Word
         </Button>
-        <Button variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
+        <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>
+          Cancel
+        </Button>
       </div>
     </motion.div>
   );
@@ -213,9 +163,18 @@ export default function PackEditor() {
   const navigate = useNavigate();
   const {
     customPacks, cloudPacks, cloudStatus,
-    addPack, updatePack, deletePack, addPair, updatePair, deletePair,
+    addPack, deletePack, addWord, deleteWord,
     exportPack, importPack, publishPackToCloud, syncCloudPacks, deleteCloudPack,
   } = usePackStore();
+
+  const getPackWords = (pack) => {
+    if (!pack) return [];
+    if (Array.isArray(pack.words) && pack.words.length > 0) return pack.words;
+    if (Array.isArray(pack.pairs)) {
+      return pack.pairs.flatMap((p) => [p.wordA, p.wordB]).filter(Boolean);
+    }
+    return [];
+  };
 
   const [selectedPackId, setSelectedPackId] = useState(null);
   const [showNewPackModal, setShowNewPackModal] = useState(false);
@@ -266,7 +225,7 @@ export default function PackEditor() {
     setImportSuccess('');
     try {
       const imported = await importPack(file);
-      setImportSuccess(`Imported "${imported.name}" with ${imported.pairs.length} pairs!`);
+      setImportSuccess(`Imported "${imported.name}" with ${getPackWords(imported).length} words!`);
       setSelectedPackId(imported.id);
       setActiveTab('custom');
       setTimeout(() => setImportSuccess(''), 4000);
@@ -379,7 +338,7 @@ export default function PackEditor() {
                     <span className="text-3xl">{pack.icon}</span>
                     <div className="flex-1 min-w-0">
                       <p className="text-white font-bold">{pack.name}</p>
-                      <p className="text-white/40 text-xs">{pack.pairs.length} word pairs</p>
+                      <p className="text-white/40 text-xs">{getPackWords(pack).length} words</p>
                     </div>
                     <div className="flex gap-2 items-center">
                       {/* Publish to cloud */}
@@ -480,7 +439,7 @@ export default function PackEditor() {
                   <span className="text-3xl">{pack.icon}</span>
                   <div className="flex-1">
                     <p className="text-white font-bold">{pack.name}</p>
-                    <p className="text-white/40 text-xs">{pack.pairs.length} pairs · Cloud</p>
+                    <p className="text-white/40 text-xs">{getPackWords(pack).length} words · Cloud</p>
                   </div>
                   <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full border border-blue-500/30">☁️ Global</span>
                   <button
@@ -504,14 +463,16 @@ export default function PackEditor() {
                       animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
                     >
-                      {pack.pairs.map((pair) => (
-                        <div key={pair.id} className="flex items-center gap-2 text-sm px-2 py-1.5 bg-white/5 rounded-lg">
-                          <span className="text-blue-300 font-bold flex-1">{pair.wordA}</span>
-                          <span className="text-white/30 text-xs">vs</span>
-                          <span className="text-red-300 font-bold flex-1">{pair.wordB}</span>
-                          <span className="text-white/30 text-xs">{pair.category}</span>
-                        </div>
-                      ))}
+                      <div className="flex flex-wrap gap-1.5 pt-1 pb-1">
+                        {getPackWords(pack).map((w, idx) => (
+                          <span
+                            key={idx}
+                            className="bg-white/10 text-white/90 text-xs px-2.5 py-1 rounded-lg border border-white/5"
+                          >
+                            {w}
+                          </span>
+                        ))}
+                      </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -536,7 +497,7 @@ export default function PackEditor() {
                 <div className="flex-1">
                   <p className="text-white font-bold">{pack.name}</p>
                   <p className="text-white/40 text-xs">
-                    {pack.words ? `${pack.words.length} words` : `${pack.pairs.length} pairs`} · Read-only
+                    {getPackWords(pack).length} words · Read-only
                   </p>
                 </div>
                 <span className="text-xs bg-violet-500/20 text-violet-400 px-2 py-0.5 rounded-full">Built-in</span>
@@ -549,26 +510,16 @@ export default function PackEditor() {
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
                   >
-                    {pack.words && pack.words.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 pt-1 pb-1">
-                        {pack.words.map((w, idx) => (
-                          <span
-                            key={idx}
-                            className="bg-white/10 text-white/90 text-xs px-2.5 py-1 rounded-lg border border-white/5"
-                          >
-                            {w}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                    {(pack.pairs || []).map((pair) => (
-                      <div key={pair.id} className="flex items-center gap-2 text-sm px-2 py-1.5 bg-white/5 rounded-lg">
-                        <span className="text-blue-300 font-bold flex-1">{pair.wordA}</span>
-                        <span className="text-white/30 text-xs">vs</span>
-                        <span className="text-red-300 font-bold flex-1">{pair.wordB}</span>
-                        <span className="text-white/30 text-xs">{pair.category}</span>
-                      </div>
-                    ))}
+                    <div className="flex flex-wrap gap-1.5 pt-1 pb-1">
+                      {getPackWords(pack).map((w, idx) => (
+                        <span
+                          key={idx}
+                          className="bg-white/10 text-white/90 text-xs px-2.5 py-1 rounded-lg border border-white/5"
+                        >
+                          {w}
+                        </span>
+                      ))}
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -577,7 +528,7 @@ export default function PackEditor() {
         </div>
       )}
 
-      {/* ── Pack pair editor (custom tab only) ── */}
+      {/* ── Pack word editor (custom tab only) ── */}
       <AnimatePresence>
         {selectedPack && activeTab === 'custom' && (
           <motion.div
@@ -587,9 +538,14 @@ export default function PackEditor() {
             exit={{ opacity: 0, y: 20 }}
           >
             <div className="flex items-center justify-between">
-              <h3 className="text-white font-bold text-lg">
-                {selectedPack.icon} {selectedPack.name}
-              </h3>
+              <div>
+                <h3 className="text-white font-bold text-lg">
+                  {selectedPack.icon} {selectedPack.name}
+                </h3>
+                <p className="text-white/40 text-xs">
+                  {getPackWords(selectedPack).length} words in this pack
+                </p>
+              </div>
               <div className="flex gap-2">
                 <Button variant="secondary" size="sm" onClick={() => exportPack(selectedPack.id)} icon="⬇️">
                   Export
@@ -606,23 +562,27 @@ export default function PackEditor() {
               </div>
             </div>
 
-            {/* Pairs */}
-            <div className="space-y-2">
-              {selectedPack.pairs.length === 0 ? (
-                <p className="text-white/30 text-sm text-center py-4">No pairs yet. Add some below!</p>
+            {/* Words tag list */}
+            <div className="space-y-3">
+              {getPackWords(selectedPack).length === 0 ? (
+                <div className="text-center py-8 border border-dashed border-white/10 rounded-xl">
+                  <p className="text-white/40 text-sm">No words yet in this pack.</p>
+                  <p className="text-white/20 text-xs mt-1">Add words using the button below</p>
+                </div>
               ) : (
-                selectedPack.pairs.map((pair) => (
-                  <PairRow
-                    key={pair.id}
-                    pair={pair}
-                    onUpdate={(pairId, updates) => updatePair(selectedPack.id, pairId, updates)}
-                    onDelete={(pairId) => deletePair(selectedPack.id, pairId)}
-                  />
-                ))
+                <div className="flex flex-wrap gap-2 p-3 bg-black/20 border border-white/10 rounded-xl min-h-[60px] max-h-64 overflow-y-auto">
+                  {getPackWords(selectedPack).map((word, idx) => (
+                    <WordTag
+                      key={`${word}-${idx}`}
+                      word={word}
+                      onDelete={() => deleteWord(selectedPack.id, word)}
+                    />
+                  ))}
+                </div>
               )}
-            </div>
 
-            <AddPairForm onAdd={(a, b, cat) => addPair(selectedPack.id, a, b, cat)} />
+              <AddWordForm onAdd={(newWord) => addWord(selectedPack.id, newWord)} />
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

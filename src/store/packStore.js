@@ -40,9 +40,12 @@ export const usePackStore = create(
       publishPackToCloud: async (packId) => {
         const pack = get().customPacks.find((p) => p.id === packId);
         if (!pack) return { success: false, error: 'Pack not found.' };
-        if (pack.pairs.length === 0) return { success: false, error: 'Pack has no word pairs.' };
+        const words = pack.words && pack.words.length > 0
+          ? pack.words
+          : (pack.pairs || []).flatMap((p) => [p.wordA, p.wordB]).filter(Boolean);
+        if (words.length === 0) return { success: false, error: 'Pack has no words.' };
 
-        const saved = await savePackToCloud(pack);
+        const saved = await savePackToCloud({ ...pack, words });
         if (!saved) return { success: false, error: 'Failed to upload pack. Check your connection.' };
 
         // Re-fetch so everyone sees the new pack
@@ -75,6 +78,7 @@ export const usePackStore = create(
           icon,
           builtin: false,
           cloud: false,
+          words: [],
           pairs: [],
           createdAt: Date.now(),
         };
@@ -96,24 +100,70 @@ export const usePackStore = create(
           customPacks: s.customPacks.filter((p) => p.id !== packId),
         })),
 
-      /** Add a word pair to a pack. */
-      addPair: (packId, wordA, wordB, category) => {
-        const newPair = { id: `pair-${generateId()}`, wordA, wordB, category };
+      /** Add a word to a pack. */
+      addWord: (packId, word) => {
+        const trimmed = word?.trim();
+        if (!trimmed) return;
         set((s) => ({
-          customPacks: s.customPacks.map((p) =>
-            p.id === packId ? { ...p, pairs: [...p.pairs, newPair] } : p
-          ),
+          customPacks: s.customPacks.map((p) => {
+            if (p.id !== packId) return p;
+            const currentWords = p.words && p.words.length > 0
+              ? p.words
+              : (p.pairs || []).flatMap((pair) => [pair.wordA, pair.wordB]).filter(Boolean);
+            if (currentWords.includes(trimmed)) return p;
+            return {
+              ...p,
+              words: [...currentWords, trimmed],
+            };
+          }),
         }));
       },
 
-      /** Update an existing word pair. */
+      /** Delete a word from a pack. */
+      deleteWord: (packId, wordOrIndex) => {
+        set((s) => ({
+          customPacks: s.customPacks.map((p) => {
+            if (p.id !== packId) return p;
+            const currentWords = p.words && p.words.length > 0
+              ? p.words
+              : (p.pairs || []).flatMap((pair) => [pair.wordA, pair.wordB]).filter(Boolean);
+            return {
+              ...p,
+              words: typeof wordOrIndex === 'number'
+                ? currentWords.filter((_, idx) => idx !== wordOrIndex)
+                : currentWords.filter((w) => w !== wordOrIndex),
+            };
+          }),
+        }));
+      },
+
+      /** Add a word pair to a pack (legacy compatibility). */
+      addPair: (packId, wordA, wordB, category) => {
+        const newPair = { id: `pair-${generateId()}`, wordA, wordB, category };
+        set((s) => ({
+          customPacks: s.customPacks.map((p) => {
+            if (p.id !== packId) return p;
+            const existingWords = p.words || [];
+            const newWords = [...existingWords];
+            if (wordA && !newWords.includes(wordA)) newWords.push(wordA);
+            if (wordB && !newWords.includes(wordB)) newWords.push(wordB);
+            return {
+              ...p,
+              words: newWords,
+              pairs: [...(p.pairs || []), newPair],
+            };
+          }),
+        }));
+      },
+
+      /** Update an existing word pair (legacy compatibility). */
       updatePair: (packId, pairId, updates) =>
         set((s) => ({
           customPacks: s.customPacks.map((p) =>
             p.id === packId
               ? {
                   ...p,
-                  pairs: p.pairs.map((pair) =>
+                  pairs: (p.pairs || []).map((pair) =>
                     pair.id === pairId ? { ...pair, ...updates } : pair
                   ),
                 }
@@ -121,21 +171,29 @@ export const usePackStore = create(
           ),
         })),
 
-      /** Delete a word pair from a pack. */
+      /** Delete a word pair from a pack (legacy compatibility). */
       deletePair: (packId, pairId) =>
         set((s) => ({
           customPacks: s.customPacks.map((p) =>
             p.id === packId
-              ? { ...p, pairs: p.pairs.filter((pair) => pair.id !== pairId) }
+              ? { ...p, pairs: (p.pairs || []).filter((pair) => pair.id !== pairId) }
               : p
           ),
         })),
 
-      /** Export a pack as a downloadable JSON file. */
+      /** Export a pack as a downloadable JSON file in the new single-word pool format. */
       exportPack: (packId) => {
         const pack = get().customPacks.find((p) => p.id === packId);
         if (!pack) return;
-        const json = JSON.stringify(pack, null, 2);
+        const words = pack.words && pack.words.length > 0
+          ? pack.words
+          : (pack.pairs || []).flatMap((p) => [p.wordA, p.wordB]).filter(Boolean);
+        const exportData = {
+          name: pack.name,
+          icon: pack.icon || '📦',
+          words,
+        };
+        const json = JSON.stringify(exportData, null, 2);
         const blob = new Blob([json], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -147,7 +205,7 @@ export const usePackStore = create(
 
       /**
        * Import a pack from a JSON file.
-       * Returns a promise that resolves when the import is done.
+       * Supports both new { name, icon, words: [...] } and legacy { name, icon, pairs: [...] } formats.
        */
       importPack: (file) => {
         return new Promise((resolve, reject) => {
@@ -155,23 +213,23 @@ export const usePackStore = create(
           reader.onload = (e) => {
             try {
               const data = JSON.parse(e.target.result);
-              if (!data.name || !Array.isArray(data.pairs)) {
-                reject(new Error('Invalid pack format: missing name or pairs array.'));
+              if (!data.name || (!Array.isArray(data.words) && !Array.isArray(data.pairs))) {
+                reject(new Error('Invalid pack format: missing name or words array.'));
                 return;
               }
+              const words = Array.isArray(data.words)
+                ? data.words.map((w) => String(w).trim()).filter(Boolean)
+                : (data.pairs || []).flatMap((p) => [p.wordA, p.wordB]).filter(Boolean);
+
               const imported = {
-                ...data,
                 id: `custom-${generateId()}`,
+                name: data.name,
+                icon: data.icon || '📦',
                 builtin: false,
                 cloud: false,
                 createdAt: Date.now(),
-                pairs: data.pairs.map((pair) => ({
-                  ...pair,
-                  id: `pair-${generateId()}`,
-                  wordA: pair.wordA || '',
-                  wordB: pair.wordB || '',
-                  category: pair.category || 'Imported',
-                })),
+                words,
+                pairs: data.pairs || [],
               };
               set((s) => ({ customPacks: [...s.customPacks, imported] }));
               resolve(imported);

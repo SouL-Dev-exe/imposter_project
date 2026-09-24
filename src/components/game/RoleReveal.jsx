@@ -1,6 +1,6 @@
 /**
  * RoleReveal.jsx — Secret role card shown to one player at a time.
- * Requires holding a button to view. Privacy-first design.
+ * Tap / click toggle to view. Privacy-first design.
  */
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -9,13 +9,11 @@ import { useAudio } from '../../hooks/useAudio';
 import { useLanguageStore } from '../../store/languageStore';
 
 export function RoleReveal({ player, gameMode, onDone }) {
-  const [holding, setHolding] = useState(false);
   const [revealed, setRevealed] = useState(false);
-  const [holdProgress, setHoldProgress] = useState(0);
+  const [hasRevealedOnce, setHasRevealedOnce] = useState(false);
   const { playReveal } = useAudio();
   const { t } = useLanguageStore();
   const strings = t();
-  const intervalRef = useState(null);
 
   const getRoleConfig = () => {
     switch (player.role) {
@@ -58,27 +56,16 @@ export function RoleReveal({ player, gameMode, onDone }) {
 
   const cfg = getRoleConfig();
 
-  const handleHoldStart = useCallback(() => {
-    setHolding(true);
-    let progress = 0;
-    intervalRef[0] = setInterval(() => {
-      progress += 5;
-      setHoldProgress(progress);
-      if (progress >= 100) {
-        clearInterval(intervalRef[0]);
-        setRevealed(true);
+  const toggleReveal = useCallback(() => {
+    setRevealed((prev) => {
+      const next = !prev;
+      if (next) {
         playReveal();
+        setHasRevealedOnce(true);
       }
-    }, 30);
+      return next;
+    });
   }, [playReveal]);
-
-  const handleHoldEnd = useCallback(() => {
-    if (!revealed) {
-      setHolding(false);
-      setHoldProgress(0);
-      clearInterval(intervalRef[0]);
-    }
-  }, [revealed]);
 
   const getWordDisplay = () => {
     if (player.role === ROLES.CIVILIAN) {
@@ -138,34 +125,50 @@ export function RoleReveal({ player, gameMode, onDone }) {
 
       {/* Role card */}
       <motion.div
-        className="w-full rounded-2xl border border-white/20 bg-gradient-to-br from-slate-700 to-zinc-800 p-0.5 shadow-2xl"
+        className="w-full rounded-2xl border border-white/20 bg-gradient-to-br from-slate-700 to-zinc-800 p-0.5 shadow-2xl cursor-pointer select-none"
+        onClick={toggleReveal}
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        transition={{ delay: 0.1 }}
+        whileHover={{ scale: 1.01 }}
+        whileTap={{ scale: 0.98 }}
+        transition={{ duration: 0.2 }}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            toggleReveal();
+          }
+        }}
+        aria-label={revealed ? (strings.reveal.tapToHide || 'Tap to Hide') : (strings.reveal.tapToReveal || 'Tap to Reveal')}
       >
-        <div className="bg-gray-950/80 rounded-2xl p-6 text-center space-y-4">
+        <div className="bg-gray-950/80 rounded-2xl p-6 text-center min-h-[220px] flex flex-col justify-center items-center">
           <AnimatePresence mode="wait">
             {!revealed ? (
               /* Hidden state */
               <motion.div
                 key="hidden"
-                className="space-y-4"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
+                className="space-y-4 w-full"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.2 }}
               >
                 <div className="text-6xl">🔒</div>
-                <p className="text-white/50 text-sm">{strings.reveal.holdInstruction}</p>
+                <p className="text-white/70 text-sm font-medium">
+                  {strings.reveal.tapInstruction || strings.reveal.holdInstruction}
+                </p>
                 <p className="text-white/30 text-xs">{strings.reveal.privacyWarning}</p>
               </motion.div>
             ) : (
               /* Revealed state */
               <motion.div
                 key="revealed"
-                className="space-y-3"
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+                className="space-y-3 w-full"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ type: 'spring', damping: 22, stiffness: 320 }}
               >
                 <div className="text-5xl">{cfg.emoji}</div>
                 <div>
@@ -189,39 +192,39 @@ export function RoleReveal({ player, gameMode, onDone }) {
         </div>
       </motion.div>
 
-      {/* Hold-to-reveal button */}
-      {!revealed ? (
-        <div className="w-full space-y-2">
-          <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
-            <motion.div
-              className="h-full bg-gradient-to-r from-violet-500 to-purple-500 rounded-full"
-              style={{ width: `${holdProgress}%` }}
-            />
-          </div>
+      {/* Action buttons */}
+      <div className="w-full space-y-3">
+        {/* Tap to Reveal / Tap to Hide button */}
+        <motion.button
+          type="button"
+          onClick={toggleReveal}
+          className={`w-full py-4 rounded-xl font-semibold text-lg cursor-pointer select-none transition-all duration-200 border flex items-center justify-center gap-2 ${
+            revealed
+              ? 'bg-white/10 hover:bg-white/15 border-white/20 text-white/90 shadow-sm'
+              : 'bg-violet-600/30 hover:bg-violet-600/40 border-violet-500/50 text-violet-300 shadow-lg shadow-violet-500/10'
+          }`}
+          whileTap={{ scale: 0.97 }}
+        >
+          {revealed
+            ? `🔒 ${strings.reveal.tapToHide || 'Tap to Hide'}`
+            : `🔓 ${strings.reveal.tapToReveal || strings.reveal.holdToReveal || 'Tap to Reveal'}`
+          }
+        </motion.button>
+
+        {/* Done / Pass Device button */}
+        {hasRevealedOnce && (
           <motion.button
-            className="w-full py-4 rounded-xl bg-violet-600/30 border border-violet-500/50 text-violet-300 font-semibold text-lg select-none touch-none cursor-pointer"
-            onMouseDown={handleHoldStart}
-            onMouseUp={handleHoldEnd}
-            onMouseLeave={handleHoldEnd}
-            onTouchStart={handleHoldStart}
-            onTouchEnd={handleHoldEnd}
+            type="button"
+            className="w-full py-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-lg cursor-pointer shadow-lg shadow-emerald-600/20 transition-colors"
+            onClick={onDone}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
             whileTap={{ scale: 0.97 }}
           >
-            {holding ? `👁️ ${strings.reveal.revealing}` : `🔒 ${strings.reveal.holdToReveal}`}
+            {strings.reveal.gotItPass}
           </motion.button>
-        </div>
-      ) : (
-        <motion.button
-          className="w-full py-4 rounded-xl bg-emerald-600 text-white font-bold text-lg cursor-pointer"
-          onClick={onDone}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          whileTap={{ scale: 0.97 }}
-          transition={{ delay: 0.5 }}
-        >
-          {strings.reveal.gotItPass}
-        </motion.button>
-      )}
+        )}
+      </div>
     </div>
   );
 }

@@ -18,22 +18,29 @@ export async function fetchCloudPacks() {
     if (error) throw error;
 
     // Normalise each Supabase row into the same shape used by the app
-    return rows.map((row) => ({
-      id: `cloud-${row.id}`,
-      supabaseId: row.id,
-      name: row.pack_name,
-      icon: row.icon || '☁️',
-      category: row.category || '',
-      builtin: false,
-      cloud: true,
-      pairs: (row.word_pairs || []).map((wp, i) => ({
-        id: `cloud-pair-${row.id}-${i}`,
-        wordA: wp.word_a || '',
-        wordB: wp.word_b || '',
-        category: row.category || wp.category || 'Cloud',
-      })),
-      createdAt: row.created_at ? new Date(row.created_at).getTime() : Date.now(),
-    }));
+    return rows.map((row) => {
+      const words = Array.isArray(row.words)
+        ? row.words
+        : (row.word_pairs || []).flatMap((wp) => [wp.word_a, wp.word_b]).filter(Boolean);
+      const uniqueWords = [...new Set(words)];
+      return {
+        id: `cloud-${row.id}`,
+        supabaseId: row.id,
+        name: row.pack_name,
+        icon: row.icon || '☁️',
+        category: row.category || '',
+        builtin: false,
+        cloud: true,
+        words: uniqueWords,
+        pairs: (row.word_pairs || []).map((wp, i) => ({
+          id: `cloud-pair-${row.id}-${i}`,
+          wordA: wp.word_a || '',
+          wordB: wp.word_b || '',
+          category: row.category || wp.category || 'Cloud',
+        })),
+        createdAt: row.created_at ? new Date(row.created_at).getTime() : Date.now(),
+      };
+    });
   } catch (err) {
     console.warn('[Supabase] Failed to fetch cloud packs — falling back to localStorage.', err.message);
     return [];
@@ -43,19 +50,29 @@ export async function fetchCloudPacks() {
 /**
  * Save a new custom pack to Supabase globally.
  *
- * @param {{ name: string, category: string, icon?: string, pairs: {wordA, wordB}[] }} pack
+ * @param {{ name: string, category?: string, icon?: string, words?: string[], pairs?: {wordA, wordB}[] }} pack
  * @returns {Promise<object|null>} The saved row data, or null on failure.
  */
 export async function savePackToCloud(pack) {
+  const words = pack.words && pack.words.length > 0
+    ? pack.words
+    : (pack.pairs || []).flatMap((p) => [p.wordA, p.wordB]).filter(Boolean);
+
   const payload = {
     pack_name: pack.name,
     category: pack.category || pack.name,
     icon: pack.icon || '📦',
-    word_pairs: pack.pairs.map((p) => ({
-      word_a: p.wordA,
-      word_b: p.wordB,
-      category: p.category || pack.category || 'Custom',
-    })),
+    word_pairs: pack.pairs && pack.pairs.length > 0
+      ? pack.pairs.map((p) => ({
+          word_a: p.wordA,
+          word_b: p.wordB,
+          category: p.category || pack.category || 'Custom',
+        }))
+      : words.map((w) => ({
+          word_a: w,
+          word_b: w,
+          category: pack.category || pack.name,
+        })),
   };
 
   try {

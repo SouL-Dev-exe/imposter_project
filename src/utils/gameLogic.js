@@ -37,29 +37,86 @@ export function shuffle(arr) {
 
 /**
  * Random Pair Picker Logic from Dynamic Category Pools.
- * Draws 2 unique words from the chosen category pool and randomizes wordA/wordB 50% of the time.
- * @param {object|string} [categoryPool] - specific category pool or category name/id, or null for random
+ * Pulls and merges dynamic word pools from all selected categories before picking a random word.
+ *
+ * @param {object|string|string[]} [categoryPoolOrCategories] - specific category pool, array of category IDs, or 'all'/null
  * @returns {{ wordA: string, wordB: string, category: string }}
  */
-export function getRandomPairFromPool(categoryPool) {
-  // If categoryPool is a string, find matching pool by category name or id
-  let pool = categoryPool;
-  if (typeof categoryPool === 'string') {
-    pool = CATEGORY_POOLS.find(
-      (c) => c.category === categoryPool || c.id === categoryPool
-    );
+export function getRandomPairFromPool(categoryPoolOrCategories) {
+  let pools = [];
+
+  if (Array.isArray(categoryPoolOrCategories)) {
+    if (categoryPoolOrCategories.includes('all') || categoryPoolOrCategories.length === 0) {
+      pools = CATEGORY_POOLS;
+    } else {
+      pools = CATEGORY_POOLS.filter(
+        (c) =>
+          categoryPoolOrCategories.includes(c.id) ||
+          categoryPoolOrCategories.includes(c.category)
+      );
+    }
+  } else if (typeof categoryPoolOrCategories === 'string') {
+    if (categoryPoolOrCategories === 'all') {
+      pools = CATEGORY_POOLS;
+    } else {
+      const match = CATEGORY_POOLS.find(
+        (c) =>
+          c.id === categoryPoolOrCategories ||
+          c.category === categoryPoolOrCategories
+      );
+      pools = match ? [match] : CATEGORY_POOLS;
+    }
+  } else if (categoryPoolOrCategories && typeof categoryPoolOrCategories === 'object') {
+    pools = [categoryPoolOrCategories];
+  } else {
+    pools = CATEGORY_POOLS;
   }
 
-  // Pick a random category if none passed or not found
-  if (!pool || !pool.words || pool.words.length < 2) {
-    pool = CATEGORY_POOLS[Math.floor(Math.random() * CATEGORY_POOLS.length)];
+  // Fallback if no matching pool
+  if (!pools || pools.length === 0) {
+    pools = CATEGORY_POOLS;
   }
 
-  // Shuffle words array and pick top 2
-  const shuffledWords = [...pool.words].sort(() => Math.random() - 0.5);
+  // Pull and merge dynamic word pools from all selected categories
+  const mergedWords = [];
+  const categoryNames = [];
 
+  for (const pool of pools) {
+    if (Array.isArray(pool.words)) {
+      for (const w of pool.words) {
+        if (!mergedWords.includes(w)) {
+          mergedWords.push(w);
+        }
+      }
+    }
+    if (pool.category && !categoryNames.includes(pool.category)) {
+      categoryNames.push(pool.category);
+    }
+  }
+
+  if (mergedWords.length < 2) {
+    return {
+      wordA: 'تفاحة',
+      wordB: 'برتقالة',
+      category: 'فواكه وخضروات',
+    };
+  }
+
+  // Shuffle merged words and pick top 2
+  const shuffledWords = [...mergedWords].sort(() => Math.random() - 0.5);
   const wordA = shuffledWords[0];
   const wordB = shuffledWords[1];
+
+  // Determine category description
+  const sourcePoolA = pools.find((p) => p.words?.includes(wordA));
+  let categoryLabel;
+  if (pools.length === 1) {
+    categoryLabel = pools[0].category;
+  } else if (categoryNames.length <= 2) {
+    categoryLabel = categoryNames.join(' • ');
+  } else {
+    categoryLabel = sourcePoolA ? `${sourcePoolA.category} (منوع)` : 'منوع';
+  }
 
   // Randomize assignment order so wordA isn't always Civilian
   const flip = Math.random() < 0.5;
@@ -67,52 +124,86 @@ export function getRandomPairFromPool(categoryPool) {
   return {
     wordA: flip ? wordA : wordB,
     wordB: flip ? wordB : wordA,
-    category: pool.category,
+    category: categoryLabel,
   };
 }
 
 /**
- * Pick a random word pair from the selected pack / all packs.
- * Falls back to dynamic category pools if no static pairs exist.
- * @param {string|null} packId - specific pack id or null for random
+ * Pick a random word pair from the selected categories/packs.
+ * Merges dynamic word pools from all selected categories.
+ *
+ * @param {string|string[]|null} packIdOrCategories - specific pack ID, array of category IDs, or 'all'
  * @param {Array} customPacks - user's custom packs from localStorage
  * @param {Array} cloudPacks - packs from Supabase
  */
-export function pickRandomPair(packId, customPacks = [], cloudPacks = []) {
-  // Check if packId corresponds to a category pool
-  const matchingPool = CATEGORY_POOLS.find(
-    (c) => c.id === packId || c.category === packId
-  );
-  if (matchingPool) {
-    return getRandomPairFromPool(matchingPool);
-  }
+export function pickRandomPair(packIdOrCategories, customPacks = [], cloudPacks = []) {
+  const ids = Array.isArray(packIdOrCategories)
+    ? packIdOrCategories
+    : [packIdOrCategories || 'all'];
 
-  const allPairs = [...ALL_BUILTIN_PAIRS];
+  // Check custom/cloud packs
+  const allCustom = [...customPacks, ...cloudPacks];
+  const selectedCustom = allCustom.filter((p) => ids.includes(p.id));
+  const hasCategoryPools = CATEGORY_POOLS.some((c) => ids.includes(c.id));
 
-  // Merge custom pack pairs (locally created)
-  for (const cp of customPacks) {
-    for (const pair of cp.pairs || []) {
-      allPairs.push({ ...pair, packId: cp.id, packName: cp.name });
+  // If ONLY custom pack(s) were selected (and not 'all' or category pools)
+  if (selectedCustom.length > 0 && !hasCategoryPools && !ids.includes('all')) {
+    const customPairs = [];
+    for (const cp of selectedCustom) {
+      for (const pair of cp.pairs || []) {
+        customPairs.push({ ...pair, packId: cp.id, packName: cp.name });
+      }
+    }
+    if (customPairs.length > 0) {
+      return customPairs[Math.floor(Math.random() * customPairs.length)];
     }
   }
 
-  // Merge cloud pack pairs (from Supabase)
-  for (const cp of cloudPacks) {
-    for (const pair of cp.pairs || []) {
-      allPairs.push({ ...pair, packId: cp.id, packName: cp.name });
+  // If custom packs are also mixed with category pools or 'all'
+  if (selectedCustom.length > 0) {
+    const customWords = [];
+    for (const cp of selectedCustom) {
+      for (const pair of cp.pairs || []) {
+        if (pair.wordA) customWords.push(pair.wordA);
+        if (pair.wordB) customWords.push(pair.wordB);
+      }
+    }
+    if (customWords.length > 0) {
+      const syntheticPool = {
+        id: 'synthetic-custom',
+        category: selectedCustom.map((cp) => cp.name).join(' • '),
+        words: customWords,
+      };
+      const poolMatches = CATEGORY_POOLS.filter(
+        (c) => ids.includes(c.id) || ids.includes('all')
+      );
+      const combined = poolMatches.length > 0 ? [...poolMatches, syntheticPool] : [syntheticPool];
+
+      const mergedWords = [];
+      const catNames = [];
+      for (const p of combined) {
+        if (p.words) {
+          for (const w of p.words) {
+            if (!mergedWords.includes(w)) mergedWords.push(w);
+          }
+        }
+        if (p.category && !catNames.includes(p.category)) catNames.push(p.category);
+      }
+
+      if (mergedWords.length >= 2) {
+        const shuffled = [...mergedWords].sort(() => Math.random() - 0.5);
+        const flip = Math.random() < 0.5;
+        return {
+          wordA: flip ? shuffled[0] : shuffled[1],
+          wordB: flip ? shuffled[1] : shuffled[0],
+          category: catNames.join(' • '),
+        };
+      }
     }
   }
 
-  let pool = allPairs;
-  if (packId && packId !== 'all') {
-    pool = allPairs.filter((p) => p.packId === packId);
-  }
-
-  if (pool.length === 0) {
-    return getRandomPairFromPool();
-  }
-
-  return pool[Math.floor(Math.random() * pool.length)];
+  // Pull and merge dynamic category pools from all selected categories
+  return getRandomPairFromPool(ids);
 }
 
 /**

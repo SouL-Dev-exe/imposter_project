@@ -12,7 +12,7 @@ import { usePackStore } from '../store/packStore';
 import { useLanguageStore } from '../store/languageStore';
 import { DEFAULT_PACKS } from '../data/defaultPacks';
 import { CATEGORY_POOLS } from '../data/categoryPools';
-import { assignRoles, pickRandomPair, getRandomPairFromPool, GAME_MODES } from '../utils/gameLogic';
+import { assignRoles, pickRandomPair, GAME_MODES } from '../utils/gameLogic';
 
 const MIN_PLAYERS = 3;
 const MAX_PLAYERS = 10;
@@ -48,8 +48,8 @@ function Toggle({ checked, onChange, label, description, disabled = false }) {
 export default function Lobby() {
   const navigate = useNavigate();
   const {
-    playerNames, gameMode, options, selectedPackId,
-    setPlayerNames, setGameMode, setOptions, setSelectedPackId, startGame,
+    playerNames, gameMode, options, selectedCategories = ['all'],
+    setPlayerNames, setGameMode, setOptions, setSelectedCategories, startGame,
   } = useGameStore();
 
   const { customPacks, cloudPacks } = usePackStore();
@@ -59,8 +59,6 @@ export default function Lobby() {
 
   const [nameInput, setNameInput] = useState('');
   const [error, setError] = useState('');
-
-  const allPacks = [...DEFAULT_PACKS, ...customPacks, ...cloudPacks];
 
   // Disable fake impostor automatically if player count drops below 6
   useEffect(() => {
@@ -96,26 +94,52 @@ export default function Lobby() {
     if (e.key === 'Enter') addPlayer();
   };
 
+  const isAllSelected = selectedCategories.includes('all');
+
+  const allAvailableCategoryIds = [
+    ...CATEGORY_POOLS.map((p) => p.id),
+    ...customPacks.map((p) => p.id),
+    ...cloudPacks.map((p) => p.id),
+  ];
+
+  const handleToggleCategory = (id) => {
+    if (id === 'all') {
+      setSelectedCategories(['all']);
+      return;
+    }
+
+    let next;
+    if (isAllSelected) {
+      // Toggling a pack ON when 'all' is active adds it and deselects 'All Packs'
+      next = [id];
+    } else if (selectedCategories.includes(id)) {
+      // Toggling a pack OFF removes it
+      next = selectedCategories.filter((catId) => catId !== id);
+      // If all individual packs are deselected, fall back to "All Packs"
+      if (next.length === 0) {
+        next = ['all'];
+      }
+    } else {
+      // Toggling a pack ON adds it
+      next = [...selectedCategories, id];
+      // If all available category IDs are manually selected, automatically highlight "All Packs"
+      if (
+        allAvailableCategoryIds.length > 0 &&
+        allAvailableCategoryIds.every((availableId) => next.includes(availableId))
+      ) {
+        next = ['all'];
+      }
+    }
+
+    setSelectedCategories(next);
+  };
+
   const handleStart = () => {
     if (playerNames.length < MIN_PLAYERS) {
       setError(strings.lobby.minPlayersError);
       return;
     }
-    let pair;
-    const customOrCloudPack = [...customPacks, ...cloudPacks].find(
-      (p) => p.id === selectedPackId
-    );
-    if (
-      customOrCloudPack &&
-      customOrCloudPack.pairs &&
-      customOrCloudPack.pairs.length > 0
-    ) {
-      pair = pickRandomPair(selectedPackId, customPacks, cloudPacks);
-    } else {
-      pair = getRandomPairFromPool(
-        selectedPackId !== 'all' ? selectedPackId : null
-      );
-    }
+    const pair = pickRandomPair(selectedCategories, customPacks, cloudPacks);
     const players = assignRoles(playerNames, gameMode, options, pair);
     startGame(players, pair);
     navigate('/reveal');
@@ -314,8 +338,16 @@ export default function Lobby() {
       {/* ── Word Pack ────────────────────────────────────────────────────────── */}
       <Card className="p-4 space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-white font-bold text-lg">📦 {strings.lobby.wordPack}</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-white font-bold text-lg">📦 {strings.lobby.wordPack}</h2>
+            {!isAllSelected && (
+              <span className="text-xs bg-violet-500/20 text-violet-300 border border-violet-500/30 px-2 py-0.5 rounded-full font-medium">
+                {selectedCategories.length} {isArabic ? 'محدد' : 'selected'}
+              </span>
+            )}
+          </div>
           <button
+            type="button"
             onClick={() => navigate('/packs')}
             className="text-violet-400 text-xs hover:text-violet-300 transition-colors"
           >
@@ -323,57 +355,88 @@ export default function Lobby() {
           </button>
         </div>
         <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto pr-1">
+          {/* All Packs Card */}
           <button
-            onClick={() => setSelectedPackId('all')}
-            className={`p-3 rounded-xl border text-center transition-all
-              ${selectedPackId === 'all'
-                ? 'bg-violet-600/30 border-violet-500 text-white'
+            type="button"
+            onClick={() => handleToggleCategory('all')}
+            className={`relative p-3 rounded-xl border text-center transition-all cursor-pointer select-none
+              ${isAllSelected
+                ? 'bg-violet-600/30 border-violet-500 text-white shadow-lg shadow-violet-500/10 ring-1 ring-violet-500/50'
                 : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
               }
             `}
           >
+            {isAllSelected && (
+              <span className="absolute top-2 end-2 w-4 h-4 bg-violet-500 rounded-full flex items-center justify-center text-[10px] text-white font-bold">
+                ✓
+              </span>
+            )}
             <div className="text-2xl mb-1">🎲</div>
             <p className="text-xs font-bold">{strings.lobby.allPacks}</p>
             <p className="text-xs text-white/30">
               {CATEGORY_POOLS.length} {isArabic ? 'تصنيفات' : 'categories'}
             </p>
           </button>
-          {CATEGORY_POOLS.map((pool) => (
-            <button
-              key={pool.id}
-              onClick={() => setSelectedPackId(pool.id)}
-              className={`p-3 rounded-xl border text-center transition-all
-                ${selectedPackId === pool.id
-                  ? 'bg-violet-600/30 border-violet-500 text-white'
-                  : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
-                }
-              `}
-            >
-              <div className="text-2xl mb-1">{pool.icon}</div>
-              <p className="text-xs font-bold truncate">{pool.category}</p>
-              <p className="text-xs text-white/30">
-                {pool.words.length} {isArabic ? 'كلمة' : 'words'}
-              </p>
-            </button>
-          ))}
-          {[...customPacks, ...cloudPacks].map((pack) => (
-            <button
-              key={pack.id}
-              onClick={() => setSelectedPackId(pack.id)}
-              className={`p-3 rounded-xl border text-center transition-all
-                ${selectedPackId === pack.id
-                  ? 'bg-violet-600/30 border-violet-500 text-white'
-                  : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
-                }
-              `}
-            >
-              <div className="text-2xl mb-1">{pack.icon || '📦'}</div>
-              <p className="text-xs font-bold truncate">{pack.name}</p>
-              <p className="text-xs text-white/30">
-                {strings.lobby.pairsCount.replace('{n}', pack.pairs?.length || 0)}
-              </p>
-            </button>
-          ))}
+
+          {/* Dynamic Category Pools Cards */}
+          {CATEGORY_POOLS.map((pool) => {
+            const isSelected = !isAllSelected && selectedCategories.includes(pool.id);
+            return (
+              <button
+                key={pool.id}
+                type="button"
+                onClick={() => handleToggleCategory(pool.id)}
+                className={`relative p-3 rounded-xl border text-center transition-all cursor-pointer select-none
+                  ${isSelected
+                    ? 'bg-violet-600/30 border-violet-500 text-white shadow-lg shadow-violet-500/10 ring-1 ring-violet-500/50'
+                    : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
+                  }
+                `}
+              >
+                {isSelected && (
+                  <span className="absolute top-2 end-2 w-4 h-4 bg-violet-500 rounded-full flex items-center justify-center text-[10px] text-white font-bold">
+                    ✓
+                  </span>
+                )}
+                <div className="text-2xl mb-1">{pool.icon}</div>
+                <p className="text-xs font-bold truncate">{pool.category}</p>
+                <p className="text-xs text-white/30">
+                  {pool.words.length} {isArabic ? 'كلمة' : 'words'}
+                </p>
+              </button>
+            );
+          })}
+
+          {/* Custom and Cloud Packs Cards */}
+          {[...customPacks, ...cloudPacks].map((pack) => {
+            const isSelected = !isAllSelected && selectedCategories.includes(pack.id);
+            return (
+              <button
+                key={pack.id}
+                type="button"
+                onClick={() => handleToggleCategory(pack.id)}
+                className={`relative p-3 rounded-xl border text-center transition-all cursor-pointer select-none
+                  ${isSelected
+                    ? 'bg-violet-600/30 border-violet-500 text-white shadow-lg shadow-violet-500/10 ring-1 ring-violet-500/50'
+                    : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
+                  }
+                `}
+              >
+                {isSelected && (
+                  <span className="absolute top-2 end-2 w-4 h-4 bg-violet-500 rounded-full flex items-center justify-center text-[10px] text-white font-bold">
+                    ✓
+                  </span>
+                )}
+                <div className="text-2xl mb-1">{pack.icon || '📦'}</div>
+                <p className="text-xs font-bold truncate">{pack.name}</p>
+                <p className="text-xs text-white/30">
+                  {pack.words
+                    ? `${pack.words.length} ${isArabic ? 'كلمة' : 'words'}`
+                    : `${(pack.pairs?.length || 0) * 2} ${isArabic ? 'كلمة' : 'words'}`}
+                </p>
+              </button>
+            );
+          })}
         </div>
       </Card>
 
