@@ -16,15 +16,18 @@ import Result from './pages/Result';
 import PackEditor from './pages/PackEditor';
 import { usePackStore } from './store/packStore';
 import { useAuthStore } from './store/authStore';
+import { useEconomyStore } from './store/economyStore';
 
 function App() {
   const syncCloudPacks = usePackStore((s) => s.syncCloudPacks);
   const initAuth = useAuthStore((s) => s.initAuth);
+  const checkDailyLogin = useEconomyStore((s) => s.checkDailyLogin);
 
-  // Fetch global cloud packs and init auth once on app load
+  // Fetch global cloud packs, init auth, and check daily login streak once on app load
   useEffect(() => {
     syncCloudPacks();
     initAuth();
+    checkDailyLogin();
   }, []);
 
   return (

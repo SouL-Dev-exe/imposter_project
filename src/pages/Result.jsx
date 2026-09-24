@@ -12,6 +12,8 @@ import { useGameStore } from '../store/gameStore';
 import { useLanguageStore } from '../store/languageStore';
 import { useAudio } from '../hooks/useAudio';
 import { ROLES } from '../utils/gameLogic';
+import { useEconomyStore } from '../store/economyStore';
+import MatchRewardsModal from '../components/economy/MatchRewardsModal';
 
 export default function Result() {
   const navigate = useNavigate();
@@ -36,6 +38,10 @@ export default function Result() {
     [ROLES.FAKE_IMPOSTOR]: { label: t('roles.fake_impostor'), emoji: '🎭', color: 'text-amber-400' },
   };
 
+  const [rewardBreakdown, setRewardBreakdown] = useState(null);
+  const [showRewardsModal, setShowRewardsModal] = useState(false);
+  const recordMatchOutcome = useEconomyStore((s) => s.recordMatchOutcome);
+
   useEffect(() => {
     if (!players || players.length === 0) {
       navigate('/');
@@ -47,7 +53,24 @@ export default function Result() {
     } else if (winner === 'impostors' || winner === 'fake_impostor') {
       setTimeout(() => playLose(), 300);
     }
-  }, [winner]);
+
+    // Record SouL Coins match reward outcome once winner is declared
+    if (winner && !showFinalGuess && !rewardBreakdown) {
+      const isVictory = winner === 'civilians' || winner === 'impostors';
+      const isImpostor = winner === 'impostors';
+      const isCorrectVote = winner === 'civilians';
+
+      const res = recordMatchOutcome({
+        isVictory,
+        isCorrectVote,
+        isImpostor,
+      });
+
+      setRewardBreakdown(res);
+      // Automatically present match rewards summary modal
+      setShowRewardsModal(true);
+    }
+  }, [winner, showFinalGuess]);
 
   const handleFinalGuessResult = (isCorrect) => {
     setFinalGuessResult(isCorrect);
@@ -252,6 +275,23 @@ export default function Result() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6 }}
       >
+        {rewardBreakdown && (
+          <button
+            type="button"
+            onClick={() => setShowRewardsModal(true)}
+            className="w-full py-3.5 px-4 rounded-2xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 text-amber-300 font-bold text-sm flex items-center justify-between transition-all shadow-lg shadow-amber-500/10 cursor-pointer"
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-xl">🪙</span>
+              <span>Match Rewards: +{rewardBreakdown.totalSC} SC</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-purple-300 font-bold">+{rewardBreakdown.xpGained} XP</span>
+              <span className="text-xs bg-amber-400 text-black px-2 py-0.5 rounded-full font-black">View</span>
+            </div>
+          </button>
+        )}
+
         <Button variant="primary" fullWidth size="xl" onClick={handlePlayAgain} icon="🔄">
           {t('result.playAgain')}
         </Button>
@@ -259,6 +299,13 @@ export default function Result() {
           {t('result.home')}
         </Button>
       </motion.div>
+
+      {/* Match Rewards Modal */}
+      <MatchRewardsModal
+        isOpen={showRewardsModal}
+        breakdown={rewardBreakdown}
+        onClose={() => setShowRewardsModal(false)}
+      />
     </div>
   );
 }
