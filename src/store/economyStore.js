@@ -24,7 +24,15 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { supabase } from '../utils/supabase';
 import { calculateMatchRewards } from '../utils/economyRewards';
-import { STORE_ITEMS, STREAK_LADDER, PASS_TIERS, RARITIES } from '../data/economyCatalog';
+import {
+  STORE_ITEMS,
+  STREAK_LADDER,
+  PASS_TIERS,
+  RARITIES,
+  normalizeCategory,
+  normalizeInventoryCategory,
+  getStoreItem,
+} from '../data/economyCatalog';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const DEFAULT_DAILY_QUESTS = [
@@ -65,6 +73,9 @@ const DEFAULT_ECONOMY = {
   weeklyQuests: DEFAULT_WEEKLY_QUESTS,
   unlockedPassTiers: [1],
   claimedPassTiers: [],
+  // Avatar Styles
+  equippedAvatarStyle: 'bottts',
+  ownedAvatarStyles: ['bottts'],
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -97,6 +108,8 @@ function buildEconomyPayload(state, userId, username) {
     equipped: state.equipped || DEFAULT_ECONOMY.equipped,
     quests: [...(state.dailyQuests || []), ...(state.weeklyQuests || [])],
     unlocked_pass_tiers: state.unlockedPassTiers || [1],
+    equipped_avatar_style: state.equippedAvatarStyle || 'bottts',
+    owned_avatar_styles: state.ownedAvatarStyles || ['bottts'],
     updated_at: new Date().toISOString(),
   };
 }
@@ -210,6 +223,10 @@ export const useEconomyStore = create(
               dailyQuests: daily,
               weeklyQuests: weekly,
               unlockedPassTiers: Array.isArray(row.unlocked_pass_tiers) ? row.unlocked_pass_tiers : [1],
+              equippedAvatarStyle: row.equipped_avatar_style ?? 'bottts',
+              ownedAvatarStyles: Array.isArray(row.owned_avatar_styles) && row.owned_avatar_styles.length > 0
+                ? row.owned_avatar_styles
+                : ['bottts'],
             });
           } else if (!row) {
             // First time user in user_economy: create initial row
@@ -353,28 +370,30 @@ export const useEconomyStore = create(
 
       // ─── 4. SouL Store Purchases & Equipping (with Supabase sync) ──────────
       purchaseItem: (itemId) => {
-        const item = STORE_ITEMS.find((i) => i.id === itemId);
+        const item = getStoreItem(itemId);
         if (!item) return { success: false, error: 'Item not found' };
 
         const { soulCoins, inventory, equipped } = get();
-        const category = item.category;
+        const invCat = normalizeInventoryCategory(item.category);
+        const eqCat = normalizeCategory(item.category);
 
-        if (inventory[category]?.includes(itemId)) {
+        const currentList = inventory[invCat] || [];
+        if (currentList.includes(itemId) || currentList.includes(item.name)) {
           return { success: false, error: 'Item already owned' };
         }
         if (soulCoins < item.price) {
           return { success: false, error: 'Insufficient SouL Coins' };
         }
 
-        const newCategoryInventory = [...(inventory[category] || []), itemId];
-        const shouldAutoEquip = !equipped[category];
+        const newCategoryInventory = [...currentList, itemId];
+        const shouldAutoEquip = !equipped[eqCat];
 
         set((s) => ({
           soulCoins: s.soulCoins - item.price,
-          inventory: { ...s.inventory, [category]: newCategoryInventory },
+          inventory: { ...s.inventory, [invCat]: newCategoryInventory },
           equipped: {
             ...s.equipped,
-            ...(shouldAutoEquip ? { [category]: itemId } : {}),
+            ...(shouldAutoEquip ? { [eqCat]: itemId } : {}),
           },
         }));
 
@@ -384,20 +403,77 @@ export const useEconomyStore = create(
 
       equipItem: (category, itemId) => {
         const { inventory } = get();
-        if (itemId && !inventory[category]?.includes(itemId)) return false;
-        set((s) => ({ equipped: { ...s.equipped, [category]: itemId } }));
+        const item = getStoreItem(itemId);
+        const invCat = normalizeInventoryCategory(category || item?.category);
+        const eqCat = normalizeCategory(category || item?.category);
+
+        // Verification: check if owned in inventory (support ID or name or default title)
+        const currentList = inventory[invCat] || [];
+        const isOwned =
+          currentList.includes(itemId) ||
+          (item && currentList.includes(item.name)) ||
+          (eqCat === 'title' && (itemId === 'Novice' || itemId === 'title_novice'));
+
+        if (itemId && !isOwned) {
+          return false;
+        }
+
+        set((s) => ({
+          equipped: {
+            ...s.equipped,
+            [eqCat]: itemId,
+          },
+        }));
+
         syncToSupabase(get());
         return true;
       },
 
       unequipItem: (category) => {
+        const eqCat = normalizeCategory(category);
         set((s) => ({
           equipped: {
             ...s.equipped,
-            [category]: category === 'title' ? 'Novice' : null,
+            [eqCat]: eqCat === 'title' ? 'Novice' : null,
           },
         }));
         syncToSupabase(get());
+      },
+
+      isOwned: (itemId, category) => {
+        const { inventory } = get();
+        if (!itemId) return false;
+        const item = getStoreItem(itemId);
+        const invCat = normalizeInventoryCategory(category || item?.category);
+        const list = inventory[invCat] || [];
+        return (
+          list.includes(itemId) ||
+          (item && list.includes(item.name)) ||
+          (invCat === 'titles' && (itemId === 'Novice' || itemId === 'title_novice'))
+        );
+      },
+
+      isEquipped: (itemId, category) => {
+        const { equipped } = get();
+        if (!itemId) return false;
+        const item = getStoreItem(itemId);
+        const eqCat = normalizeCategory(category || item?.category);
+        const active = equipped[eqCat];
+        if (!active) return false;
+        return (
+          active === itemId ||
+          (item && active === item.name) ||
+          (eqCat === 'title' && active === 'Novice' && (itemId === 'Novice' || itemId === 'title_novice')) ||
+          (eqCat === 'title' && item && (active === item.name || active === item.id))
+        );
+      },
+
+      getEquippedItem: (category) => {
+        const { equipped } = get();
+        const eqCat = normalizeCategory(category);
+        const activeVal = equipped[eqCat];
+        if (!activeVal) return null;
+        return getStoreItem(activeVal) || { id: activeVal, name: activeVal, icon: '✨' };
       },
 
       // ─── 5. SouL Pass Claims (with Supabase sync) ──────────────────────────
@@ -604,6 +680,45 @@ export const useEconomyStore = create(
           return [];
         }
       },
+
+      // ─── 8. Avatar Style Purchase & Equip ─────────────────────────────────
+      /**
+       * Purchase a DiceBear avatar style with SC.
+       * Bottts is free/default. All others cost SC and require a minimum level.
+       * @param {string} styleValue - DiceBear style key (e.g. 'adventurer')
+       * @param {number} price - SC cost (0 for free/already owned)
+       */
+      purchaseAvatarStyle: (styleValue, price) => {
+        const state = get();
+        if (state.ownedAvatarStyles.includes(styleValue)) {
+          // Already owned — just equip
+          set({ equippedAvatarStyle: styleValue });
+          syncToSupabase(get());
+          return { success: true, alreadyOwned: true };
+        }
+        if (state.soulCoins < price) {
+          return { success: false, error: 'Not enough SouL Coins.' };
+        }
+        set((s) => ({
+          soulCoins: s.soulCoins - price,
+          ownedAvatarStyles: [...s.ownedAvatarStyles, styleValue],
+          equippedAvatarStyle: styleValue,
+        }));
+        syncToSupabase(get());
+        return { success: true, alreadyOwned: false };
+      },
+
+      /**
+       * Equip an already-owned avatar style (free).
+       * @param {string} styleValue - DiceBear style key
+       */
+      equipAvatarStyle: (styleValue) => {
+        const { ownedAvatarStyles } = get();
+        if (!ownedAvatarStyles.includes(styleValue)) return false;
+        set({ equippedAvatarStyle: styleValue });
+        syncToSupabase(get());
+        return true;
+      },
     }),
     {
       name: 'soul_coins_economy',
@@ -623,6 +738,8 @@ export const useEconomyStore = create(
           claimAllPassTiers,
           openCrate,
           fetchLeaderboard,
+          purchaseAvatarStyle,
+          equipAvatarStyle,
           ...rest
         } = state;
         return rest;

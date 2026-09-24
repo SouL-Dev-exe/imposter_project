@@ -7,9 +7,21 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEconomyStore } from '../../store/economyStore';
+import { useAuthStore } from '../../store/authStore';
 import { STORE_ITEMS, RARITIES } from '../../data/economyCatalog';
+import { ALL_AVATAR_STYLES } from '../../utils/milestones';
 import { toast } from '../../store/toastStore';
-import { playClickSound, vibrate } from '../../utils/sfx';
+import { playClickSound, playCoinSound, vibrate } from '../../utils/sfx';
+
+// Avatar style SC prices + level requirements (mirrors milestones.js order)
+const AVATAR_STYLE_CATALOG = [
+  { value: 'bottts',     label: '🤖 Bottts',     minLevel: 1,  price: 0,    desc: 'Classic robot vibes. Default style.' },
+  { value: 'identicon',  label: '🔷 Identicon',  minLevel: 2,  price: 300,  desc: 'Geometric pixel art identity.' },
+  { value: 'adventurer', label: '🧝 Adventurer', minLevel: 3,  price: 500,  desc: 'Fantasy hero portrait.' },
+  { value: 'avataaars',  label: '🧑 Avataaars',  minLevel: 5,  price: 750,  desc: 'Personalized cartoon avatar.' },
+  { value: 'thumbs',     label: '👍 Thumbs',     minLevel: 7,  price: 1000, desc: 'Cute thumbs-up character.' },
+  { value: 'pixel-art',  label: '🕹️ Pixel Art', minLevel: 10, price: 1500, desc: 'Retro 16-bit pixel character.' },
+];
 
 const CATEGORY_TABS = [
   { id: 'outfits', label: 'Outfits & Clothes', icon: '🧥' },
@@ -17,6 +29,7 @@ const CATEGORY_TABS = [
   { id: 'emotes', label: 'Emotes & Expressions', icon: '🤫' },
   { id: 'screenFX', label: 'Screen FX', icon: '✨' },
   { id: 'titles', label: 'Banners & Titles', icon: '🏷️' },
+  { id: 'avatarStyles', label: 'Avatar Styles', icon: '🎨' },
 ];
 
 export default function SouLStoreModal({ isOpen, onClose }) {
@@ -30,7 +43,18 @@ export default function SouLStoreModal({ isOpen, onClose }) {
     purchaseItem,
     equipItem,
     unequipItem,
+    isOwned,
+    isEquipped,
+    seasonLevel,
+    equippedAvatarStyle,
+    ownedAvatarStyles,
+    purchaseAvatarStyle,
+    equipAvatarStyle,
   } = useEconomyStore();
+
+  const { profile } = useAuthStore();
+  const avatarSeed = profile?.username || 'guest';
+
 
   if (!isOpen) return null;
 
@@ -145,11 +169,134 @@ export default function SouLStoreModal({ isOpen, onClose }) {
             ))}
           </div>
 
-          {/* Catalog grid */}
+          {/* Catalog grid — Avatar Styles or regular items */}
+          {activeTab === 'avatarStyles' ? (
+            <div className="overflow-y-auto p-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5 flex-1">
+              {AVATAR_STYLE_CATALOG.map((style) => {
+                const isActive  = equippedAvatarStyle === style.value;
+                const isOwnedStyle = ownedAvatarStyles.includes(style.value);
+                const isLocked  = (seasonLevel ?? 1) < style.minLevel;
+                const canAfford = soulCoins >= style.price;
+                const avatarUrl = `https://api.dicebear.com/9.x/${style.value}/svg?seed=${encodeURIComponent(avatarSeed)}`;
+
+                const handleStyleAction = () => {
+                  playClickSound();
+                  vibrate(50);
+                  if (isLocked) {
+                    setFeedback({ type: 'error', msg: `Reach Level ${style.minLevel} to unlock this style.` });
+                    setTimeout(() => setFeedback(null), 3000);
+                    return;
+                  }
+                  if (isOwnedStyle || style.price === 0) {
+                    const ok = equipAvatarStyle(style.value);
+                    if (ok || style.value === 'bottts') {
+                      toast.equip(style.label.replace(/^[^\s]+\s/, ''), 'Avatar Style');
+                      setFeedback({ type: 'info', msg: `${style.label} equipped!` });
+                      setTimeout(() => setFeedback(null), 2000);
+                    }
+                  } else {
+                    const res = purchaseAvatarStyle(style.value, style.price);
+                    if (res.success) {
+                      playCoinSound();
+                      toast.success(`Unlocked ${style.label}!`, `${style.price.toLocaleString()} SC spent · Style equipped`);
+                      setFeedback({ type: 'success', msg: `Unlocked & equipped ${style.label}!` });
+                    } else {
+                      setFeedback({ type: 'error', msg: res.error || 'Purchase failed.' });
+                    }
+                    setTimeout(() => setFeedback(null), 3000);
+                  }
+                };
+
+                return (
+                  <div
+                    key={style.value}
+                    className={`relative p-4 rounded-2xl border transition-all flex flex-col ${
+                      isActive
+                        ? 'bg-violet-950/40 border-violet-500 shadow-[0_0_20px_rgba(139,92,246,0.35)] ring-1 ring-violet-400'
+                        : isOwnedStyle
+                        ? 'bg-white/[0.04] border-emerald-500/30'
+                        : isLocked
+                        ? 'bg-black/20 border-white/5 opacity-60'
+                        : 'bg-black/30 border-white/10 hover:border-white/20'
+                    }`}
+                  >
+                    {/* Status badge */}
+                    <div className="flex items-center justify-between mb-3">
+                      <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full border ${
+                        isLocked
+                          ? 'text-white/40 border-white/10 bg-white/5'
+                          : style.price === 0
+                          ? 'text-emerald-400 border-emerald-500/40 bg-emerald-500/10'
+                          : 'text-amber-400 border-amber-500/30 bg-amber-500/10'
+                      }`}>
+                        {isLocked ? `🔒 Lv.${style.minLevel}` : style.price === 0 ? 'FREE' : `${style.price.toLocaleString()} SC`}
+                      </span>
+
+                      {isActive ? (
+                        <span className="text-[10px] font-black text-violet-300 bg-violet-600/30 border border-violet-400/50 px-2 py-0.5 rounded-full flex items-center gap-1">
+                          <span>✓</span> Active
+                        </span>
+                      ) : isOwnedStyle ? (
+                        <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-full">
+                          Owned
+                        </span>
+                      ) : null}
+                    </div>
+
+                    {/* DiceBear preview */}
+                    <div className="relative flex flex-col items-center my-2">
+                      <div className={`w-20 h-20 mx-auto rounded-2xl overflow-hidden bg-white/5 border ${
+                        isActive ? 'border-violet-500/50' : 'border-white/10'
+                      } flex items-center justify-center mb-3 transition-all ${
+                        isActive ? 'shadow-[0_0_15px_rgba(139,92,246,0.4)]' : ''
+                      }`}>
+                        {isLocked ? (
+                          <span className="text-3xl">🔒</span>
+                        ) : (
+                          <img
+                            src={avatarUrl}
+                            alt={style.label}
+                            className="w-full h-full object-contain p-1"
+                            loading="lazy"
+                          />
+                        )}
+                      </div>
+                      <h3 className="text-sm font-bold text-white leading-tight mb-0.5">{style.label}</h3>
+                      <p className="text-[11px] text-white/40 text-center leading-snug">{style.desc}</p>
+                      {style.minLevel > 1 && (
+                        <p className="text-[10px] text-white/30 mt-1">Requires Level {style.minLevel}</p>
+                      )}
+                    </div>
+
+                    {/* Action button */}
+                    <div className="mt-auto pt-3 border-t border-white/5">
+                      <button
+                        onClick={handleStyleAction}
+                        disabled={isLocked || (!canAfford && !isOwnedStyle && style.price > 0)}
+                        className={`w-full py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                          isActive
+                            ? 'bg-violet-600/30 border border-violet-500/40 text-violet-300 cursor-default'
+                            : isOwnedStyle
+                            ? 'bg-violet-600 hover:bg-violet-500 text-white shadow-md shadow-violet-600/20 cursor-pointer hover:scale-[1.02]'
+                            : isLocked
+                            ? 'bg-white/5 text-white/25 border border-white/5 cursor-not-allowed'
+                            : canAfford
+                            ? 'bg-amber-500 hover:bg-amber-400 text-black shadow-lg shadow-amber-500/25 cursor-pointer hover:scale-[1.02]'
+                            : 'bg-white/5 text-white/30 border border-white/5 cursor-not-allowed'
+                        }`}
+                      >
+                        {isActive ? '✓ Equipped' : isOwnedStyle ? 'Equip' : isLocked ? `🔒 Locked` : `🪙 ${style.price.toLocaleString()} SC`}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
           <div className="overflow-y-auto p-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5 flex-1">
             {currentItems.map((item) => {
-              const isOwned = inventory[item.category]?.includes(item.id);
-              const isEquipped = equipped[item.category] === item.id;
+              const owned = isOwned(item.id, item.category);
+              const active = isEquipped(item.id, item.category);
               const rarityInfo = RARITIES[item.rarity] || RARITIES.common;
               const canAfford = soulCoins >= item.price;
 
@@ -157,10 +304,10 @@ export default function SouLStoreModal({ isOpen, onClose }) {
                 <div
                   key={item.id}
                   className={`relative p-4 rounded-2xl border transition-all flex flex-col justify-between ${
-                    isEquipped
-                      ? 'bg-violet-950/30 border-violet-500/60 shadow-lg shadow-violet-900/30'
-                      : isOwned
-                      ? 'bg-white/[0.04] border-white/20'
+                    active
+                      ? 'bg-violet-950/40 border-violet-500 shadow-[0_0_20px_rgba(139,92,246,0.35)] ring-1 ring-violet-400'
+                      : owned
+                      ? 'bg-white/[0.04] border-emerald-500/30'
                       : 'bg-black/30 border-white/10 hover:border-white/20'
                   }`}
                 >
@@ -172,11 +319,11 @@ export default function SouLStoreModal({ isOpen, onClose }) {
                       {rarityInfo.name}
                     </span>
 
-                    {isEquipped ? (
-                      <span className="text-[10px] font-bold text-violet-400 bg-violet-500/20 border border-violet-500/40 px-2 py-0.5 rounded-full">
-                        ✓ Equipped
+                    {active ? (
+                      <span className="text-[10px] font-black text-violet-300 bg-violet-600/30 border border-violet-400/50 px-2 py-0.5 rounded-full shadow-sm shadow-violet-500/20 flex items-center gap-1">
+                        <span>✓</span> Equipped
                       </span>
-                    ) : isOwned ? (
+                    ) : owned ? (
                       <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-full">
                         Owned
                       </span>
@@ -199,17 +346,17 @@ export default function SouLStoreModal({ isOpen, onClose }) {
 
                   {/* Action buttons */}
                   <div className="mt-4 pt-3 border-t border-white/5">
-                    {isEquipped ? (
+                    {active ? (
                       <button
                         onClick={() => handleUnequip(item.category)}
-                        className="w-full py-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/60 hover:text-white text-xs font-semibold transition-all cursor-pointer"
+                        className="w-full py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white/70 hover:text-white text-xs font-semibold transition-all cursor-pointer border border-white/10"
                       >
                         Unequip
                       </button>
-                    ) : isOwned ? (
+                    ) : owned ? (
                       <button
                         onClick={() => handleEquip(item.category, item.id)}
-                        className="w-full py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold transition-all shadow-md shadow-violet-600/20 cursor-pointer"
+                        className="w-full py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold transition-all shadow-md shadow-violet-600/20 cursor-pointer hover:scale-[1.02] active:scale-98"
                       >
                         Equip
                       </button>
@@ -232,6 +379,7 @@ export default function SouLStoreModal({ isOpen, onClose }) {
               );
             })}
           </div>
+          )}
 
           {/* Footer status */}
           <div className="p-4 border-t border-white/10 bg-white/[0.02] flex items-center justify-between text-xs text-white/50">
@@ -239,7 +387,7 @@ export default function SouLStoreModal({ isOpen, onClose }) {
               Category: <strong className="text-white font-semibold">{CATEGORY_TABS.find((t) => t.id === activeTab)?.label}</strong>
             </span>
             <span>
-              Total Items: <strong className="text-white font-semibold">{currentItems.length}</strong>
+              Total Items: <strong className="text-white font-semibold">{activeTab === 'avatarStyles' ? 6 : currentItems.length}</strong>
             </span>
           </div>
         </motion.div>

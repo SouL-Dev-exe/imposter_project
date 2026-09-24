@@ -35,3 +35,17 @@ CREATE INDEX IF NOT EXISTS idx_profiles_economy_data
 --   ON public.profiles
 --   FOR SELECT TO authenticated
 --   USING (true);
+
+-- ============================================================
+-- Avatar Styles Migration (add after the initial migration)
+-- ============================================================
+
+-- 5. Add equipped_avatar_style column to user_economy
+--    (stores the DiceBear style key the player currently has equipped)
+ALTER TABLE public.user_economy
+  ADD COLUMN IF NOT EXISTS equipped_avatar_style TEXT DEFAULT 'bottts';
+
+-- 6. Add owned_avatar_styles JSONB array to user_economy
+--    (stores array of purchased DiceBear style keys)
+ALTER TABLE public.user_economy
+  ADD COLUMN IF NOT EXISTS owned_avatar_styles JSONB DEFAULT '["bottts"]'::jsonb;

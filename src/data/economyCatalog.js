@@ -21,6 +21,28 @@ export function getEconomicRank(totalEarnedSC = 0) {
   return ECONOMIC_RANKS[0];
 }
 
+export function normalizeCategory(category) {
+  if (!category) return '';
+  const c = category.toLowerCase();
+  if (c === 'outfit' || c === 'outfits') return 'outfit';
+  if (c === 'accessory' || c === 'accessories') return 'accessory';
+  if (c === 'emote' || c === 'emotes') return 'emote';
+  if (c === 'screenfx' || c === 'screen_fx') return 'screenFX';
+  if (c === 'title' || c === 'titles') return 'title';
+  return category;
+}
+
+export function normalizeInventoryCategory(category) {
+  if (!category) return '';
+  const c = category.toLowerCase();
+  if (c === 'outfit' || c === 'outfits') return 'outfits';
+  if (c === 'accessory' || c === 'accessories') return 'accessories';
+  if (c === 'emote' || c === 'emotes') return 'emotes';
+  if (c === 'screenfx' || c === 'screen_fx') return 'screenFX';
+  if (c === 'title' || c === 'titles') return 'titles';
+  return category;
+}
+
 export const RARITIES = {
   common: { id: 'common', name: 'Common', color: 'text-slate-400', border: 'border-slate-500/30', bg: 'bg-slate-500/10', dropRate: 0.50 },
   rare: { id: 'rare', name: 'Rare', color: 'text-blue-400', border: 'border-blue-500/40', bg: 'bg-blue-500/10', dropRate: 0.30 },
@@ -367,3 +389,21 @@ export function generatePassTiers() {
 }
 
 export const PASS_TIERS = generatePassTiers();
+
+/**
+ * Universal lookup helper to resolve any item by ID or Name
+ */
+export function getStoreItem(idOrName) {
+  if (!idOrName) return null;
+  const clean = String(idOrName).trim();
+  const lower = clean.toLowerCase();
+  const stripped = lower.replace(/[^a-z0-9]/g, '');
+
+  return (
+    STORE_ITEMS.find((i) => i.id === clean) ||
+    STORE_ITEMS.find((i) => i.name.toLowerCase() === lower) ||
+    STORE_ITEMS.find((i) => i.name.toLowerCase().replace(/[^a-z0-9]/g, '') === stripped) ||
+    STORE_ITEMS.find((i) => i.id.replace(/^title_|^outfit_|^acc_|^emote_|^fx_/, '') === stripped) ||
+    null
+  );
+}
