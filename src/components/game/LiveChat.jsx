@@ -2,10 +2,14 @@ import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMultiplayerStore } from '../../store/multiplayerStore';
 import { useAuthStore } from '../../store/authStore';
+import { useEconomyStore } from '../../store/economyStore';
+import { UserAvatar } from '../ui/UserAvatar';
+import { getStoreItem } from '../../data/economyCatalog';
 
 export function LiveChat() {
   const { messages, sendMessage } = useMultiplayerStore();
   const { profile } = useAuthStore();
+  const globalEquipped = useEconomyStore((s) => s.equipped);
   const [text, setText] = useState('');
   const chatRef = useRef(null);
 
@@ -28,7 +32,7 @@ export function LiveChat() {
     <div className="flex flex-col h-full bg-gray-900 border border-white/10 rounded-2xl overflow-hidden shadow-xl shadow-black/50">
       {/* Header */}
       <div className="bg-white/5 border-b border-white/10 px-4 py-3 flex items-center justify-between">
-        <span className="text-white font-bold text-sm">💬 Room Chat</span>
+        <span className="text-white font-bold text-sm flex items-center gap-2">💬 Room Chat</span>
         <span className="text-white/40 text-xs">{messages.length} msgs</span>
       </div>
 
@@ -46,25 +50,41 @@ export function LiveChat() {
           <AnimatePresence initial={false}>
             {messages.map((msg, i) => {
               const isMe = msg.user_id === profile?.id;
+              const titleId = msg.equipped_title || (isMe ? globalEquipped?.title : null) || 'title_novice';
+              const titleItem = getStoreItem(titleId) || { name: 'Novice', icon: '🌱', accent: '#3b82f6' };
+
               return (
                 <motion.div
                   key={`${msg.timestamp}-${i}`}
                   initial={{ opacity: 0, y: 10, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
-                  className={`flex gap-2 w-full ${isMe ? 'flex-row-reverse' : 'flex-row'}`}
+                  className={`flex gap-2.5 w-full ${isMe ? 'flex-row-reverse' : 'flex-row'}`}
                 >
-                  <img 
-                    src={msg.avatar_url} 
-                    alt={msg.username} 
-                    className="w-8 h-8 rounded-full bg-white/10 shrink-0 border border-white/20"
+                  <UserAvatar
+                    username={msg.username || 'Player'}
+                    avatarUrl={msg.avatar_url}
+                    equipped={isMe ? globalEquipped : msg.equipped}
+                    size="sm"
                   />
                   <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} max-w-[75%]`}>
-                    <span className="text-[10px] text-white/40 font-bold uppercase tracking-wider mb-0.5 px-1">
-                      {isMe ? 'You' : msg.username}
-                    </span>
+                    <div className="flex items-center gap-1.5 mb-0.5 px-1">
+                      <span className="text-[10px] text-white/50 font-bold uppercase tracking-wider">
+                        {isMe ? 'You' : msg.username}
+                      </span>
+                      <span
+                        className="text-[9px] font-extrabold px-1.5 py-0.2 rounded border shadow-sm"
+                        style={{
+                          color: titleItem.accent || '#3b82f6',
+                          borderColor: `${titleItem.accent || '#3b82f6'}50`,
+                          backgroundColor: `${titleItem.accent || '#3b82f6'}20`,
+                        }}
+                      >
+                        {titleItem.icon} [{titleItem.name}]
+                      </span>
+                    </div>
                     <div className={`px-3 py-2 rounded-2xl text-sm ${
                       isMe 
-                        ? 'bg-violet-600 text-white rounded-tr-sm' 
+                        ? 'bg-violet-600 text-white rounded-tr-sm shadow-md' 
                         : 'bg-white/10 text-white rounded-tl-sm'
                     }`}>
                       {msg.text}

@@ -1,0 +1,92 @@
+/**
+ * UserAvatar.jsx — Core Reusable Avatar Component with Store Cosmetics Integration.
+ * Renders DiceBear avatar styles, equipped accessory rings, halos, crowns, and status badges.
+ */
+import { useMemo } from 'react';
+import { useEconomyStore } from '../../store/economyStore';
+import { getAccessoryStyle } from './ProfileModal';
+
+const SIZE_CLASSES = {
+  xs: 'w-6 h-6 text-xs',
+  sm: 'w-8 h-8 text-sm',
+  md: 'w-10 h-10 text-base',
+  lg: 'w-14 h-14 text-xl',
+  xl: 'w-20 h-20 text-2xl',
+  '2xl': 'w-28 h-28 text-3xl',
+};
+
+export function UserAvatar({
+  username = 'Player',
+  avatarUrl,
+  avatarStyle,
+  equipped,
+  size = 'md',
+  className = '',
+  showBadge = true,
+  onClick,
+}) {
+  const economyStoreStyle = useEconomyStore((s) => s.equippedAvatarStyle);
+  const globalEquipped = useEconomyStore((s) => s.equipped);
+
+  // Active avatar style: explicit prop > store state > default 'bottts'
+  const activeStyle = avatarStyle || economyStoreStyle || 'bottts';
+
+  // Active accessory ID: from equipped prop > store equipped accessory > null
+  const activeAccessoryId = typeof equipped === 'string'
+    ? equipped
+    : equipped?.accessory || globalEquipped?.accessory || null;
+
+  // DiceBear SVG URL generator
+  const srcUrl = useMemo(() => {
+    if (avatarUrl && !avatarUrl.includes('default_avatar')) {
+      return avatarUrl;
+    }
+    return `https://api.dicebear.com/9.x/${activeStyle}/svg?seed=${encodeURIComponent(username || 'guest')}`;
+  }, [avatarUrl, activeStyle, username]);
+
+  // Accessory styling metadata (ring, crest, badge, color)
+  const accMeta = useMemo(() => {
+    return getAccessoryStyle(activeAccessoryId);
+  }, [activeAccessoryId]);
+
+  const sizeClass = SIZE_CLASSES[size] || SIZE_CLASSES.md;
+
+  return (
+    <div
+      onClick={onClick}
+      className={`relative inline-flex items-center justify-center shrink-0 ${onClick ? 'cursor-pointer' : ''} ${className}`}
+    >
+      {/* Floating Top Crest (Halo / Horns) */}
+      {accMeta.crest && (
+        <span className="absolute -top-3 left-1/2 -translate-x-1/2 z-20 text-base animate-bounce drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]">
+          {accMeta.crest}
+        </span>
+      )}
+
+      {/* Avatar Image Container with Accessory Ring */}
+      <div className={`relative rounded-full overflow-hidden bg-gradient-to-br from-violet-900/40 to-slate-900 ${sizeClass} ${accMeta.ring || 'ring-2 ring-white/20'} transition-all duration-300`}>
+        <img
+          src={srcUrl}
+          alt={username}
+          className="w-full h-full object-cover rounded-full"
+          onError={(e) => {
+            // Fallback to bottts on error
+            e.target.src = `https://api.dicebear.com/9.x/bottts/svg?seed=${encodeURIComponent(username || 'guest')}`;
+          }}
+        />
+      </div>
+
+      {/* Accessory Status Badge (Bottom-Right) */}
+      {showBadge && accMeta.badge && (
+        <div
+          className="absolute -bottom-1 -right-1 z-20 w-5 h-5 rounded-full bg-slate-900 border border-white/30 flex items-center justify-center text-[10px] shadow-md drop-shadow"
+          title={accMeta.label || 'Equipped Accessory'}
+        >
+          {accMeta.badge}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default UserAvatar;

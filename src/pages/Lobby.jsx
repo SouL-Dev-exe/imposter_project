@@ -13,6 +13,8 @@ import { useLanguageStore } from '../store/languageStore';
 import { DEFAULT_PACKS } from '../data/defaultPacks';
 import { CATEGORY_POOLS } from '../data/categoryPools';
 import { assignRoles, pickRandomPair, GAME_MODES } from '../utils/gameLogic';
+import { PlayerCard } from '../components/game/PlayerCard';
+import { useAuthStore } from '../store/authStore';
 import Footer from '../components/Footer';
 
 const MIN_PLAYERS = 3;
@@ -203,30 +205,16 @@ export default function Lobby() {
 
         {error && <p className="text-red-400 text-sm">{error}</p>}
 
-        {/* Player chips */}
+        {/* Player Cards Grid */}
         <AnimatePresence>
-          <div className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
             {playerNames.map((name, i) => (
-              <motion.div
+              <PlayerCard
                 key={name}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                className="flex items-center gap-1.5 bg-violet-600/20 border border-violet-500/30
-                           rounded-full px-3 py-1 text-sm text-violet-300"
-              >
-                <span className="w-5 h-5 rounded-full bg-violet-500 flex items-center justify-center
-                                 text-white text-xs font-bold">
-                  {i + 1}
-                </span>
-                <span>{name}</span>
-                <button
-                  onClick={() => removePlayer(name)}
-                  className="text-violet-400/60 hover:text-red-400 ms-1 transition-colors"
-                >
-                  ×
-                </button>
-              </motion.div>
+                player={{ username: name, level: 1 }}
+                index={i}
+                onRemove={removePlayer}
+              />
             ))}
           </div>
         </AnimatePresence>

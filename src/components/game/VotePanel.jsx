@@ -5,6 +5,8 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '../ui/Button';
+import { UserAvatar } from '../ui/UserAvatar';
+import { getStoreItem } from '../../data/economyCatalog';
 import { useLanguageStore } from '../../store/languageStore';
 
 export function VotePanel({ players, voterName, onVote, hasVoted }) {
@@ -45,34 +47,54 @@ export function VotePanel({ players, voterName, onVote, hasVoted }) {
         <p className="text-white/50 text-xs mt-1">{strings.vote.selectSuspicious}</p>
       </div>
 
-      <div className="space-y-2">
-        {eligibleTargets.map((player) => (
-          <motion.button
-            key={player.id}
-            onClick={() => setSelected(player.name)}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.97 }}
-            className={`
-              w-full p-4 rounded-xl border text-start transition-all duration-200 cursor-pointer
-              ${selected === player.name
-                ? 'bg-red-600/30 border-red-500 text-white'
-                : 'bg-white/5 border-white/10 text-white/80 hover:bg-white/10'
-              }
-            `}
-          >
-            <div className="flex items-center gap-3">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold
-                ${selected === player.name ? 'bg-red-500 text-white' : 'bg-white/10 text-white/60'}
-              `}>
-                {player.name[0].toUpperCase()}
+      <div className="space-y-2.5">
+        {eligibleTargets.map((player) => {
+          const titleId = player.equipped?.title || 'title_novice';
+          const titleItem = getStoreItem(titleId) || { name: 'Novice', icon: '🌱', accent: '#3b82f6' };
+          const playerName = player.username || player.name;
+
+          return (
+            <motion.button
+              key={player.id || playerName}
+              onClick={() => setSelected(playerName)}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
+              className={`
+                w-full p-3 rounded-2xl border text-start transition-all duration-200 cursor-pointer flex items-center justify-between gap-3
+                ${selected === playerName
+                  ? 'bg-red-600/30 border-red-500 text-white shadow-lg shadow-red-600/20'
+                  : 'bg-white/5 border-white/10 text-white/80 hover:bg-white/10'
+                }
+              `}
+            >
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                <UserAvatar
+                  username={playerName}
+                  avatarUrl={player.avatar_url}
+                  equipped={player.equipped}
+                  size="sm"
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="font-bold text-sm text-white truncate">{playerName}</p>
+                  <span
+                    className="text-[9px] font-extrabold px-1.5 py-0.2 rounded border shadow-sm inline-block truncate"
+                    style={{
+                      color: titleItem.accent || '#3b82f6',
+                      borderColor: `${titleItem.accent || '#3b82f6'}50`,
+                      backgroundColor: `${titleItem.accent || '#3b82f6'}20`,
+                    }}
+                  >
+                    {titleItem.icon} [{titleItem.name}]
+                  </span>
+                </div>
               </div>
-              <span className="font-semibold">{player.name}</span>
-              {selected === player.name && (
-                <span className="ms-auto text-red-400">🎯</span>
+
+              {selected === playerName && (
+                <span className="text-red-400 font-extrabold text-lg animate-bounce shrink-0">🎯</span>
               )}
-            </div>
-          </motion.button>
-        ))}
+            </motion.button>
+          );
+        })}
       </div>
 
       <Button

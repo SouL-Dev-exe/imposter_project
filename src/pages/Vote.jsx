@@ -13,6 +13,8 @@ import { useGameStore } from '../store/gameStore';
 import { useLanguageStore } from '../store/languageStore';
 import { tallyVotes, checkWinCondition } from '../utils/gameLogic';
 import { useAudio } from '../hooks/useAudio';
+import { ScreenFXOverlay } from '../components/ui/ScreenFXOverlay';
+import { EmoteWheel } from '../components/game/EmoteWheel';
 
 export default function Vote() {
   const navigate = useNavigate();
@@ -87,9 +89,15 @@ export default function Vote() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col px-4 py-6 max-w-lg mx-auto gap-4">
+    <div className="min-h-screen flex flex-col px-4 py-6 max-w-lg mx-auto gap-4 relative overflow-hidden">
+      {/* Active Screen FX Background Overlay */}
+      <ScreenFXOverlay />
+
+      {/* Interactive Emote Wheel */}
+      <EmoteWheel />
+
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between z-10">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate('/clues')}

@@ -15,7 +15,7 @@ import { useEconomyStore } from '../../store/economyStore';
 import { getStoreItem, RARITIES } from '../../data/economyCatalog';
 import { getPlayerMilestone, ALL_AVATAR_STYLES, getUnlockedAvatarStyles } from '../../utils/milestones';
 import { toast } from '../../store/toastStore';
-import { playClickSound, vibrate } from '../../utils/sfx';
+import { playClickSound, vibrate, sfxState } from '../../utils/sfx';
 
 function makeAvatarUrl(style, seed) {
   return `https://api.dicebear.com/9.x/${style}/svg?seed=${encodeURIComponent(seed || 'guest')}`;
@@ -556,73 +556,96 @@ export function ProfileModal({ isOpen, onClose }) {
                   </div>
                 )}
 
-                {/* Username Input */}
-                <div>
-                  <label className="block text-xs font-bold text-white/60 uppercase mb-1.5">
-                    Display Name
-                  </label>
-                  <input
-                    type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    maxLength={20}
-                    placeholder="Enter your nickname..."
-                    className="w-full px-4 py-2.5 bg-black/40 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
-                  />
-                </div>
-
-                {/* Avatar Style Grid */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="block text-xs font-bold text-white/60 uppercase">
-                      Avatar Style (Level {level})
-                    </label>
-                    <span className="text-[10px] text-white/30">
-                      Buy styles in the SouL Store 🎨
+                {/* 1. Account Info Section */}
+                <div className="space-y-3 bg-white/[0.02] border border-white/10 rounded-2xl p-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-white/60 uppercase tracking-wider flex items-center gap-2">
+                      👤 Account Info
+                    </span>
+                    <span className="text-[10px] bg-violet-500/20 text-violet-300 border border-violet-500/30 px-2 py-0.5 rounded-full font-bold">
+                      Level {level} ({milestone.title})
                     </span>
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {ALL_AVATAR_STYLES.map((s) => {
-                      // Owned = purchased in SouL Store (economy store source of truth)
-                      const isOwnedByStore = ownedAvatarStyles.includes(s.value);
-                      const isSelected = style === s.value;
-                      return (
-                        <button
-                          key={s.value}
-                          type="button"
-                          disabled={!isOwnedByStore}
-                          onClick={() => isOwnedByStore && setStyle(s.value)}
-                          title={isOwnedByStore ? s.label : `Purchase in SouL Store (Lv.${s.minLevel})`}
-                          className={`p-2.5 rounded-xl border text-center transition-all ${
-                            isSelected
-                              ? 'bg-violet-600/30 border-violet-500 text-white shadow-md shadow-violet-500/20'
-                              : isOwnedByStore
-                              ? 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10 cursor-pointer'
-                              : 'bg-black/20 border-white/5 text-white/20 cursor-not-allowed opacity-50'
-                          }`}
-                        >
-                          {isOwnedByStore ? (
-                            <img
-                              src={makeAvatarUrl(s.value, username || 'test')}
-                              alt={s.label}
-                              className="w-10 h-10 mx-auto rounded-full mb-1"
-                            />
-                          ) : (
-                            <div className="w-10 h-10 mx-auto rounded-full mb-1 bg-white/5 flex items-center justify-center text-xl">
-                              🔒
-                            </div>
-                          )}
-                          <p className="text-xs font-bold truncate">{s.label}</p>
-                          {!isOwnedByStore && (
-                            <p className="text-[10px] text-amber-400">Buy in Store</p>
-                          )}
-                          {isSelected && (
-                            <p className="text-[10px] text-violet-400 font-bold">✓ Active</p>
-                          )}
-                        </button>
-                      );
-                    })}
+
+                  <div>
+                    <label className="block text-[11px] text-white/50 mb-1">
+                      Display Name ({username.length}/20)
+                    </label>
+                    <input
+                      type="text"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      maxLength={20}
+                      placeholder="Enter your nickname..."
+                      className="w-full px-4 py-2.5 bg-black/40 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                    />
                   </div>
+
+                  <div className="flex justify-between items-center text-xs text-white/40 pt-1 border-t border-white/5">
+                    <span>Account Status</span>
+                    <span className="text-emerald-400 font-semibold flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" /> Connected
+                    </span>
+                  </div>
+                </div>
+
+                {/* 2. Audio & Sound Settings */}
+                <div className="space-y-3 bg-white/[0.02] border border-white/10 rounded-2xl p-4">
+                  <span className="text-xs font-bold text-white/60 uppercase tracking-wider flex items-center gap-2">
+                    🔊 Audio & Sound Effects
+                  </span>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-white">Sound Effects (SFX)</p>
+                      <p className="text-[11px] text-white/40">In-game sound effects & audio cues</p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        playClickSound();
+                        sfxState.toggle();
+                        // Force re-render of modal
+                        setSuccess(false);
+                      }}
+                      className={`px-3.5 py-1.5 rounded-xl font-bold text-xs border transition-all cursor-pointer ${
+                        !sfxState.muted
+                          ? 'bg-emerald-600/30 border-emerald-500/50 text-emerald-300 shadow-md shadow-emerald-500/10'
+                          : 'bg-red-950/40 border-red-500/40 text-red-300'
+                      }`}
+                    >
+                      {!sfxState.muted ? '🔊 Enabled' : '🔇 Muted'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* 3. Theme & UI Preferences */}
+                <div className="space-y-3 bg-white/[0.02] border border-white/10 rounded-2xl p-4">
+                  <span className="text-xs font-bold text-white/60 uppercase tracking-wider flex items-center gap-2">
+                    🎨 Visual Theme & Notifications
+                  </span>
+
+                  <div className="flex items-center justify-between text-xs">
+                    <div>
+                      <p className="text-sm font-semibold text-white">App Skin</p>
+                      <p className="text-[11px] text-white/40">Cyberpunk Dark Glassmorphism</p>
+                    </div>
+                    <span className="px-2.5 py-1 rounded-lg bg-violet-600/20 text-violet-300 border border-violet-500/30 font-bold">
+                      Active
+                    </span>
+                  </div>
+                </div>
+
+                {/* 4. SouL Store Avatar Styles Redirect Banner */}
+                <div className="p-4 rounded-2xl bg-gradient-to-r from-violet-900/40 to-pink-900/40 border border-violet-500/30 text-start space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">🎨</span>
+                    <h4 className="text-sm font-bold text-white">Looking for Avatar Styles?</h4>
+                  </div>
+                  <p className="text-xs text-white/60 leading-relaxed">
+                    Avatar style selection and customization are now centrally managed in the <strong className="text-violet-300">SouL Store → 🎨 Avatar Styles</strong> tab. Visit the store to view, unlock, and switch your 6 unique DiceBear avatars!
+                  </p>
                 </div>
 
                 {/* Action Buttons */}

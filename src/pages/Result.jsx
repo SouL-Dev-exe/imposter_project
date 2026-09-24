@@ -14,6 +14,10 @@ import { useAudio } from '../hooks/useAudio';
 import { ROLES } from '../utils/gameLogic';
 import { useEconomyStore } from '../store/economyStore';
 import MatchRewardsModal from '../components/economy/MatchRewardsModal';
+import { VictoryModal } from '../components/game/VictoryModal';
+import { UserAvatar } from '../components/ui/UserAvatar';
+import { ScreenFXOverlay } from '../components/ui/ScreenFXOverlay';
+import { getStoreItem } from '../data/economyCatalog';
 import { toast } from '../store/toastStore';
 import { vibrate, playVictorySound, playCoinSound } from '../utils/sfx';
 
@@ -42,7 +46,9 @@ export default function Result() {
 
   const [rewardBreakdown, setRewardBreakdown] = useState(null);
   const [showRewardsModal, setShowRewardsModal] = useState(false);
+  const [showVictoryModal, setShowVictoryModal] = useState(false);
   const recordMatchOutcome = useEconomyStore((s) => s.recordMatchOutcome);
+  const globalEquipped = useEconomyStore((s) => s.equipped);
 
   useEffect(() => {
     if (!players || players.length === 0) {
@@ -52,8 +58,10 @@ export default function Result() {
     // Play win/lose audio if we have a winner
     if (winner === 'civilians') {
       setTimeout(() => playWin(), 300);
+      setShowVictoryModal(true);
     } else if (winner === 'impostors' || winner === 'fake_impostor') {
       setTimeout(() => playLose(), 300);
+      setShowVictoryModal(true);
     }
 
     // Record SouL Coins match reward outcome once winner is declared
@@ -189,21 +197,35 @@ export default function Result() {
       {/* Winner reveal */}
       {winner && winner !== 'fake_impostor' && info && (
         <motion.div
-          className={`rounded-3xl bg-gradient-to-br ${info.gradient} p-1 shadow-2xl ${info.glow}`}
+          className={`rounded-3xl bg-gradient-to-br ${info.gradient} p-1 shadow-2xl ${info.glow} relative overflow-hidden`}
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: 'spring', damping: 20, stiffness: 200, delay: 0.1 }}
         >
-          <div className="bg-gray-950/70 rounded-3xl p-8 text-center space-y-3">
+          <ScreenFXOverlay />
+          <div className="bg-gray-950/80 rounded-3xl p-6 text-center space-y-3 relative z-10">
+            <div className="flex justify-center my-2">
+              <UserAvatar size="xl" />
+            </div>
             <motion.div
-              className="text-7xl"
+              className="text-4xl"
               animate={{ rotate: [0, -10, 10, -10, 10, 0] }}
               transition={{ duration: 0.8, delay: 0.3 }}
             >
               {info.emoji}
             </motion.div>
-            <h1 className="text-4xl font-black text-white">{info.title}</h1>
-            <p className="text-white/60">{info.subtitle}</p>
+            <h1 className="text-3xl font-black text-white">{info.title}</h1>
+            <p className="text-white/60 text-sm">{info.subtitle}</p>
+
+            {/* Glowing Title Badge */}
+            {globalEquipped?.title && (
+              <div className="pt-2 flex justify-center">
+                <span className="text-xs font-black px-3 py-1 rounded-full border border-amber-400/60 bg-amber-400/20 text-amber-300 shadow-[0_0_15px_rgba(245,158,11,0.5)] flex items-center gap-1.5 uppercase tracking-wider">
+                  <span>🏆</span>
+                  <span>[{getStoreItem(globalEquipped.title)?.name || globalEquipped.title}]</span>
+                </span>
+              </div>
+            )}
           </div>
         </motion.div>
       )}
@@ -258,17 +280,38 @@ export default function Result() {
             >
               {players.map((p, i) => {
                 const roleCfg = ROLE_LABELS[p.role] || ROLE_LABELS[ROLES.CIVILIAN];
+                const playerName = p.username || p.name;
+                const titleId = p.equipped?.title || 'title_novice';
+                const titleItem = getStoreItem(titleId) || { name: 'Novice', icon: '🌱', accent: '#3b82f6' };
+
                 return (
                   <motion.div
-                    key={p.id}
+                    key={p.id || i}
                     className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl px-4 py-3"
                     initial={{ opacity: 0, x: isRTL ? 20 : -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.07 }}
                   >
-                    <span className="text-xl">{roleCfg.emoji}</span>
+                    <UserAvatar
+                      username={playerName}
+                      avatarUrl={p.avatar_url}
+                      equipped={p.equipped}
+                      size="sm"
+                    />
                     <div className="flex-1 min-w-0 text-start">
-                      <p className="text-white font-bold">{p.name}</p>
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-white font-bold">{playerName}</p>
+                        <span
+                          className="text-[9px] font-extrabold px-1.5 py-0.2 rounded border shadow-sm"
+                          style={{
+                            color: titleItem.accent || '#3b82f6',
+                            borderColor: `${titleItem.accent || '#3b82f6'}50`,
+                            backgroundColor: `${titleItem.accent || '#3b82f6'}20`,
+                          }}
+                        >
+                          {titleItem.icon} [{titleItem.name}]
+                        </span>
+                      </div>
                       <p className={`text-xs ${roleCfg.color}`}>{roleCfg.label}</p>
                     </div>
                     <div className="text-end">
@@ -327,6 +370,14 @@ export default function Result() {
         isOpen={showRewardsModal}
         breakdown={rewardBreakdown}
         onClose={() => setShowRewardsModal(false)}
+      />
+
+      {/* Victory Showcase Spotlight Modal */}
+      <VictoryModal
+        isOpen={showVictoryModal}
+        winner={winner}
+        wordPair={wordPair}
+        onClose={() => setShowVictoryModal(false)}
       />
     </div>
   );

@@ -16,6 +16,10 @@ import { useLanguageStore } from '../store/languageStore';
 import { useAudio } from '../hooks/useAudio';
 import { playTimerEndSound } from '../utils/sfx';
 import { assignRoles, pickRandomPair } from '../utils/gameLogic';
+import { ScreenFXOverlay } from '../components/ui/ScreenFXOverlay';
+import { EmoteWheel } from '../components/game/EmoteWheel';
+import { UserAvatar } from '../components/ui/UserAvatar';
+import { getStoreItem } from '../data/economyCatalog';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const RADIUS = 54;
@@ -221,9 +225,15 @@ export default function Clues() {
   if (!players || players.length === 0) return null;
 
   return (
-    <div className="min-h-screen flex flex-col px-4 py-6 max-w-lg mx-auto gap-4">
+    <div className="min-h-screen flex flex-col px-4 py-6 max-w-lg mx-auto gap-4 relative overflow-hidden">
+      {/* Active Screen FX Background Overlay */}
+      <ScreenFXOverlay />
+
+      {/* Interactive In-Game Emote Wheel */}
+      <EmoteWheel />
+
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between z-10">
         <div>
           <p className="text-white/40 text-xs uppercase tracking-widest">
             {isArabic ? 'مرحلة النقاش' : 'Discussion Phase'}
@@ -237,7 +247,7 @@ export default function Clues() {
 
       {/* Instruction strip */}
       <motion.div
-        className="bg-violet-600/10 border border-violet-500/20 rounded-xl px-4 py-3 text-center"
+        className="bg-violet-600/10 border border-violet-500/20 rounded-xl px-4 py-3 text-center z-10"
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
       >
@@ -249,7 +259,7 @@ export default function Clues() {
       </motion.div>
 
       {/* ── Central countdown ring ── */}
-      <div className="flex-1 flex flex-col items-center justify-center gap-6">
+      <div className="flex-1 flex flex-col items-center justify-center gap-6 z-10">
         <motion.div
           className="flex flex-col items-center gap-2"
           initial={{ scale: 0.85, opacity: 0 }}
@@ -266,7 +276,7 @@ export default function Clues() {
           </p>
         </motion.div>
 
-        {/* Player roster — compact chips, no turn indicator */}
+        {/* Player roster — compact chips with UserAvatar & equipped Title */}
         <motion.div
           className="w-full bg-white/5 border border-white/10 rounded-2xl p-4"
           initial={{ opacity: 0, y: 16 }}
@@ -276,18 +286,37 @@ export default function Clues() {
           <p className="text-white/30 text-xs uppercase tracking-wider mb-3 text-center">
             {isArabic ? 'اللاعبون' : 'Players'} · {activePlayers.length}
           </p>
-          <div className="flex flex-wrap gap-2 justify-center">
-            {activePlayers.map((p) => (
-              <div
-                key={p.id}
-                className="flex items-center gap-2 bg-white/8 border border-white/10 rounded-full px-3 py-1.5"
-              >
-                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-violet-500 to-purple-700 flex items-center justify-center text-white text-xs font-black">
-                  {p.name[0].toUpperCase()}
+          <div className="flex flex-wrap gap-2.5 justify-center">
+            {activePlayers.map((p) => {
+              const titleId = p.equipped?.title || 'title_novice';
+              const titleItem = getStoreItem(titleId) || { name: 'Novice', icon: '🌱', accent: '#3b82f6' };
+              const playerName = p.username || p.name;
+
+              return (
+                <div
+                  key={p.id || playerName}
+                  className="flex items-center gap-2 bg-slate-900/80 border border-white/15 rounded-full px-3 py-1.5 shadow-md"
+                >
+                  <UserAvatar
+                    username={playerName}
+                    avatarUrl={p.avatar_url}
+                    equipped={p.equipped}
+                    size="xs"
+                  />
+                  <span className="text-white font-bold text-xs">{playerName}</span>
+                  <span
+                    className="text-[9px] font-extrabold px-1.5 py-0.2 rounded border shadow-sm"
+                    style={{
+                      color: titleItem.accent || '#3b82f6',
+                      borderColor: `${titleItem.accent || '#3b82f6'}50`,
+                      backgroundColor: `${titleItem.accent || '#3b82f6'}20`,
+                    }}
+                  >
+                    {titleItem.icon} [{titleItem.name}]
+                  </span>
                 </div>
-                <span className="text-white/80 text-sm font-medium">{p.name}</span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </motion.div>
 
