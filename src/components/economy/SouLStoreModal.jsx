@@ -8,6 +8,8 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEconomyStore } from '../../store/economyStore';
 import { STORE_ITEMS, RARITIES } from '../../data/economyCatalog';
+import { toast } from '../../store/toastStore';
+import { playClickSound, vibrate } from '../../utils/sfx';
 
 const CATEGORY_TABS = [
   { id: 'outfits', label: 'Outfits & Clothes', icon: '🧥' },
@@ -35,9 +37,12 @@ export default function SouLStoreModal({ isOpen, onClose }) {
   const currentItems = STORE_ITEMS.filter((item) => item.category === activeTab);
 
   const handleBuy = (item) => {
+    playClickSound();
+    vibrate(50);
     const res = purchaseItem(item.id);
     if (res.success) {
       setFeedback({ type: 'success', msg: `Purchased ${item.name}!` });
+      toast.success(`Purchased ${item.name}!`, `Added to your inventory`);
     } else {
       setFeedback({ type: 'error', msg: res.error || 'Purchase failed.' });
     }
@@ -45,12 +50,18 @@ export default function SouLStoreModal({ isOpen, onClose }) {
   };
 
   const handleEquip = (category, itemId) => {
-    equipItem(category, itemId);
-    setFeedback({ type: 'info', msg: 'Item equipped!' });
+    const success = equipItem(category, itemId);
+    if (success) {
+      const item = STORE_ITEMS.find((i) => i.id === itemId);
+      toast.equip(item?.name || 'Item', category);
+      setFeedback({ type: 'info', msg: 'Item equipped!' });
+    }
     setTimeout(() => setFeedback(null), 2000);
   };
 
   const handleUnequip = (category) => {
+    playClickSound();
+    vibrate(30);
     unequipItem(category);
     setFeedback({ type: 'info', msg: 'Item unequipped.' });
     setTimeout(() => setFeedback(null), 2000);

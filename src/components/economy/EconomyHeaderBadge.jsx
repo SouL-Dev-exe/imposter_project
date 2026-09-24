@@ -3,7 +3,7 @@
  * Persistent header bar badge displaying SouL Coins balance, Season Level & Economic Tier.
  * Provides quick launcher buttons for Store, Pass, Crates, and Quests with interactive modals.
  */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useEconomyStore } from '../../store/economyStore';
 import { getEconomicRank } from '../../data/economyCatalog';
@@ -11,12 +11,15 @@ import SouLStoreModal from './SouLStoreModal';
 import SouLPassModal from './SouLPassModal';
 import CrateOpeningModal from './CrateOpeningModal';
 import DailyQuestsModal from './DailyQuestsModal';
+import LeaderboardModal from './LeaderboardModal';
+import { toast } from '../../store/toastStore';
 
 export default function EconomyHeaderBadge({ className = '' }) {
   const [storeOpen, setStoreOpen] = useState(false);
   const [passOpen, setPassOpen] = useState(false);
   const [cratesOpen, setCratesOpen] = useState(false);
   const [questsOpen, setQuestsOpen] = useState(false);
+  const [leaderboardOpen, setLeaderboardOpen] = useState(false);
 
   const {
     soulCoins,
@@ -38,6 +41,12 @@ export default function EconomyHeaderBadge({ className = '' }) {
   const claimableQuestsCount =
     dailyQuests.filter((q) => q.progress >= q.target && !q.claimed).length +
     weeklyQuests.filter((q) => q.progress >= q.target && !q.claimed).length;
+
+  useEffect(() => {
+    if (streakRewardPending) {
+      toast.streak(streakRewardPending.day, `${streakRewardPending.label} (+${streakRewardPending.sc} SC)`);
+    }
+  }, [streakRewardPending]);
 
   return (
     <>
@@ -103,6 +112,17 @@ export default function EconomyHeaderBadge({ className = '' }) {
             </span>
           )}
         </motion.button>
+
+        {/* 5. Global Leaderboard */}
+        <motion.button
+          whileHover={{ scale: 1.08 }}
+          whileTap={{ scale: 0.92 }}
+          onClick={() => setLeaderboardOpen(true)}
+          title="Global Leaderboard"
+          className="p-1.5 sm:px-2 rounded-full bg-black/40 hover:bg-yellow-500/20 border border-white/10 hover:border-yellow-500/40 text-white/80 hover:text-white transition-all shadow-sm cursor-pointer flex items-center justify-center"
+        >
+          <span className="text-sm">🏆</span>
+        </motion.button>
       </div>
 
       {/* Modals */}
@@ -110,6 +130,7 @@ export default function EconomyHeaderBadge({ className = '' }) {
       <SouLPassModal isOpen={passOpen} onClose={() => setPassOpen(false)} />
       <CrateOpeningModal isOpen={cratesOpen} onClose={() => setCratesOpen(false)} />
       <DailyQuestsModal isOpen={questsOpen} onClose={() => setQuestsOpen(false)} />
+      <LeaderboardModal isOpen={leaderboardOpen} onClose={() => setLeaderboardOpen(false)} />
 
       {/* Daily Streak Login Reward Toast */}
       {streakRewardPending && (

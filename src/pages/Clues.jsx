@@ -14,6 +14,7 @@ import { useGameStore } from '../store/gameStore';
 import { usePackStore } from '../store/packStore';
 import { useLanguageStore } from '../store/languageStore';
 import { useAudio } from '../hooks/useAudio';
+import { playTimerEndSound } from '../utils/sfx';
 import { assignRoles, pickRandomPair } from '../utils/gameLogic';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -41,6 +42,7 @@ function DiscussionTimer({ totalSeconds, onExpire }) {
           clearInterval(intervalRef.current);
           setExpired(true);
           playAlarm();
+          playTimerEndSound();
           onExpire?.();
           return 0;
         }

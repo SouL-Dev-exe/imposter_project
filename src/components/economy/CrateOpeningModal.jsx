@@ -9,6 +9,8 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEconomyStore } from '../../store/economyStore';
 import { RARITIES } from '../../data/economyCatalog';
+import { playCrateOpenSound, playCoinSound } from '../../utils/sfx';
+import { toast } from '../../store/toastStore';
 
 export default function CrateOpeningModal({ isOpen, onClose }) {
   const [opening, setOpening] = useState(false);
@@ -24,6 +26,7 @@ export default function CrateOpeningModal({ isOpen, onClose }) {
     if (!canOpen || opening) return;
     setOpening(true);
     setUnboxedResult(null);
+    playCrateOpenSound();
 
     // Simulated thrilling suspense delay (1.5s)
     setTimeout(() => {
@@ -31,6 +34,11 @@ export default function CrateOpeningModal({ isOpen, onClose }) {
       setOpening(false);
       if (res.success) {
         setUnboxedResult(res);
+        if (res.isDuplicate) {
+          toast.coin(res.refundAmount, 'Duplicate item converted to SC');
+        } else if (res.item) {
+          toast.success(`Unboxed ${res.item.name}!`, `${res.rarity.toUpperCase()} rarity reward`);
+        }
       }
     }, 1500);
   };

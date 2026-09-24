@@ -5,6 +5,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEconomyStore } from '../../store/economyStore';
 import { STREAK_LADDER } from '../../data/economyCatalog';
+import { toast } from '../../store/toastStore';
 
 export default function DailyQuestsModal({ isOpen, onClose }) {
   const {
@@ -17,6 +18,16 @@ export default function DailyQuestsModal({ isOpen, onClose }) {
   } = useEconomyStore();
 
   if (!isOpen) return null;
+
+  const handleClaim = (type, q) => {
+    const success = claimQuest(type, q.id);
+    if (success) {
+      toast.quest(q.desc, q.reward);
+      if (q.rewardCrate) {
+        toast.success(`Bonus Reward!`, `Unlocked 1 Epic Mystery Crate 🎁`);
+      }
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -128,7 +139,7 @@ export default function DailyQuestsModal({ isOpen, onClose }) {
                       </div>
 
                       <button
-                        onClick={() => claimQuest('daily', q.id)}
+                        onClick={() => handleClaim('daily', q)}
                         disabled={!isDone || q.claimed}
                         className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
                           q.claimed
@@ -185,7 +196,7 @@ export default function DailyQuestsModal({ isOpen, onClose }) {
                       </div>
 
                       <button
-                        onClick={() => claimQuest('weekly', q.id)}
+                        onClick={() => handleClaim('weekly', q)}
                         disabled={!isDone || q.claimed}
                         className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
                           q.claimed

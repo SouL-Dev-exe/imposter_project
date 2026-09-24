@@ -7,6 +7,7 @@ import { LanguageToggle } from './ui/LanguageToggle';
 import { ProfileCustomizer } from './ui/ProfileCustomizer';
 import { DiscordIcon } from './DiscordIcon';
 import EconomyHeaderBadge from './economy/EconomyHeaderBadge';
+import SfxToggle from './ui/SfxToggle';
 
 export default function Navbar({
   showBack = false,
@@ -64,6 +65,7 @@ export default function Navbar({
       {/* Right controls */}
       <div className="ms-auto flex items-center gap-2">
         <EconomyHeaderBadge />
+        <SfxToggle />
         <ProfileCustomizer />
       </div>
     </nav>

@@ -36,7 +36,7 @@ export const useMultiplayerStore = create((set, get) => ({
     // Insert host into room_players
     const { error: joinError } = await supabase
       .from('room_players')
-      .insert([{ room_id: roomData.id, player_id: user.id }]);
+      .insert([{ room_id: roomData.id, user_id: user.id, player_id: user.id }]);
 
     if (joinError) return { success: false, error: joinError.message };
 
@@ -72,7 +72,7 @@ export const useMultiplayerStore = create((set, get) => ({
       // Insert into room_players
       const { error: joinError } = await supabase
         .from('room_players')
-        .insert([{ room_id: roomData.id, player_id: user.id }]);
+        .insert([{ room_id: roomData.id, user_id: user.id, player_id: user.id }]);
 
       if (joinError) return { success: false, error: joinError.message };
     }
@@ -97,7 +97,8 @@ export const useMultiplayerStore = create((set, get) => ({
       .from('room_players')
       .select(`
         player_id,
-        profiles:player_id (id, username, avatar_url, level, xp)
+        user_id,
+        profiles:user_id (id, username, avatar_url, level, xp)
       `)
       .eq('room_id', roomId);
 

@@ -7,6 +7,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEconomyStore } from '../../store/economyStore';
 import { PASS_TIERS } from '../../data/economyCatalog';
+import { toast } from '../../store/toastStore';
 
 export default function SouLPassModal({ isOpen, onClose }) {
   const {
@@ -25,6 +26,24 @@ export default function SouLPassModal({ isOpen, onClose }) {
   const progressPercent = Math.min(100, Math.round((seasonXP / currentLevelRequiredXP) * 100));
 
   const claimableCount = unlockedPassTiers.filter((lvl) => !claimedPassTiers.includes(lvl)).length;
+
+  const handleClaimTier = (tier) => {
+    const success = claimPassTier(tier.level);
+    if (success) {
+      if (tier.reward?.sc) {
+        toast.coin(tier.reward.sc, `Tier ${tier.level} SouL Pass reward`);
+      } else {
+        toast.success(`Tier ${tier.level} Claimed!`, tier.reward?.name || 'Pass Reward');
+      }
+    }
+  };
+
+  const handleClaimAll = () => {
+    const claimedCount = claimAllPassTiers();
+    if (claimedCount > 0) {
+      toast.success(`Claimed All Tiers!`, `${claimedCount} Pass rewards collected`);
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -89,7 +108,7 @@ export default function SouLPassModal({ isOpen, onClose }) {
 
               {/* Claim All Button */}
               <button
-                onClick={claimAllPassTiers}
+                onClick={handleClaimAll}
                 disabled={claimableCount === 0}
                 className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 ${
                   claimableCount > 0
@@ -165,7 +184,7 @@ export default function SouLPassModal({ isOpen, onClose }) {
                       </span>
                     ) : isUnlocked ? (
                       <button
-                        onClick={() => claimPassTier(tier.level)}
+                        onClick={() => handleClaimTier(tier)}
                         className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white text-xs font-bold shadow-md shadow-violet-600/30 hover:scale-105 active:scale-95 transition-all cursor-pointer"
                       >
                         Claim

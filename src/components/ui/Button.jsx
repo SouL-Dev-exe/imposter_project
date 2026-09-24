@@ -2,6 +2,7 @@
  * Button.jsx — Reusable button component
  */
 import { motion } from 'framer-motion';
+import { playClickSound, vibrate } from '../../utils/sfx';
 
 const variants = {
   primary: 'bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white shadow-lg shadow-violet-900/40',
@@ -31,10 +32,17 @@ export function Button({
   icon,
   ...props
 }) {
+  const handleClick = (e) => {
+    if (disabled) return;
+    playClickSound();
+    vibrate(50);
+    onClick?.(e);
+  };
+
   return (
     <motion.button
       type={type}
-      onClick={onClick}
+      onClick={handleClick}
       disabled={disabled}
       whileHover={disabled ? {} : { scale: 1.02, y: -1 }}
       whileTap={disabled ? {} : { scale: 0.97 }}

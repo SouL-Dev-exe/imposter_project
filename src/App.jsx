@@ -17,17 +17,18 @@ import PackEditor from './pages/PackEditor';
 import { usePackStore } from './store/packStore';
 import { useAuthStore } from './store/authStore';
 import { useEconomyStore } from './store/economyStore';
+import ToastContainer from './components/ToastContainer';
 
 function App() {
   const syncCloudPacks = usePackStore((s) => s.syncCloudPacks);
   const initAuth = useAuthStore((s) => s.initAuth);
-  const checkDailyLogin = useEconomyStore((s) => s.checkDailyLogin);
+  const initEconomy = useEconomyStore((s) => s.initEconomy);
 
-  // Fetch global cloud packs, init auth, and check daily login streak once on app load
+  // Fetch global cloud packs, init auth, and hydrate economy from Supabase on app load
   useEffect(() => {
     syncCloudPacks();
-    initAuth();
-    checkDailyLogin();
+    // initAuth first so Supabase session is ready, then initEconomy hydrates from DB
+    initAuth().then(() => initEconomy());
   }, []);
 
   return (
@@ -40,6 +41,7 @@ function App() {
             backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
           }}
         />
+        <ToastContainer />
         <div className="relative z-10 flex-1 flex flex-col">
           <Routes>
             <Route path="/" element={<Home />} />

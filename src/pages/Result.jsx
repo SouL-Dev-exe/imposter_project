@@ -14,6 +14,8 @@ import { useAudio } from '../hooks/useAudio';
 import { ROLES } from '../utils/gameLogic';
 import { useEconomyStore } from '../store/economyStore';
 import MatchRewardsModal from '../components/economy/MatchRewardsModal';
+import { toast } from '../store/toastStore';
+import { vibrate, playVictorySound, playCoinSound } from '../utils/sfx';
 
 export default function Result() {
   const navigate = useNavigate();
@@ -69,6 +71,26 @@ export default function Result() {
       setRewardBreakdown(res);
       // Automatically present match rewards summary modal
       setShowRewardsModal(true);
+
+      // Trigger victory haptics and SFX
+      vibrate([100, 50, 100]);
+      if (isVictory) {
+        playVictorySound();
+      } else {
+        playCoinSound();
+      }
+
+      // 1. Toast: Player earns SC (+150 SC!)
+      if (res.totalSC > 0) {
+        toast.coin(res.totalSC, isVictory ? 'Victory Rewards' : 'Match Rewards');
+      }
+
+      // 2. Toast: Player levels up in SouL Pass
+      if (res.leveledUp) {
+        setTimeout(() => {
+          toast.levelUp(res.newLevel);
+        }, 600);
+      }
     }
   }, [winner, showFinalGuess]);
 
