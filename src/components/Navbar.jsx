@@ -1,15 +1,13 @@
 /**
  * Navbar.jsx — Top navigation menu component.
- * Features brand/language/profile controls and the Discord social community link.
+ * Features brand/language controls, Discord community link, and interactive economy header controls.
  */
 import { useNavigate } from 'react-router-dom';
 import { LanguageToggle } from './ui/LanguageToggle';
-import { ProfileCustomizer } from './ui/ProfileCustomizer';
 import { DiscordIcon } from './DiscordIcon';
 import EconomyHeaderBadge from './economy/EconomyHeaderBadge';
-import SfxToggle from './ui/SfxToggle';
 
-export default function Navbar({
+export function Navbar({
   showBack = false,
   backTo = '/',
   title = '',
@@ -20,10 +18,10 @@ export default function Navbar({
 
   return (
     <nav
-      className={`w-full flex items-center justify-between gap-3 z-50 pointer-events-auto ${className}`}
+      className={`w-full flex items-center justify-between gap-2.5 z-50 pointer-events-auto ${className}`}
       aria-label="Main Navigation"
     >
-      {/* Left controls: Back button, LanguageToggle & Discord icon near it */}
+      {/* Left controls: Back button, LanguageToggle & Discord icon */}
       <div className="flex items-center gap-2">
         {showBack && (
           <button
@@ -37,7 +35,7 @@ export default function Navbar({
 
         <LanguageToggle variant="chip" />
 
-        {/* Discord Social Community Link right near the language changer */}
+        {/* Discord Social Community Link */}
         <a
           href="https://discord.gg/XgVSFcvNM5"
           target="_blank"
@@ -65,11 +63,9 @@ export default function Navbar({
       {/* Right controls */}
       <div className="ms-auto flex items-center gap-2">
         <EconomyHeaderBadge />
-        <SfxToggle />
-        <ProfileCustomizer />
       </div>
     </nav>
   );
 }
 
-export { Navbar };
+export default Navbar;

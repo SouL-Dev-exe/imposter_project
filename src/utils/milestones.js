@@ -2,6 +2,7 @@
  * milestones.js — Player rank titles and perks based on level.
  * Used in ProfileCustomizer and any lobby display.
  */
+import { AVATAR_STYLES } from '../data/avatarStyles';
 
 export const LEVEL_MILESTONES = [
   { 
@@ -116,10 +117,6 @@ export const LEVEL_MILESTONES = [
   },
 ];
 
-/**
- * Returns the highest milestone the player has reached.
- * @param {number} level - The player's current level
- */
 export function getPlayerMilestone(level) {
   const currentLevel = level || 1;
   return (
@@ -129,21 +126,9 @@ export function getPlayerMilestone(level) {
 }
 
 // ─── Level-Gated Avatar Styles ───────────────────────────────────────────────
-export const ALL_AVATAR_STYLES = [
-  { value: 'bottts',     label: '🤖 Bottts',     minLevel: 1 },
-  { value: 'identicon',  label: '🔷 Identicon',  minLevel: 1 },
-  { value: 'adventurer', label: '🧝 Adventurer', minLevel: 5 },
-  { value: 'avataaars',  label: '🧑 Avataaars',  minLevel: 10 },
-  { value: 'thumbs',     label: '👍 Thumbs',     minLevel: 15 },
-  { value: 'pixel-art',  label: '🕹️ Pixel Art', minLevel: 25 },
-];
+export const ALL_AVATAR_STYLES = AVATAR_STYLES;
 
-/**
- * Returns an array of unlocked style value strings based on player level.
- * @param {number} playerLevel
- */
 export function getUnlockedAvatarStyles(playerLevel) {
   const level = playerLevel || 1;
-  return ALL_AVATAR_STYLES.filter((s) => level >= s.minLevel).map((s) => s.value);
+  return AVATAR_STYLES.filter((s) => level >= s.minLevel).map((s) => s.value);
 }
-

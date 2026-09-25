@@ -1,12 +1,14 @@
 /**
  * LeaderboardModal.jsx
  * Global Supabase Leaderboard — real-time top 100 players ranked by SouL Coins.
- * Fetches from profiles.economy_data via useEconomyStore.fetchLeaderboard().
+ * Fetches from user_economy via useEconomyStore.fetchLeaderboard().
+ * Displays each player's live UserAvatar style and equipped Title badge.
  */
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEconomyStore } from '../../store/economyStore';
 import { getEconomicRank, STORE_ITEMS } from '../../data/economyCatalog';
+import UserAvatar from '../ui/UserAvatar';
 
 function getItemById(id) {
   return STORE_ITEMS.find((i) => i.id === id);
@@ -16,8 +18,11 @@ function TitleDisplay({ titleId }) {
   const item = titleId ? getItemById(titleId) : null;
   if (!item) return <span className="text-white/30 text-[11px]">Novice</span>;
   return (
-    <span className="text-[11px] font-bold flex items-center gap-1" style={{ color: item.accent || '#a78bfa' }}>
-      {item.icon} {item.name}
+    <span
+      className="text-[11px] font-bold flex items-center gap-1"
+      style={{ color: item.accent || '#a78bfa' }}
+    >
+      {item.icon} [{item.name}]
     </span>
   );
 }
@@ -114,7 +119,7 @@ export default function LeaderboardModal({ isOpen, onClose }) {
             )}
 
             {!loading && !error && entries.map((entry) => {
-              const rank = getEconomicRank(entry.totalCoinsEarned || entry.soulCoins);
+              const rank = getEconomicRank(entry.soulCoins);
               const medal = RANK_MEDALS[entry.rank];
 
               return (
@@ -138,24 +143,23 @@ export default function LeaderboardModal({ isOpen, onClose }) {
                     )}
                   </div>
 
-                  {/* Avatar */}
+                  {/* Dynamic UserAvatar */}
                   <div className="relative shrink-0">
-                    <img
-                      src={entry.avatar_url || `https://api.dicebear.com/9.x/bottts/svg?seed=${entry.username}`}
-                      alt={entry.username}
-                      className="w-9 h-9 rounded-full bg-white/10 border border-white/10"
-                      onError={(e) => {
-                        e.currentTarget.src = `https://api.dicebear.com/9.x/bottts/svg?seed=${entry.username}`;
-                      }}
+                    <UserAvatar
+                      username={entry.username}
+                      avatarStyle={entry.equippedAvatarStyle || 'bottts'}
+                      equipped={entry.equipped}
+                      avatarUrl={entry.avatar_url}
+                      size="sm"
                     />
                     <span
-                      className={`absolute -bottom-0.5 -end-0.5 text-[10px] px-1 py-0 rounded-full border font-black ${rank.color} ${rank.border} ${rank.bg}`}
+                      className={`absolute -bottom-0.5 -end-0.5 text-[10px] px-1 py-0 rounded-full border font-black z-20 ${rank.color} ${rank.border} ${rank.bg}`}
                     >
                       {rank.icon}
                     </span>
                   </div>
 
-                  {/* Username & Title */}
+                  {/* Username & Equipped Title */}
                   <div className="flex-1 min-w-0">
                     <p className="text-white font-bold text-sm truncate">{entry.username}</p>
                     <TitleDisplay titleId={entry.equippedTitle} />
@@ -175,7 +179,7 @@ export default function LeaderboardModal({ isOpen, onClose }) {
 
           {/* Footer */}
           <div className="p-4 border-t border-white/10 bg-white/[0.02] text-center text-[11px] text-white/30">
-            Data sourced from Supabase profiles in real-time. Updates after each match.
+            Data sourced from Supabase user_economy in real-time. Updates after each match.
           </div>
         </motion.div>
       </div>

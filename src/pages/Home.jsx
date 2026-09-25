@@ -4,10 +4,10 @@ import { motion } from 'framer-motion';
 import { Button } from '../components/ui/Button';
 import { useGameStore } from '../store/gameStore';
 import { useAuthStore } from '../store/authStore';
+import { useEconomyStore } from '../store/economyStore';
 import { useLanguageStore } from '../store/languageStore';
 import { AuthModal } from '../components/ui/AuthModal';
-import { ProfileCustomizer } from '../components/ui/ProfileCustomizer';
-import { LanguageToggle } from '../components/ui/LanguageToggle';
+import { UserAvatar } from '../components/ui/UserAvatar';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
@@ -27,21 +27,17 @@ const fadeUp = {
   animate: { opacity: 1, y: 0, transition: { duration: 0.5 } },
 };
 
-const FEATURES = [
-  { icon: '🎭', title: 'Two Game Modes', desc: 'Conscious Impostor or Blind Infiltrator' },
-  { icon: '📱', title: 'Pass & Play', desc: 'One device, no internet needed' },
-  { icon: '🌐', title: 'Play Online', desc: 'Private rooms with friends' },
-  { icon: '🎨', title: 'Custom Packs', desc: 'Create, share & import word packs' },
-];
-
 export default function Home() {
   const navigate = useNavigate();
   const { currentPhase } = useGameStore();
   const { profile } = useAuthStore();
-  const { language, t } = useLanguageStore();
+  const { equippedAvatarStyle, equipped } = useEconomyStore();
+  const { t } = useLanguageStore();
   const strings = t();
   
   const [showAuthModal, setShowAuthModal] = useState(false);
+
+  const username = profile?.username || 'Player';
 
   const hasActiveGame =
     currentPhase !== 'home' && currentPhase !== 'lobby' && currentPhase !== 'result';
@@ -102,9 +98,15 @@ export default function Home() {
         initial="initial"
         animate="animate"
       >
-        {/* Hero icon */}
-        <motion.div variants={floatVariants} animate="animate" className="text-8xl select-none">
-          🕵️
+        {/* Hero icon — Dynamic User Avatar */}
+        <motion.div variants={floatVariants} animate="animate" className="select-none py-2">
+          <UserAvatar
+            username={username}
+            avatarStyle={equippedAvatarStyle}
+            equipped={equipped}
+            size="2xl"
+            className="shadow-2xl shadow-violet-600/40 ring-4 ring-violet-500/50"
+          />
         </motion.div>
 
         {/* Title */}

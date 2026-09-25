@@ -5,10 +5,6 @@
  * AudioContext is created lazily on first interaction (required by browsers).
  *
  * Global mute state is persisted in localStorage under 'sfx_muted'.
- *
- * Usage:
- *   import { playCoinSound, playCrateOpenSound, playTimerEndSound, playClickSound, vibrate } from './sfx';
- *   import { useSfxStore } from './sfx';   // for mute toggle
  */
 
 // ─── Mute State (persisted to localStorage) ────────────────────────────────────
@@ -47,7 +43,6 @@ function getCtx() {
       return null;
     }
   }
-  // Resume if suspended (browser autoplay policy)
   if (_ctx.state === 'suspended') _ctx.resume();
   return _ctx;
 }
@@ -72,31 +67,20 @@ function osc(ctx, type, freq, startTime, duration, gainValue = 0.3) {
 }
 
 // ─── 1. Coin Sound ─────────────────────────────────────────────────────────────
-/**
- * Quick high-pitched chime: two short sine tones ascending.
- * Used when SC is earned or a quest reward is claimed.
- */
 export function playCoinSound() {
   if (_muted) return;
   const ctx = getCtx();
   if (!ctx) return;
 
   const t = ctx.currentTime;
-  // First chime
   osc(ctx, 'sine', 880, t, 0.12, 0.25);
-  // Second chime — slightly higher, slight delay
   osc(ctx, 'sine', 1320, t + 0.08, 0.18, 0.22);
-  // Shimmer overtone
   osc(ctx, 'triangle', 2640, t + 0.12, 0.12, 0.08);
 
   vibrate(30);
 }
 
 // ─── 2. Crate Open Sound ───────────────────────────────────────────────────────
-/**
- * Ascending tension sweep (sawtooth LFO) + snappy drum burst.
- * Used when the Mystery Crate animation begins.
- */
 export function playCrateOpenSound() {
   if (_muted) return;
   const ctx = getCtx();
@@ -104,7 +88,6 @@ export function playCrateOpenSound() {
 
   const t = ctx.currentTime;
 
-  // Tension sweep: rising sawtooth
   const sweep = ctx.createOscillator();
   const sweepGain = ctx.createGain();
   sweep.type = 'sawtooth';
@@ -117,7 +100,6 @@ export function playCrateOpenSound() {
   sweep.start(t);
   sweep.stop(t + 0.75);
 
-  // Drum burst: noise buffer
   const bufSize = ctx.sampleRate * 0.15;
   const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
   const data = buf.getChannelData(0);
@@ -136,10 +118,7 @@ export function playCrateOpenSound() {
   noiseGain.connect(ctx.destination);
   noise.start(t + 0.55);
 
-  // Punch tone
   osc(ctx, 'sine', 120, t + 0.55, 0.2, 0.4);
-
-  // Victory shimmer at end
   osc(ctx, 'sine', 1047, t + 0.65, 0.25, 0.18);
   osc(ctx, 'sine', 1319, t + 0.72, 0.2, 0.15);
 
@@ -147,9 +126,6 @@ export function playCrateOpenSound() {
 }
 
 // ─── 3. Timer End Sound ────────────────────────────────────────────────────────
-/**
- * Triple urgent beep — played when the voting / clue countdown hits 0.
- */
 export function playTimerEndSound() {
   if (_muted) return;
   const ctx = getCtx();
@@ -168,9 +144,6 @@ export function playTimerEndSound() {
 }
 
 // ─── 4. Click Sound ───────────────────────────────────────────────────────────
-/**
- * Subtle soft tap — a very short sine pop for primary button presses.
- */
 export function playClickSound() {
   if (_muted) return;
   const ctx = getCtx();
@@ -182,34 +155,59 @@ export function playClickSound() {
   vibrate(20);
 }
 
-// ─── 5. Victory / Round Completion Sound ──────────────────────────────────────
-/**
- * Triumphant 3-note fanfare chord.
- * Used on match win / round completion.
- */
+// ─── 5. Victory Sound ──────────────────────────────────────────────────────────
 export function playVictorySound() {
   if (_muted) return;
   const ctx = getCtx();
   if (!ctx) return;
 
   const t = ctx.currentTime;
-  // Chord: C5 - E5 - G5
   osc(ctx, 'sine', 523.25, t,        0.5, 0.22);
   osc(ctx, 'sine', 659.25, t + 0.08, 0.5, 0.22);
   osc(ctx, 'sine', 783.99, t + 0.16, 0.5, 0.22);
-  // Octave shimmer
   osc(ctx, 'triangle', 1046.5, t + 0.22, 0.35, 0.14);
 
   vibrate([100, 50, 100]);
 }
 
-// ─── 6. Mobile Haptics ────────────────────────────────────────────────────────
-/**
- * Trigger device vibration if supported.
- * @param {number | number[]} pattern - ms duration or pattern array
- */
+// ─── 6. Emote Sound Effect ─────────────────────────────────────────────────────
+export function playEmoteSound(emoteId = '') {
+  if (_muted) return;
+  const ctx = getCtx();
+  if (!ctx) return;
+
+  const t = ctx.currentTime;
+  const key = String(emoteId).toLowerCase();
+
+  if (key.includes('hush') || key.includes('quiet')) {
+    // Soft high-to-low whistle pop
+    osc(ctx, 'sine', 950, t, 0.1, 0.15);
+    osc(ctx, 'sine', 500, t + 0.08, 0.12, 0.1);
+  } else if (key.includes('laugh') || key.includes('smile')) {
+    // Staccato chuckle sound
+    osc(ctx, 'triangle', 600, t, 0.06, 0.2);
+    osc(ctx, 'triangle', 750, t + 0.08, 0.06, 0.2);
+    osc(ctx, 'triangle', 650, t + 0.16, 0.08, 0.2);
+  } else if (key.includes('fire') || key.includes('flame') || key.includes('burst')) {
+    // Sizzling burst
+    osc(ctx, 'sawtooth', 300, t, 0.15, 0.25);
+    osc(ctx, 'sine', 700, t + 0.05, 0.2, 0.2);
+  } else if (key.includes('crown') || key.includes('king') || key.includes('gold')) {
+    // Royal chime
+    osc(ctx, 'sine', 784, t, 0.15, 0.25);
+    osc(ctx, 'sine', 1046, t + 0.1, 0.25, 0.25);
+  } else {
+    // Default cheerful double pop
+    osc(ctx, 'sine', 587.33, t, 0.08, 0.2);
+    osc(ctx, 'sine', 880, t + 0.07, 0.12, 0.2);
+  }
+
+  vibrate(30);
+}
+
+// ─── 7. Mobile Haptics ────────────────────────────────────────────────────────
 export function vibrate(pattern) {
   try {
     if (navigator?.vibrate) navigator.vibrate(pattern);
-  } catch { /* noop — some browsers throw */ }
+  } catch { /* noop */ }
 }

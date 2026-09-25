@@ -1,41 +1,32 @@
 /**
  * EmoteWheel.jsx — Interactive In-Game Emote Selector & Floating Toast Trigger.
- * Enables triggering animated floating emotes during active game rounds & voting phases.
+ * Enables triggering 20+ animated floating emotes during active game rounds & voting phases.
  */
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEconomyStore } from '../../store/economyStore';
-import { getStoreItem } from '../../data/economyCatalog';
-import { playClickSound, vibrate } from '../../utils/sfx';
+import { STORE_ITEMS } from '../../data/shopItems';
+import { playClickSound, playEmoteSound, vibrate } from '../../utils/sfx';
 
-const DEFAULT_EMOTES = [
-  { id: 'emote_hush', icon: '🤫', name: 'Hush' },
-  { id: 'emote_inspect', icon: '🔍', name: 'Inspect' },
-  { id: 'emote_crown', icon: '👑', name: 'Crown' },
-  { id: 'emote_mystery', icon: '🎭', name: 'Mystery' },
-  { id: 'emote_on_fire', icon: '🔥', name: 'On Fire' },
-  { id: 'emote_mind_blown', icon: '🤯', name: 'Mind Blown' },
-  { id: 'emote_target', icon: '🎯', name: 'Target' },
-  { id: 'emote_laugh', icon: '😂', name: 'Laugh' },
-];
+const DEFAULT_EMOTES = STORE_ITEMS.filter((i) => i.category === 'emotes');
 
 export function EmoteWheel({ onEmoteTrigger, className = '' }) {
   const [isOpen, setIsOpen] = useState(false);
   const [activeFloatingEmotes, setActiveFloatingEmotes] = useState([]);
 
-  const { inventory, equipped } = useEconomyStore();
+  const { inventory } = useEconomyStore();
 
-  // Gather owned emotes from inventory + defaults
-  const ownedEmoteItems = (inventory?.emotes || [])
-    .map((id) => getStoreItem(id))
-    .filter(Boolean);
+  // Gather owned emotes from inventory + default items
+  const ownedEmoteIds = inventory?.emotes || ['emote_hush'];
+  const availableEmotes = DEFAULT_EMOTES.filter(
+    (e) => ownedEmoteIds.includes(e.id) || e.price === 200 || e.id === 'emote_hush'
+  );
 
-  const availableEmotes = ownedEmoteItems.length > 0
-    ? ownedEmoteItems
-    : DEFAULT_EMOTES;
+  const displayEmotes = availableEmotes.length > 0 ? availableEmotes : DEFAULT_EMOTES.slice(0, 8);
 
   const handleSelectEmote = (emote) => {
     playClickSound();
+    playEmoteSound(emote.id || emote.name);
     vibrate(40);
 
     const emoteId = Date.now() + Math.random();
@@ -43,13 +34,11 @@ export function EmoteWheel({ onEmoteTrigger, className = '' }) {
       id: emoteId,
       icon: emote.icon,
       name: emote.name,
-      x: (Math.random() - 0.5) * 60, // slight lateral drift
+      x: (Math.random() - 0.5) * 60,
     };
 
-    // Add floating animated emote
     setActiveFloatingEmotes((prev) => [...prev, newFloatingEmote]);
 
-    // Auto cleanup after 2.5s
     setTimeout(() => {
       setActiveFloatingEmotes((prev) => prev.filter((e) => e.id !== emoteId));
     }, 2500);
@@ -94,24 +83,24 @@ export function EmoteWheel({ onEmoteTrigger, className = '' }) {
               initial={{ opacity: 0, scale: 0.8, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.8, y: 20 }}
-              className="absolute bottom-16 right-0 bg-slate-900/95 border border-violet-500/40 rounded-3xl p-3 shadow-2xl backdrop-blur-xl w-64 space-y-2 mb-2"
+              className="absolute bottom-16 right-0 bg-slate-900/95 border border-violet-500/40 rounded-3xl p-3 shadow-2xl backdrop-blur-xl w-72 max-h-80 overflow-y-auto space-y-2 mb-2"
             >
-              <div className="flex items-center justify-between px-2 pb-1 border-b border-white/10">
+              <div className="flex items-center justify-between px-2 pb-1 border-b border-white/10 sticky top-0 bg-slate-900/95 z-10">
                 <span className="text-xs font-bold text-white/60 uppercase tracking-wider flex items-center gap-1">
-                  🎭 Express Emote
+                  🎭 Express Emote ({displayEmotes.length})
                 </span>
                 <span className="text-[10px] text-violet-400 font-semibold">
-                  Tap to pop!
+                  🔊 Sound FX
                 </span>
               </div>
 
-              <div className="grid grid-cols-4 gap-2">
-                {availableEmotes.map((emote) => (
+              <div className="grid grid-cols-4 gap-2 pt-1">
+                {displayEmotes.map((emote) => (
                   <button
                     key={emote.id}
                     type="button"
                     onClick={() => handleSelectEmote(emote)}
-                    className="p-2.5 rounded-2xl bg-white/5 border border-white/10 hover:border-violet-500 hover:bg-violet-600/30 transition-all flex flex-col items-center justify-center gap-1 cursor-pointer group active:scale-95"
+                    className="p-2 rounded-2xl bg-white/5 border border-white/10 hover:border-violet-500 hover:bg-violet-600/30 transition-all flex flex-col items-center justify-center gap-1 cursor-pointer group active:scale-95"
                     title={emote.name}
                   >
                     <span className="text-2xl group-hover:scale-125 transition-transform">

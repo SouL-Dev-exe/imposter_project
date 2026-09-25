@@ -22,18 +22,15 @@ export function calculateMatchRewards({
   currentXP = 0,
   currentLevel = 1,
 }) {
-  // 1. Base Participation Reward
-  const baseSC = 50;
+  // 1. Base Participation & Outcome Earn Rates: Loss = +20 SC, Win = +100 SC
+  const baseSC = 20;
+  const victorySC = isVictory ? 80 : 0; // 20 + 80 = 100 SC for Win, 20 SC for Loss
 
-  // 2. Victory Bonus
-  const victorySC = isVictory ? 100 : 0;
+  // 2. MVP / Correct Vote Bonus (+20 SC)
+  const mvpSC = isCorrectVote ? 20 : 0;
 
-  // 3. MVP / Correct Vote Bonus
-  const mvpSC = isCorrectVote ? 30 : 0;
-
-  // 4. Win Streak & Streak Multiplier
+  // 3. Win Streak & Streak Multiplier
   const newWinStreak = isVictory ? currentWinStreak + 1 : 0;
-  // +10% per consecutive win, capped at +50%
   const multiplierPercent = Math.min(newWinStreak * 10, 50);
   const subtotalSC = baseSC + victorySC + mvpSC;
   const streakBonusSC = Math.round((subtotalSC * multiplierPercent) / 100);
@@ -41,15 +38,12 @@ export function calculateMatchRewards({
   // Total SC
   const totalSC = subtotalSC + streakBonusSC;
 
-  // 5. Season XP Gain
-  // Base 100 XP per match + 50 bonus XP on victory
+  // 4. Season XP Gain
   const xpGained = 100 + (isVictory ? 50 : 0);
   let totalXP = currentXP + xpGained;
   let newLevel = currentLevel;
   let leveledUp = false;
 
-  // Level Progression: Level requires `level * 200 XP`
-  // We can calculate how many levels are gained
   while (true) {
     const requiredForNext = newLevel * 200;
     if (totalXP >= requiredForNext && newLevel < 50) {

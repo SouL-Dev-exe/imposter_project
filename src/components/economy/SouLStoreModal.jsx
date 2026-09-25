@@ -1,7 +1,7 @@
 /**
  * SouLStoreModal.jsx
  * The SouL Store and Inventory Customization modal.
- * 5 Tabbed Sections: Outfits, Accessories, Emotes, Screen FX, Banners & Titles.
+ * 6 Tabbed Sections: Outfits, Accessories, Emotes, Screen FX, Banners & Titles, Avatar Styles.
  * Handles Purchase, Equip, and Unequip state dynamically.
  */
 import { useState } from 'react';
@@ -9,19 +9,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useEconomyStore } from '../../store/economyStore';
 import { useAuthStore } from '../../store/authStore';
 import { STORE_ITEMS, RARITIES } from '../../data/economyCatalog';
-import { ALL_AVATAR_STYLES } from '../../utils/milestones';
+import { AVATAR_STYLES } from '../../data/avatarStyles';
 import { toast } from '../../store/toastStore';
 import { playClickSound, playCoinSound, vibrate } from '../../utils/sfx';
-
-// Avatar style SC prices + level requirements (mirrors milestones.js order)
-const AVATAR_STYLE_CATALOG = [
-  { value: 'bottts',     label: '🤖 Bottts',     minLevel: 1,  price: 0,    desc: 'Classic robot vibes. Default style.' },
-  { value: 'identicon',  label: '🔷 Identicon',  minLevel: 2,  price: 300,  desc: 'Geometric pixel art identity.' },
-  { value: 'adventurer', label: '🧝 Adventurer', minLevel: 3,  price: 500,  desc: 'Fantasy hero portrait.' },
-  { value: 'avataaars',  label: '🧑 Avataaars',  minLevel: 5,  price: 750,  desc: 'Personalized cartoon avatar.' },
-  { value: 'thumbs',     label: '👍 Thumbs',     minLevel: 7,  price: 1000, desc: 'Cute thumbs-up character.' },
-  { value: 'pixel-art',  label: '🕹️ Pixel Art', minLevel: 10, price: 1500, desc: 'Retro 16-bit pixel character.' },
-];
 
 const CATEGORY_TABS = [
   { id: 'outfits', label: 'Outfits & Clothes', icon: '🧥' },
@@ -32,8 +22,8 @@ const CATEGORY_TABS = [
   { id: 'avatarStyles', label: 'Avatar Styles', icon: '🎨' },
 ];
 
-export default function SouLStoreModal({ isOpen, onClose }) {
-  const [activeTab, setActiveTab] = useState('outfits');
+export default function SouLStoreModal({ isOpen, onClose, initialTab = 'outfits' }) {
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [feedback, setFeedback] = useState(null);
 
   const {
@@ -55,7 +45,6 @@ export default function SouLStoreModal({ isOpen, onClose }) {
   const { profile } = useAuthStore();
   const avatarSeed = profile?.username || 'guest';
 
-
   if (!isOpen) return null;
 
   const currentItems = STORE_ITEMS.filter((item) => item.category === activeTab);
@@ -65,6 +54,7 @@ export default function SouLStoreModal({ isOpen, onClose }) {
     vibrate(50);
     const res = purchaseItem(item.id);
     if (res.success) {
+      playCoinSound();
       setFeedback({ type: 'success', msg: `Purchased ${item.name}!` });
       toast.success(`Purchased ${item.name}!`, `Added to your inventory`);
     } else {
@@ -111,7 +101,7 @@ export default function SouLStoreModal({ isOpen, onClose }) {
                   SouL Store & Locker
                 </h2>
                 <p className="text-white/40 text-xs">
-                  Unlock cosmetics, outfits, screen effects & titles
+                  Unlock 20+ cosmetics, outfits, avatar styles, screen effects & titles
                 </p>
               </div>
             </div>
@@ -172,7 +162,7 @@ export default function SouLStoreModal({ isOpen, onClose }) {
           {/* Catalog grid — Avatar Styles or regular items */}
           {activeTab === 'avatarStyles' ? (
             <div className="overflow-y-auto p-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5 flex-1">
-              {AVATAR_STYLE_CATALOG.map((style) => {
+              {AVATAR_STYLES.map((style) => {
                 const isActive  = equippedAvatarStyle === style.value;
                 const isOwnedStyle = ownedAvatarStyles.includes(style.value);
                 const isLocked  = (seasonLevel ?? 1) < style.minLevel;
@@ -387,7 +377,7 @@ export default function SouLStoreModal({ isOpen, onClose }) {
               Category: <strong className="text-white font-semibold">{CATEGORY_TABS.find((t) => t.id === activeTab)?.label}</strong>
             </span>
             <span>
-              Total Items: <strong className="text-white font-semibold">{activeTab === 'avatarStyles' ? 6 : currentItems.length}</strong>
+              Total Items: <strong className="text-white font-semibold">{activeTab === 'avatarStyles' ? AVATAR_STYLES.length : currentItems.length}</strong>
             </span>
           </div>
         </motion.div>

@@ -628,6 +628,7 @@ export const useEconomyStore = create(
               season_xp,
               win_streak,
               equipped,
+              equipped_avatar_style,
               profiles (
                 avatar_url,
                 username
@@ -640,7 +641,7 @@ export const useEconomyStore = create(
             // Direct query fallback if join relation is not exposed
             const { data: simpleData, error: simpleError } = await supabase
               .from('user_economy')
-              .select('id, user_id, username, soul_coins, season_level, equipped')
+              .select('id, user_id, username, soul_coins, season_level, equipped, equipped_avatar_style')
               .order('soul_coins', { ascending: false })
               .limit(100);
 
@@ -651,7 +652,9 @@ export const useEconomyStore = create(
               id: row.id,
               userId: row.user_id,
               username: row.username || 'Player',
-              avatar_url: `https://api.dicebear.com/9.x/bottts/svg?seed=${encodeURIComponent(row.username || 'Player')}`,
+              avatar_url: `https://api.dicebear.com/9.x/${row.equipped_avatar_style || 'bottts'}/svg?seed=${encodeURIComponent(row.username || 'Player')}`,
+              equippedAvatarStyle: row.equipped_avatar_style || 'bottts',
+              equipped: row.equipped || {},
               soulCoins: row.soul_coins ?? 0,
               seasonLevel: row.season_level ?? 1,
               equippedTitle: row.equipped?.title ?? 'Novice',
@@ -662,7 +665,7 @@ export const useEconomyStore = create(
             const uname = row.profiles?.username || row.username || 'Player';
             const avatar = row.profiles?.avatar_url && row.profiles?.avatar_url !== 'default_avatar.png'
               ? row.profiles.avatar_url
-              : `https://api.dicebear.com/9.x/bottts/svg?seed=${encodeURIComponent(uname)}`;
+              : `https://api.dicebear.com/9.x/${row.equipped_avatar_style || 'bottts'}/svg?seed=${encodeURIComponent(uname)}`;
 
             return {
               rank: index + 1,
@@ -670,6 +673,8 @@ export const useEconomyStore = create(
               userId: row.user_id,
               username: uname,
               avatar_url: avatar,
+              equippedAvatarStyle: row.equipped_avatar_style || 'bottts',
+              equipped: row.equipped || {},
               soulCoins: row.soul_coins ?? 0,
               seasonLevel: row.season_level ?? 1,
               equippedTitle: row.equipped?.title ?? 'Novice',
