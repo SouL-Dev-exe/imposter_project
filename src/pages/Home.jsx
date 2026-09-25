@@ -100,13 +100,14 @@ export default function Home() {
         >
           {/* Hero Icon — Clean Fixed-Size User Avatar */}
           <motion.div variants={floatVariants} animate="animate" className="select-none py-1">
-            <UserAvatar
-              username={username}
-              avatarStyle={equippedAvatarStyle}
-              equipped={equipped}
-              size="xl"
-              className="shadow-2xl shadow-violet-600/40 ring-4 ring-violet-500/50"
-            />
+            <div className="relative flex items-center justify-center p-2 rounded-full">
+              <UserAvatar
+                username={username}
+                avatarStyle={equippedAvatarStyle}
+                equipped={equipped}
+                size="xl"
+              />
+            </div>
           </motion.div>
 
           {/* Title */}

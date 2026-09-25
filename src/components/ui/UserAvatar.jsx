@@ -54,7 +54,7 @@ const UserAvatar = memo(function UserAvatar({
   return (
     <div
       onClick={onClick}
-      className={`relative flex items-center justify-center shrink-0 overflow-visible ${sizeClass} ${onClick ? 'cursor-pointer' : ''} ${className}`}
+      className={`relative flex items-center justify-center shrink-0 rounded-full bg-transparent overflow-visible border-none ${sizeClass} ${onClick ? 'cursor-pointer' : ''} ${className}`}
     >
       {/* Floating Top Crest (Halo / Horns / Crown) */}
       {accMeta.crest && (
