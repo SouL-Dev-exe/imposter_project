@@ -77,37 +77,6 @@ export function getRandomPairFromPool(categoryPoolOrCategories) {
     pools = CATEGORY_POOLS;
   }
 
-  // Check if selected pools have curated thematic pairs (20+ per pack)
-  const curatedPairs = [];
-  for (const pool of pools) {
-    if (Array.isArray(pool.pairs) && pool.pairs.length > 0) {
-      for (const pair of pool.pairs) {
-        const civilianWord = pair.civilian || pair.wordA;
-        const undercoverWord = pair.undercover || pair.wordB;
-        if (civilianWord && undercoverWord) {
-          curatedPairs.push({
-            civilian: civilianWord,
-            undercover: undercoverWord,
-            category: pool.category || pair.category,
-          });
-        }
-      }
-    }
-  }
-
-  // If curated pairs are available, pick one with balanced random role flip
-  if (curatedPairs.length > 0) {
-    const picked = curatedPairs[Math.floor(Math.random() * curatedPairs.length)];
-    const flip = Math.random() < 0.5;
-    return {
-      wordA: flip ? picked.civilian : picked.undercover,
-      wordB: flip ? picked.undercover : picked.civilian,
-      civilian: picked.civilian,
-      undercover: picked.undercover,
-      category: picked.category || 'عام',
-    };
-  }
-
   // Pull and merge dynamic word pools from all selected categories
   const mergedWords = [];
   const categoryNames = [];
@@ -127,21 +96,21 @@ export function getRandomPairFromPool(categoryPoolOrCategories) {
 
   if (mergedWords.length < 2) {
     return {
-      wordA: 'كسكس',
-      wordB: 'رشتة',
-      civilian: 'كسكس',
-      undercover: 'رشتة',
-      category: 'أكلات وثقافة جزائرية',
+      wordA: 'تفاحة',
+      wordB: 'برتقالة',
+      civilian: 'تفاحة',
+      undercover: 'برتقالة',
+      category: 'فواكه وخضروات',
     };
   }
 
-  // Shuffle merged words and pick top 2
+  // Shuffle merged words and pick 2 distinct words (Civilian & Undercover)
   const shuffledWords = [...mergedWords].sort(() => Math.random() - 0.5);
-  const wordA = shuffledWords[0];
-  const wordB = shuffledWords[1];
+  const civilianWord = shuffledWords[0];
+  const undercoverWord = shuffledWords[1];
 
   // Determine category description
-  const sourcePoolA = pools.find((p) => p.words?.includes(wordA));
+  const sourcePoolA = pools.find((p) => p.words?.includes(civilianWord));
   let categoryLabel;
   if (pools.length === 1) {
     categoryLabel = pools[0].category;
@@ -151,14 +120,11 @@ export function getRandomPairFromPool(categoryPoolOrCategories) {
     categoryLabel = sourcePoolA ? `${sourcePoolA.category} (منوع)` : 'منوع';
   }
 
-  // Randomize assignment order so wordA isn't always Civilian
-  const flip = Math.random() < 0.5;
-
   return {
-    wordA: flip ? wordA : wordB,
-    wordB: flip ? wordB : wordA,
-    civilian: flip ? wordA : wordB,
-    undercover: flip ? wordB : wordA,
+    wordA: civilianWord,
+    wordB: undercoverWord,
+    civilian: civilianWord,
+    undercover: undercoverWord,
     category: categoryLabel,
   };
 }
@@ -181,33 +147,39 @@ export function pickRandomPair(packIdOrCategories, customPacks = [], cloudPacks 
   const selectedCustom = allCustom.filter((p) => ids.includes(p.id));
   const hasCategoryPools = CATEGORY_POOLS.some((c) => ids.includes(c.id));
 
-  // If ONLY custom pack(s) were selected (and not 'all' or category pools)
-  if (selectedCustom.length > 0 && !hasCategoryPools && !ids.includes('all')) {
-    const customPairs = [];
-    for (const cp of selectedCustom) {
-      for (const pair of cp.pairs || []) {
-        customPairs.push({ ...pair, packId: cp.id, packName: cp.name });
-      }
-    }
-    if (customPairs.length > 0) {
-      return customPairs[Math.floor(Math.random() * customPairs.length)];
-    }
-  }
-
-  // If custom packs are also mixed with category pools or 'all'
+  // If custom/cloud pack(s) were selected, build synthetic pool(s)
   if (selectedCustom.length > 0) {
     const customWords = [];
     for (const cp of selectedCustom) {
+      if (Array.isArray(cp.words)) {
+        customWords.push(...cp.words);
+      }
       for (const pair of cp.pairs || []) {
-        if (pair.wordA) customWords.push(pair.wordA);
-        if (pair.wordB) customWords.push(pair.wordB);
+        const wA = pair.civilian || pair.wordA;
+        const wB = pair.undercover || pair.wordB;
+        if (wA) customWords.push(wA);
+        if (wB) customWords.push(wB);
       }
     }
-    if (customWords.length > 0) {
+
+    const uniqueCustomWords = Array.from(new Set(customWords.filter(Boolean)));
+
+    if (uniqueCustomWords.length >= 2 && !hasCategoryPools && !ids.includes('all')) {
+      const shuffled = [...uniqueCustomWords].sort(() => Math.random() - 0.5);
+      return {
+        wordA: shuffled[0],
+        wordB: shuffled[1],
+        civilian: shuffled[0],
+        undercover: shuffled[1],
+        category: selectedCustom.map((cp) => cp.name || cp.category).join(' • '),
+      };
+    }
+
+    if (uniqueCustomWords.length > 0) {
       const syntheticPool = {
         id: 'synthetic-custom',
-        category: selectedCustom.map((cp) => cp.name).join(' • '),
-        words: customWords,
+        category: selectedCustom.map((cp) => cp.name || cp.category).join(' • '),
+        words: uniqueCustomWords,
       };
       const poolMatches = CATEGORY_POOLS.filter(
         (c) => ids.includes(c.id) || ids.includes('all')
@@ -227,10 +199,11 @@ export function pickRandomPair(packIdOrCategories, customPacks = [], cloudPacks 
 
       if (mergedWords.length >= 2) {
         const shuffled = [...mergedWords].sort(() => Math.random() - 0.5);
-        const flip = Math.random() < 0.5;
         return {
-          wordA: flip ? shuffled[0] : shuffled[1],
-          wordB: flip ? shuffled[1] : shuffled[0],
+          wordA: shuffled[0],
+          wordB: shuffled[1],
+          civilian: shuffled[0],
+          undercover: shuffled[1],
           category: catNames.join(' • '),
         };
       }
