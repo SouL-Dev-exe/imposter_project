@@ -2,7 +2,7 @@
  * EmoteWheel.jsx — Interactive In-Game Emote Selector & Floating Toast Trigger.
  * Enables triggering 20+ animated floating emotes during active game rounds & voting phases.
  */
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEconomyStore } from '../../store/economyStore';
 import { STORE_ITEMS } from '../../data/shopItems';
@@ -10,7 +10,7 @@ import { playClickSound, playEmoteSound, vibrate } from '../../utils/sfx';
 
 const DEFAULT_EMOTES = STORE_ITEMS.filter((i) => i.category === 'emotes');
 
-export function EmoteWheel({ onEmoteTrigger, className = '' }) {
+export const EmoteWheel = memo(function EmoteWheel({ onEmoteTrigger, className = '' }) {
   const [isOpen, setIsOpen] = useState(false);
   const [activeFloatingEmotes, setActiveFloatingEmotes] = useState([]);
 
@@ -130,6 +130,6 @@ export function EmoteWheel({ onEmoteTrigger, className = '' }) {
       </div>
     </>
   );
-}
+});
 
 export default EmoteWheel;

@@ -28,8 +28,6 @@ export default function SouLStoreModal({ isOpen, onClose, initialTab = 'avatarSt
 
   const {
     soulCoins,
-    inventory,
-    equipped,
     purchaseItem,
     equipItem,
     unequipItem,

@@ -3,11 +3,11 @@
  * Applies visual overlays to the game canvas based on `equipped.screenFX`.
  * Supports 20 distinct animated CSS/Canvas overlays.
  */
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, memo } from 'react';
 import { motion } from 'framer-motion';
 import { useEconomyStore } from '../../store/economyStore';
 
-export function ScreenFXOverlay({ fxId: customFxId, className = '' }) {
+export const ScreenFXOverlay = memo(function ScreenFXOverlay({ fxId: customFxId, className = '' }) {
   const storeFxId = useEconomyStore((s) => s.equipped?.screenFX);
   const activeFxId = customFxId || storeFxId;
   const canvasRef = useRef(null);
@@ -326,6 +326,6 @@ export function ScreenFXOverlay({ fxId: customFxId, className = '' }) {
   }
 
   return null;
-}
+});
 
 export default ScreenFXOverlay;

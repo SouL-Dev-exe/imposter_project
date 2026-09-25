@@ -2,14 +2,14 @@
  * PlayerCard.jsx — Lobby & Room Player Card Component.
  * Displays equipped Avatar Styles, Titles ([🔥 Bluff King]), Accessory Frames, Level Badges, and Host status.
  */
-import { useMemo } from 'react';
+import { useMemo, memo } from 'react';
 import { motion } from 'framer-motion';
 import { UserAvatar } from '../ui/UserAvatar';
 import { useEconomyStore } from '../../store/economyStore';
 import { getStoreItem } from '../../data/economyCatalog';
 import { getPlayerMilestone } from '../../utils/milestones';
 
-export function PlayerCard({
+export const PlayerCard = memo(function PlayerCard({
   player,
   index,
   onRemove,
@@ -144,6 +144,6 @@ export function PlayerCard({
       </div>
     </motion.div>
   );
-}
+});
 
 export default PlayerCard;

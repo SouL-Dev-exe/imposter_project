@@ -1,7 +1,6 @@
 /**
  * Timer.jsx — Animated circular countdown timer
  */
-import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useTimer } from '../../hooks/useTimer';
 import { useAudio } from '../../hooks/useAudio';

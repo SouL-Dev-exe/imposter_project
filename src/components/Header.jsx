@@ -1,21 +1,33 @@
 /**
  * Header.jsx — Responsive Single-Row Top Navigation Bar.
  * Fits all controls neatly on mobile (< 400px) & desktop without wrapping.
+ * Heavy economy modals are lazy-loaded so they only download when first opened.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useEconomyStore } from '../store/economyStore';
 import { useAuthStore } from '../store/authStore';
 import { LanguageToggle } from './ui/LanguageToggle';
 import { DiscordIcon } from './DiscordIcon';
 import UserAvatar from './ui/UserAvatar';
-import SouLStoreModal from './economy/SouLStoreModal';
-import SouLPassModal from './economy/SouLPassModal';
-import CrateOpeningModal from './economy/CrateOpeningModal';
-import DailyQuestsModal from './economy/DailyQuestsModal';
-import LeaderboardModal from './economy/LeaderboardModal';
-import ProfileModal from './ui/ProfileModal';
 import { toast } from '../store/toastStore';
+
+// ─── Lazy-loaded heavy modal chunks ────────────────────────────────────────
+const SouLStoreModal   = lazy(() => import('./economy/SouLStoreModal'));
+const SouLPassModal    = lazy(() => import('./economy/SouLPassModal'));
+const CrateOpeningModal = lazy(() => import('./economy/CrateOpeningModal'));
+const DailyQuestsModal = lazy(() => import('./economy/DailyQuestsModal'));
+const LeaderboardModal = lazy(() => import('./economy/LeaderboardModal'));
+const ProfileModal     = lazy(() => import('./ui/ProfileModal'));
+
+// Lightweight spinner shown while a modal chunk loads
+function ModalLoader() {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+      <div className="w-8 h-8 rounded-full border-2 border-violet-500/40 border-t-violet-400 animate-spin" />
+    </div>
+  );
+}
 
 export function Header({
   showBack = false,
@@ -26,13 +38,13 @@ export function Header({
 }) {
   const navigate = useNavigate();
 
-  const [isStoreOpen, setIsStoreOpen] = useState(false);
-  const [isPassOpen, setIsPassOpen] = useState(false);
-  const [isCratesOpen, setIsCratesOpen] = useState(false);
-  const [isQuestsOpen, setIsQuestsOpen] = useState(false);
-  const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isStoreOpen,       setIsStoreOpen]       = useState(false);
+  const [isPassOpen,        setIsPassOpen]         = useState(false);
+  const [isCratesOpen,      setIsCratesOpen]       = useState(false);
+  const [isQuestsOpen,      setIsQuestsOpen]       = useState(false);
+  const [isLeaderboardOpen, setIsLeaderboardOpen]  = useState(false);
+  const [isSettingsOpen,    setIsSettingsOpen]     = useState(false);
+  const [isProfileOpen,     setIsProfileOpen]      = useState(false);
 
   const { profile } = useAuthStore();
   const username = profile?.username || 'Player';
@@ -64,7 +76,7 @@ export function Header({
         className={`flex items-center justify-between w-full px-3 py-2 bg-slate-900/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-800 ${className}`}
         aria-label="Main Navigation"
       >
-        {/* Left Control Group (Quick Actions) */}
+        {/* Left Control Group */}
         <div className="flex items-center gap-1.5 sm:gap-2">
           {showBack && (
             <button
@@ -77,7 +89,7 @@ export function Header({
             </button>
           )}
 
-          {/* ⚙️ Settings Button */}
+          {/* ⚙️ Settings */}
           <button
             onClick={() => setIsSettingsOpen(true)}
             title="Settings"
@@ -86,7 +98,7 @@ export function Header({
             ⚙️
           </button>
 
-          {/* 🏆 Leaderboard Button */}
+          {/* 🏆 Leaderboard */}
           <button
             onClick={() => setIsLeaderboardOpen(true)}
             title="Global Leaderboard"
@@ -95,7 +107,7 @@ export function Header({
             🏆
           </button>
 
-          {/* 🛒 Store Button */}
+          {/* 🛒 Store */}
           <button
             onClick={() => setIsStoreOpen(true)}
             title="SouL Store"
@@ -117,7 +129,7 @@ export function Header({
             )}
           </button>
 
-          {/* Language Toggle & Discord Icon (desktop/tablet) */}
+          {/* Language Toggle & Discord (desktop) */}
           <div className="hidden md:flex items-center gap-1.5 ms-1">
             <LanguageToggle variant="chip" />
             <a
@@ -140,7 +152,7 @@ export function Header({
           )}
         </div>
 
-        {/* Right Control Group (Currency & Profile) */}
+        {/* Right Control Group */}
         <div className="flex items-center gap-2 shrink-0">
           {/* 🪙 Coins Pill */}
           <button
@@ -169,16 +181,18 @@ export function Header({
         </div>
       </header>
 
-      {/* Modals */}
-      <SouLStoreModal isOpen={isStoreOpen} onClose={() => setIsStoreOpen(false)} />
-      <SouLPassModal isOpen={isPassOpen} onClose={() => setIsPassOpen(false)} />
-      <CrateOpeningModal isOpen={isCratesOpen} onClose={() => setIsCratesOpen(false)} />
-      <DailyQuestsModal isOpen={isQuestsOpen} onClose={() => setIsQuestsOpen(false)} />
-      <LeaderboardModal isOpen={isLeaderboardOpen} onClose={() => setIsLeaderboardOpen(false)} />
-      <ProfileModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} defaultTab="settings" />
-      <ProfileModal isOpen={isProfileOpen} onClose={() => setIsProfileOpen(false)} defaultTab="loadout" />
+      {/* ─── Lazy-loaded Modals ─────────────────────────────────────────── */}
+      <Suspense fallback={<ModalLoader />}>
+        {isStoreOpen       && <SouLStoreModal    isOpen={isStoreOpen}       onClose={() => setIsStoreOpen(false)} />}
+        {isPassOpen        && <SouLPassModal      isOpen={isPassOpen}        onClose={() => setIsPassOpen(false)} />}
+        {isCratesOpen      && <CrateOpeningModal  isOpen={isCratesOpen}      onClose={() => setIsCratesOpen(false)} />}
+        {isQuestsOpen      && <DailyQuestsModal   isOpen={isQuestsOpen}      onClose={() => setIsQuestsOpen(false)} />}
+        {isLeaderboardOpen && <LeaderboardModal   isOpen={isLeaderboardOpen} onClose={() => setIsLeaderboardOpen(false)} />}
+        {isSettingsOpen    && <ProfileModal       isOpen={isSettingsOpen}    onClose={() => setIsSettingsOpen(false)} defaultTab="settings" />}
+        {isProfileOpen     && <ProfileModal       isOpen={isProfileOpen}     onClose={() => setIsProfileOpen(false)} defaultTab="loadout" />}
+      </Suspense>
 
-      {/* Daily Streak Login Reward Toast */}
+      {/* Daily Streak Toast Banner */}
       {streakRewardPending && (
         <div className="fixed bottom-6 start-1/2 -translate-x-1/2 z-50 animate-bounce">
           <div className="flex items-center gap-3 p-3.5 px-5 bg-gradient-to-r from-amber-600 via-orange-500 to-amber-600 text-white font-bold rounded-2xl shadow-2xl border border-white/20 text-xs">

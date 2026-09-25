@@ -1,33 +1,42 @@
 /**
  * App.jsx — Root component with HashRouter routing.
  * Hash routing is required for GitHub Pages static hosting.
- * Syncs cloud packs from Supabase on launch.
+ * Pages are lazy-loaded for optimal initial bundle size.
  */
-import { useEffect } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AnimatePresence } from 'framer-motion';
-import Home from './pages/Home';
-import Lobby from './pages/Lobby';
-import OnlineLobby from './pages/OnlineLobby';
-import Reveal from './pages/Reveal';
-import Clues from './pages/Clues';
-import Vote from './pages/Vote';
-import Result from './pages/Result';
-import PackEditor from './pages/PackEditor';
 import { usePackStore } from './store/packStore';
 import { useAuthStore } from './store/authStore';
 import { useEconomyStore } from './store/economyStore';
 import ToastContainer from './components/ToastContainer';
+
+// ─── Lazy-loaded page chunks ───────────────────────────────────────────────
+const Home       = lazy(() => import('./pages/Home'));
+const Lobby      = lazy(() => import('./pages/Lobby'));
+const OnlineLobby = lazy(() => import('./pages/OnlineLobby'));
+const Reveal     = lazy(() => import('./pages/Reveal'));
+const Clues      = lazy(() => import('./pages/Clues'));
+const Vote       = lazy(() => import('./pages/Vote'));
+const Result     = lazy(() => import('./pages/Result'));
+const PackEditor = lazy(() => import('./pages/PackEditor'));
+
+// ─── Minimal full-screen loader shown while chunks download ───────────────
+function PageLoader() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-slate-950">
+      <div className="w-10 h-10 rounded-full border-2 border-violet-500/40 border-t-violet-400 animate-spin" />
+    </div>
+  );
+}
 
 function App() {
   const syncCloudPacks = usePackStore((s) => s.syncCloudPacks);
   const initAuth = useAuthStore((s) => s.initAuth);
   const initEconomy = useEconomyStore((s) => s.initEconomy);
 
-  // Fetch global cloud packs, init auth, and hydrate economy from Supabase on app load
+  // Fetch global cloud packs, init auth, then hydrate economy from Supabase
   useEffect(() => {
     syncCloudPacks();
-    // initAuth first so Supabase session is ready, then initEconomy hydrates from DB
     initAuth().then(() => initEconomy());
   }, []);
 
@@ -43,18 +52,20 @@ function App() {
         />
         <ToastContainer />
         <div className="relative z-10 flex-1 flex flex-col">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/lobby" element={<Lobby />} />
-            <Route path="/online" element={<OnlineLobby />} />
-            <Route path="/reveal" element={<Reveal />} />
-            <Route path="/clues" element={<Clues />} />
-            <Route path="/vote" element={<Vote />} />
-            <Route path="/result" element={<Result />} />
-            <Route path="/packs" element={<PackEditor />} />
-            {/* Catch-all */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              <Route path="/"       element={<Home />} />
+              <Route path="/lobby"  element={<Lobby />} />
+              <Route path="/online" element={<OnlineLobby />} />
+              <Route path="/reveal" element={<Reveal />} />
+              <Route path="/clues"  element={<Clues />} />
+              <Route path="/vote"   element={<Vote />} />
+              <Route path="/result" element={<Result />} />
+              <Route path="/packs"  element={<PackEditor />} />
+              {/* Catch-all */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Suspense>
         </div>
       </div>
     </HashRouter>
@@ -62,4 +73,3 @@ function App() {
 }
 
 export default App;
-

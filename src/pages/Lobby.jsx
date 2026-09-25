@@ -10,11 +10,9 @@ import { LanguageToggle } from '../components/ui/LanguageToggle';
 import { useGameStore } from '../store/gameStore';
 import { usePackStore } from '../store/packStore';
 import { useLanguageStore } from '../store/languageStore';
-import { DEFAULT_PACKS } from '../data/defaultPacks';
 import { CATEGORY_POOLS } from '../data/categoryPools';
 import { assignRoles, pickRandomPair, GAME_MODES } from '../utils/gameLogic';
 import { PlayerCard } from '../components/game/PlayerCard';
-import { useAuthStore } from '../store/authStore';
 import Footer from '../components/Footer';
 
 const MIN_PLAYERS = 3;

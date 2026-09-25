@@ -7,7 +7,6 @@ import { useMultiplayerStore } from '../store/multiplayerStore';
 import { LiveChat } from '../components/game/LiveChat';
 import { ReactionPanel } from '../components/game/ReactionPanel';
 import { PlayerCard } from '../components/game/PlayerCard';
-import { getPlayerMilestone } from '../utils/milestones';
 
 export default function OnlineLobby() {
   const navigate = useNavigate();

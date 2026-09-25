@@ -9,7 +9,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEconomyStore } from '../../store/economyStore';
 import { RARITIES } from '../../data/economyCatalog';
-import { playCrateOpenSound, playCoinSound } from '../../utils/sfx';
+import { playCrateOpenSound } from '../../utils/sfx';
 import { toast } from '../../store/toastStore';
 
 export default function CrateOpeningModal({ isOpen, onClose }) {

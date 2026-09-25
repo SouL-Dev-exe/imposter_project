@@ -727,28 +727,24 @@ export const useEconomyStore = create(
     }),
     {
       name: 'soul_coins_economy',
-      partialize: (state) => {
-        const {
-          isSyncing,
-          streakRewardPending,
-          initEconomy,
-          checkDailyLogin,
-          clearStreakNotification,
-          recordMatchOutcome,
-          claimQuest,
-          purchaseItem,
-          equipItem,
-          unequipItem,
-          claimPassTier,
-          claimAllPassTiers,
-          openCrate,
-          fetchLeaderboard,
-          purchaseAvatarStyle,
-          equipAvatarStyle,
-          ...rest
-        } = state;
-        return rest;
-      },
+      partialize: (state) => ({
+        soulCoins: state.soulCoins,
+        totalCoinsEarned: state.totalCoinsEarned,
+        seasonXP: state.seasonXP,
+        seasonLevel: state.seasonLevel,
+        streakDays: state.streakDays,
+        lastLoginDate: state.lastLoginDate,
+        winStreak: state.winStreak,
+        cratesCount: state.cratesCount,
+        inventory: state.inventory,
+        equipped: state.equipped,
+        dailyQuests: state.dailyQuests,
+        weeklyQuests: state.weeklyQuests,
+        unlockedPassTiers: state.unlockedPassTiers,
+        claimedPassTiers: state.claimedPassTiers,
+        equippedAvatarStyle: state.equippedAvatarStyle,
+        ownedAvatarStyles: state.ownedAvatarStyles,
+      }),
     }
   )
 );

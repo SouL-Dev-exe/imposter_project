@@ -2,7 +2,7 @@
  * UserAvatar.jsx — Core Reusable Avatar Component with Store Cosmetics Integration.
  * Pixel-perfect centered alignment across all avatar sizes with overlay protection.
  */
-import { useMemo } from 'react';
+import { useMemo, memo } from 'react';
 import { useEconomyStore } from '../../store/economyStore';
 import { getAccessoryStyle } from './ProfileModal';
 
@@ -15,7 +15,7 @@ const SIZE_CLASSES = {
   '2xl': 'w-24 h-24 text-3xl',
 };
 
-export function UserAvatar({
+const UserAvatar = memo(function UserAvatar({
   username = 'Player',
   avatarUrl,
   avatarStyle,
@@ -94,6 +94,7 @@ export function UserAvatar({
       )}
     </div>
   );
-}
+});
 
+export { UserAvatar };
 export default UserAvatar;
