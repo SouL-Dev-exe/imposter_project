@@ -13,7 +13,7 @@ import Footer from '../components/Footer';
 
 const floatVariants = {
   animate: {
-    y: [0, -12, 0],
+    y: [0, -10, 0],
     transition: { duration: 3, repeat: Infinity, ease: 'easeInOut' },
   },
 };
@@ -23,7 +23,7 @@ const staggerContainer = {
 };
 
 const fadeUp = {
-  initial: { opacity: 0, y: 24 },
+  initial: { opacity: 0, y: 20 },
   animate: { opacity: 1, y: 0, transition: { duration: 0.5 } },
 };
 
@@ -36,7 +36,6 @@ export default function Home() {
   const strings = t();
   
   const [showAuthModal, setShowAuthModal] = useState(false);
-
   const username = profile?.username || 'Player';
 
   const hasActiveGame =
@@ -68,12 +67,12 @@ export default function Home() {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 relative overflow-hidden">
-      {/* Top navigation menu */}
-      <Navbar className="absolute top-4 inset-x-4" />
+    <div className="min-h-screen flex flex-col bg-slate-950 text-white relative overflow-x-hidden">
+      {/* Top Single-Row Responsive Navigation Bar */}
+      <Navbar />
 
       {/* Animated background orbs */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
         <motion.div
           className="absolute -top-32 -left-32 w-96 h-96 bg-violet-600/20 rounded-full blur-3xl"
           animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
@@ -91,88 +90,90 @@ export default function Home() {
         />
       </div>
 
-      {/* Main content */}
-      <motion.div
-        className="relative z-10 flex flex-col items-center gap-8 max-w-md w-full"
-        variants={staggerContainer}
-        initial="initial"
-        animate="animate"
-      >
-        {/* Hero icon — Dynamic User Avatar */}
-        <motion.div variants={floatVariants} animate="animate" className="select-none py-2">
-          <UserAvatar
-            username={username}
-            avatarStyle={equippedAvatarStyle}
-            equipped={equipped}
-            size="2xl"
-            className="shadow-2xl shadow-violet-600/40 ring-4 ring-violet-500/50"
-          />
-        </motion.div>
+      {/* Main hero content container */}
+      <main className="flex-1 flex flex-col items-center justify-center px-4 py-8 relative z-10">
+        <motion.div
+          className="flex flex-col items-center gap-6 max-w-md w-full"
+          variants={staggerContainer}
+          initial="initial"
+          animate="animate"
+        >
+          {/* Hero Icon — Clean Fixed-Size User Avatar */}
+          <motion.div variants={floatVariants} animate="animate" className="select-none py-1">
+            <UserAvatar
+              username={username}
+              avatarStyle={equippedAvatarStyle}
+              equipped={equipped}
+              size="xl"
+              className="shadow-2xl shadow-violet-600/40 ring-4 ring-violet-500/50"
+            />
+          </motion.div>
 
-        {/* Title */}
-        <motion.div variants={fadeUp} className="text-center space-y-2">
-          <h1 className="text-5xl font-black tracking-tight">
-            <span className="bg-gradient-to-r from-violet-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-              {strings.home.title}
-            </span>
-          </h1>
-          <p className="text-xl text-white/60 font-medium">{strings.home.tagline}</p>
-          <p className="text-white/40 text-sm">
-            {strings.home.subtitle}
-          </p>
-        </motion.div>
+          {/* Title */}
+          <motion.div variants={fadeUp} className="text-center space-y-1.5">
+            <h1 className="text-4xl sm:text-5xl font-black tracking-tight">
+              <span className="bg-gradient-to-r from-violet-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                {strings.home.title}
+              </span>
+            </h1>
+            <p className="text-lg text-white/60 font-medium">{strings.home.tagline}</p>
+            <p className="text-white/40 text-xs sm:text-sm">
+              {strings.home.subtitle}
+            </p>
+          </motion.div>
 
-        {/* CTA Buttons */}
-        <motion.div variants={fadeUp} className="w-full space-y-3">
-          {hasActiveGame && (
-            <Button variant="warning" fullWidth size="xl" onClick={handleResume} icon="▶️">
-              {strings.home.resumeGame}
+          {/* CTA Buttons */}
+          <motion.div variants={fadeUp} className="w-full space-y-3">
+            {hasActiveGame && (
+              <Button variant="warning" fullWidth size="xl" onClick={handleResume} icon="▶️">
+                {strings.home.resumeGame}
+              </Button>
+            )}
+            
+            <Button variant="primary" fullWidth size="xl" onClick={handleOnlineClick} icon="🌐">
+              {strings.home.playOnline}
             </Button>
-          )}
-          
-          <Button variant="primary" fullWidth size="xl" onClick={handleOnlineClick} icon="🌐">
-            {strings.home.playOnline}
-          </Button>
 
-          <Button
-            variant="secondary"
-            fullWidth
-            size="lg"
-            onClick={() => navigate('/lobby')}
-            icon="📱"
-          >
-            {strings.home.localMode}
-          </Button>
-          
-          <Button
-            variant="ghost"
-            fullWidth
-            onClick={() => navigate('/packs')}
-            icon="📦"
-          >
-            {strings.home.wordPacks}
-          </Button>
-        </motion.div>
-
-        {/* Features grid */}
-        <motion.div variants={fadeUp} className="grid grid-cols-2 gap-3 w-full">
-          {featuresList.map((f, idx) => (
-            <div
-              key={idx}
-              className="bg-white/5 border border-white/10 rounded-xl p-3 text-center space-y-1"
+            <Button
+              variant="secondary"
+              fullWidth
+              size="lg"
+              onClick={() => navigate('/lobby')}
+              icon="📱"
             >
-              <div className="text-2xl">{f.icon}</div>
-              <p className="text-white text-xs font-bold">{f.title}</p>
-              <p className="text-white/40 text-xs leading-tight">{f.desc}</p>
-            </div>
-          ))}
-        </motion.div>
+              {strings.home.localMode}
+            </Button>
+            
+            <Button
+              variant="ghost"
+              fullWidth
+              onClick={() => navigate('/packs')}
+              icon="📦"
+            >
+              {strings.home.wordPacks}
+            </Button>
+          </motion.div>
 
-        {/* Footer with developer attribution and Discord social link */}
-        <motion.div variants={fadeUp} className="w-full">
-          <Footer />
+          {/* Features grid */}
+          <motion.div variants={fadeUp} className="grid grid-cols-2 gap-3 w-full pt-2">
+            {featuresList.map((f, idx) => (
+              <div
+                key={idx}
+                className="bg-white/5 border border-white/10 rounded-xl p-3 text-center space-y-1"
+              >
+                <div className="text-xl sm:text-2xl">{f.icon}</div>
+                <p className="text-white text-xs font-bold">{f.title}</p>
+                <p className="text-white/40 text-[11px] leading-tight">{f.desc}</p>
+              </div>
+            ))}
+          </motion.div>
+
+          {/* Footer */}
+          <motion.div variants={fadeUp} className="w-full pt-2">
+            <Footer />
+          </motion.div>
         </motion.div>
-      </motion.div>
+      </main>
       
       <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
     </div>
