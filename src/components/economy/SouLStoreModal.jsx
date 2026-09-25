@@ -1,7 +1,7 @@
 /**
  * SouLStoreModal.jsx
  * The SouL Store and Inventory Customization modal.
- * 6 Tabbed Sections: Outfits, Accessories, Emotes, Screen FX, Banners & Titles, Avatar Styles.
+ * 6 Tabbed Sections: Avatar Styles, Avatar Accessories, Outfits & Clothes, Banners & Titles, Screen FX, Emotes & Expressions.
  * Handles Purchase, Equip, and Unequip state dynamically.
  */
 import { useState } from 'react';
@@ -14,15 +14,15 @@ import { toast } from '../../store/toastStore';
 import { playClickSound, playCoinSound, vibrate } from '../../utils/sfx';
 
 const CATEGORY_TABS = [
-  { id: 'outfits', label: 'Outfits & Clothes', icon: '🧥' },
-  { id: 'accessories', label: 'Avatar Accessories', icon: '⭕' },
-  { id: 'emotes', label: 'Emotes & Expressions', icon: '🤫' },
-  { id: 'screenFX', label: 'Screen FX', icon: '✨' },
-  { id: 'titles', label: 'Banners & Titles', icon: '🏷️' },
   { id: 'avatarStyles', label: 'Avatar Styles', icon: '🎨' },
+  { id: 'accessories', label: 'Avatar Accessories', icon: '⭕' },
+  { id: 'outfits', label: 'Outfits & Clothes', icon: '🧥' },
+  { id: 'titles', label: 'Banners & Titles', icon: '🏷️' },
+  { id: 'screenFX', label: 'Screen FX', icon: '✨' },
+  { id: 'emotes', label: 'Emotes & Expressions', icon: '🤫' },
 ];
 
-export default function SouLStoreModal({ isOpen, onClose, initialTab = 'outfits' }) {
+export default function SouLStoreModal({ isOpen, onClose, initialTab = 'avatarStyles' }) {
   const [activeTab, setActiveTab] = useState(initialTab);
   const [feedback, setFeedback] = useState(null);
 
@@ -100,16 +100,20 @@ export default function SouLStoreModal({ isOpen, onClose, initialTab = 'outfits'
                 <h2 className="text-xl font-black text-white flex items-center gap-2">
                   SouL Store & Locker
                 </h2>
-                <p className="text-white/40 text-xs">
+                <p className="text-white/40 text-xs" dir="ltr">
                   Unlock 20+ cosmetics, outfits, avatar styles, screen effects & titles
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-3">
-              {/* SC balance badge */}
-              <div className="px-3.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 font-bold text-xs flex items-center gap-1.5 shadow-sm">
-                <span>🪙</span> {soulCoins.toLocaleString()} SC
+              {/* SC balance badge with strict LTR text direction */}
+              <div
+                dir="ltr"
+                className="px-3.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 font-bold text-xs flex items-center gap-1.5 shadow-sm"
+              >
+                <span>Your balance:</span>
+                <span className="font-extrabold text-amber-300">{soulCoins.toLocaleString()} SC 🪙</span>
               </div>
 
               <button
@@ -128,6 +132,7 @@ export default function SouLStoreModal({ isOpen, onClose, initialTab = 'outfits'
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
+                dir="ltr"
                 className={`px-4 py-2 text-center text-xs font-bold ${
                   feedback.type === 'success'
                     ? 'bg-emerald-500/20 text-emerald-300 border-b border-emerald-500/30'
@@ -141,13 +146,13 @@ export default function SouLStoreModal({ isOpen, onClose, initialTab = 'outfits'
             )}
           </AnimatePresence>
 
-          {/* Tabs */}
-          <div className="flex overflow-x-auto p-2.5 gap-1.5 border-b border-white/10 bg-black/30 scrollbar-none">
+          {/* Sleek Horizontal Category Selector Bar */}
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-2 px-3 w-full flex-nowrap scroll-smooth border-b border-white/10 bg-black/40">
             {CATEGORY_TABS.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer shrink-0 ${
                   activeTab === tab.id
                     ? 'bg-violet-600 text-white shadow-lg shadow-violet-600/30'
                     : 'text-white/50 hover:text-white hover:bg-white/5'
@@ -211,7 +216,7 @@ export default function SouLStoreModal({ isOpen, onClose, initialTab = 'outfits'
                     }`}
                   >
                     {/* Status badge */}
-                    <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center justify-between mb-3" dir="ltr">
                       <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full border ${
                         isLocked
                           ? 'text-white/40 border-white/10 bg-white/5'
@@ -252,9 +257,9 @@ export default function SouLStoreModal({ isOpen, onClose, initialTab = 'outfits'
                         )}
                       </div>
                       <h3 className="text-sm font-bold text-white leading-tight mb-0.5">{style.label}</h3>
-                      <p className="text-[11px] text-white/40 text-center leading-snug">{style.desc}</p>
+                      <p className="text-[11px] text-white/40 text-center leading-snug" dir="ltr">{style.desc}</p>
                       {style.minLevel > 1 && (
-                        <p className="text-[10px] text-white/30 mt-1">Requires Level {style.minLevel}</p>
+                        <p className="text-[10px] text-white/30 mt-1" dir="ltr">Requires Level {style.minLevel}</p>
                       )}
                     </div>
 
@@ -275,7 +280,9 @@ export default function SouLStoreModal({ isOpen, onClose, initialTab = 'outfits'
                             : 'bg-white/5 text-white/30 border border-white/5 cursor-not-allowed'
                         }`}
                       >
-                        {isActive ? '✓ Equipped' : isOwnedStyle ? 'Equip' : isLocked ? `🔒 Locked` : `🪙 ${style.price.toLocaleString()} SC`}
+                        <span dir="ltr">
+                          {isActive ? '✓ Equipped' : isOwnedStyle ? 'Equip' : isLocked ? `🔒 Locked` : `${style.price.toLocaleString()} SC 🪙`}
+                        </span>
                       </button>
                     </div>
                   </div>
@@ -302,7 +309,7 @@ export default function SouLStoreModal({ isOpen, onClose, initialTab = 'outfits'
                   }`}
                 >
                   {/* Top rarity & equipped badge */}
-                  <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center justify-between mb-3" dir="ltr">
                     <span
                       className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full border ${rarityInfo.color} ${rarityInfo.border} ${rarityInfo.bg}`}
                     >
@@ -330,8 +337,8 @@ export default function SouLStoreModal({ isOpen, onClose, initialTab = 'outfits'
                     >
                       {item.icon}
                     </div>
-                    <h3 className="text-sm font-bold text-white leading-tight mb-1">{item.name}</h3>
-                    <p className="text-[11px] text-white/40 leading-snug line-clamp-2">{item.desc}</p>
+                    <h3 className="text-sm font-bold text-white leading-tight mb-1" dir="ltr">{item.name}</h3>
+                    <p className="text-[11px] text-white/40 leading-snug line-clamp-2 text-left" dir="ltr">{item.desc}</p>
                   </div>
 
                   {/* Action buttons */}
@@ -360,8 +367,9 @@ export default function SouLStoreModal({ isOpen, onClose, initialTab = 'outfits'
                             : 'bg-white/5 text-white/30 border border-white/5 cursor-not-allowed'
                         }`}
                       >
-                        <span>🪙</span>
-                        <span>{item.price === 0 ? 'Free' : `${item.price.toLocaleString()} SC`}</span>
+                        <span dir="ltr">
+                          {item.price === 0 ? 'Free' : `${item.price.toLocaleString()} SC 🪙`}
+                        </span>
                       </button>
                     )}
                   </div>
@@ -372,7 +380,7 @@ export default function SouLStoreModal({ isOpen, onClose, initialTab = 'outfits'
           )}
 
           {/* Footer status */}
-          <div className="p-4 border-t border-white/10 bg-white/[0.02] flex items-center justify-between text-xs text-white/50">
+          <div className="p-4 border-t border-white/10 bg-white/[0.02] flex items-center justify-between text-xs text-white/50" dir="ltr">
             <span>
               Category: <strong className="text-white font-semibold">{CATEGORY_TABS.find((t) => t.id === activeTab)?.label}</strong>
             </span>

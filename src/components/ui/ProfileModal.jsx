@@ -93,7 +93,15 @@ export function ProfileModal({ isOpen, onClose, defaultTab = 'loadout' }) {
 
   // Equipped cosmetic representations
   const equippedTitleItem = useMemo(() => {
-    return getStoreItem(equipped?.title) || { id: 'title_novice', name: equipped?.title || 'Novice', icon: '🌱', accent: '#94a3b8' };
+    const id = equipped?.title;
+    if (!id || id === 'Novice' || id === 'title_novice') {
+      return { id: 'title_novice', name: 'Novice', icon: '🌱', accent: '#94a3b8', desc: 'Default title for fresh recruits.' };
+    }
+    const found = getStoreItem(id);
+    if (found) return found;
+    // Fallback: strip prefix and capitalise for any unresolved IDs
+    const displayName = id.replace(/^title_/, '').replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+    return { id, name: displayName, icon: '🏷️', accent: '#94a3b8', desc: 'Player title' };
   }, [equipped?.title]);
 
   const equippedOutfitItem = useMemo(() => getStoreItem(equipped?.outfit), [equipped?.outfit]);
@@ -480,14 +488,14 @@ export function ProfileModal({ isOpen, onClose, defaultTab = 'loadout' }) {
                             <div className="shrink-0">
                               {active ? (
                                 <button
-                                  onClick={() => handleUnequip(item.category, item)}
+                                  onClick={() => handleUnequip(item.categoryKey || item.category, item)}
                                   className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white/80 text-xs font-semibold cursor-pointer"
                                 >
                                   Unequip
                                 </button>
                               ) : (
                                 <button
-                                  onClick={() => handleEquip(item.category, item)}
+                                  onClick={() => handleEquip(item.categoryKey || item.category, item)}
                                   className="px-3.5 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold shadow-md shadow-violet-600/25 cursor-pointer hover:scale-105 active:scale-95 transition-transform"
                                 >
                                   Equip

@@ -1,6 +1,6 @@
 /**
  * UserAvatar.jsx — Core Reusable Avatar Component with Store Cosmetics Integration.
- * Strictly constrained by parent dimensions with overflow-visible wrapper for accessory rings & badges.
+ * Pixel-perfect centered alignment across all avatar sizes with overlay protection.
  */
 import { useMemo } from 'react';
 import { useEconomyStore } from '../../store/economyStore';
@@ -54,7 +54,7 @@ export function UserAvatar({
   return (
     <div
       onClick={onClick}
-      className={`relative inline-flex items-center justify-center shrink-0 overflow-visible ${sizeClass} ${onClick ? 'cursor-pointer' : ''} ${className}`}
+      className={`relative flex items-center justify-center shrink-0 overflow-visible ${sizeClass} ${onClick ? 'cursor-pointer' : ''} ${className}`}
     >
       {/* Floating Top Crest (Halo / Horns / Crown) */}
       {accMeta.crest && (
@@ -73,15 +73,15 @@ export function UserAvatar({
             e.target.src = `https://api.dicebear.com/9.x/bottts/svg?seed=${encodeURIComponent(username || 'guest')}`;
           }}
         />
-
-        {/* Constrained Accessory Frame Overlay if defined */}
-        {accMeta.overlay && (
-          <div
-            className="absolute inset-0 pointer-events-none w-full h-full object-contain rounded-full border border-white/10"
-            style={{ borderColor: accMeta.color }}
-          />
-        )}
       </div>
+
+      {/* Constrained Frame Overlay Centered over Avatar */}
+      {accMeta.overlay && (
+        <div
+          className="absolute inset-0 m-auto w-full h-full pointer-events-none z-10 rounded-full border border-white/20"
+          style={{ borderColor: accMeta.color }}
+        />
+      )}
 
       {/* Accessory Status Badge (Bottom-Right) */}
       {showBadge && accMeta.badge && (

@@ -9,7 +9,7 @@
  *  - 🎁 Daily Reward / Crates
  *  - ⚙️ Settings
  */
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useEconomyStore } from '../../store/economyStore';
 import { useAuthStore } from '../../store/authStore';
@@ -21,7 +21,6 @@ import CrateOpeningModal from './CrateOpeningModal';
 import DailyQuestsModal from './DailyQuestsModal';
 import LeaderboardModal from './LeaderboardModal';
 import ProfileModal from '../ui/ProfileModal';
-import { toast } from '../../store/toastStore';
 
 export default function EconomyHeaderBadge({ className = '' }) {
   const [storeOpen, setStoreOpen] = useState(false);
@@ -57,11 +56,6 @@ export default function EconomyHeaderBadge({ className = '' }) {
     dailyQuests.filter((q) => q.progress >= q.target && !q.claimed).length +
     weeklyQuests.filter((q) => q.progress >= q.target && !q.claimed).length;
 
-  useEffect(() => {
-    if (streakRewardPending) {
-      toast.streak(streakRewardPending.day, `${streakRewardPending.label} (+${streakRewardPending.sc} SC)`);
-    }
-  }, [streakRewardPending]);
 
   return (
     <>
