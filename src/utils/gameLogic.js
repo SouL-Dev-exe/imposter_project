@@ -77,6 +77,37 @@ export function getRandomPairFromPool(categoryPoolOrCategories) {
     pools = CATEGORY_POOLS;
   }
 
+  // Check if selected pools have curated thematic pairs (20+ per pack)
+  const curatedPairs = [];
+  for (const pool of pools) {
+    if (Array.isArray(pool.pairs) && pool.pairs.length > 0) {
+      for (const pair of pool.pairs) {
+        const civilianWord = pair.civilian || pair.wordA;
+        const undercoverWord = pair.undercover || pair.wordB;
+        if (civilianWord && undercoverWord) {
+          curatedPairs.push({
+            civilian: civilianWord,
+            undercover: undercoverWord,
+            category: pool.category || pair.category,
+          });
+        }
+      }
+    }
+  }
+
+  // If curated pairs are available, pick one with balanced random role flip
+  if (curatedPairs.length > 0) {
+    const picked = curatedPairs[Math.floor(Math.random() * curatedPairs.length)];
+    const flip = Math.random() < 0.5;
+    return {
+      wordA: flip ? picked.civilian : picked.undercover,
+      wordB: flip ? picked.undercover : picked.civilian,
+      civilian: picked.civilian,
+      undercover: picked.undercover,
+      category: picked.category || 'عام',
+    };
+  }
+
   // Pull and merge dynamic word pools from all selected categories
   const mergedWords = [];
   const categoryNames = [];
@@ -96,9 +127,11 @@ export function getRandomPairFromPool(categoryPoolOrCategories) {
 
   if (mergedWords.length < 2) {
     return {
-      wordA: 'تفاحة',
-      wordB: 'برتقالة',
-      category: 'فواكه وخضروات',
+      wordA: 'كسكس',
+      wordB: 'رشتة',
+      civilian: 'كسكس',
+      undercover: 'رشتة',
+      category: 'أكلات وثقافة جزائرية',
     };
   }
 
@@ -124,6 +157,8 @@ export function getRandomPairFromPool(categoryPoolOrCategories) {
   return {
     wordA: flip ? wordA : wordB,
     wordB: flip ? wordB : wordA,
+    civilian: flip ? wordA : wordB,
+    undercover: flip ? wordB : wordA,
     category: categoryLabel,
   };
 }
@@ -230,7 +265,7 @@ export function assignRoles(playerNames, gameModeOrOptions, optionsOrWordPair, m
     gameMode = options.gameMode || GAME_MODES.CONSCIOUS;
   }
 
-  if (!wordPair || !wordPair.wordA) {
+  if (!wordPair || (!wordPair.wordA && !wordPair.civilian)) {
     wordPair = getRandomPairFromPool();
   }
 
@@ -261,21 +296,24 @@ export function assignRoles(playerNames, gameModeOrOptions, optionsOrWordPair, m
   // Shuffle roles randomly
   roles = shuffle(roles);
 
+  const defaultWordA = wordPair.wordA || wordPair.civilian;
+  const defaultWordB = wordPair.wordB || wordPair.undercover || defaultWordA;
+
   return playerNames.map((player, index) => {
     const role = roles[index];
-    let word = wordPair.wordA; // Default Civilian word
+    let word = defaultWordA; // Default Civilian word
 
     if (role === ROLES.IMPOSTOR) {
       if (gameMode === GAME_MODES.CONSCIOUS && options.gameMode !== GAME_MODES.BLIND) {
         word = '';
       } else {
-        word = wordPair.wordB;
+        word = defaultWordB;
       }
     } else if (role === ROLES.MR_WHITE) {
       word = '';
     } else if (role === ROLES.FAKE_IMPOSTOR || role === 'fake_impostor') {
       // Fake Impostor gets wordB so they receive a related secondary word to bluff with
-      word = wordPair.wordB;
+      word = defaultWordB;
     }
 
     const playerName = typeof player === 'object' ? player.name : player;

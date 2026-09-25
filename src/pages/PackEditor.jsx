@@ -172,7 +172,7 @@ export default function PackEditor() {
     if (!pack) return [];
     if (Array.isArray(pack.words) && pack.words.length > 0) return pack.words;
     if (Array.isArray(pack.pairs)) {
-      return pack.pairs.flatMap((p) => [p.wordA, p.wordB]).filter(Boolean);
+      return pack.pairs.flatMap((p) => [p.civilian || p.wordA, p.undercover || p.wordB]).filter(Boolean);
     }
     return [];
   };
@@ -511,16 +511,31 @@ export default function PackEditor() {
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
                   >
-                    <div className="flex flex-wrap gap-1.5 pt-1 pb-1">
-                      {getPackWords(pack).map((w, idx) => (
-                        <span
-                          key={idx}
-                          className="bg-white/10 text-white/90 text-xs px-2.5 py-1 rounded-lg border border-white/5"
-                        >
-                          {w}
-                        </span>
-                      ))}
-                    </div>
+                    {pack.pairs && pack.pairs.length > 0 ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-1 pb-1">
+                        {pack.pairs.map((p, idx) => (
+                          <div
+                            key={idx}
+                            className="flex items-center justify-between bg-white/10 text-white/90 text-xs px-2.5 py-1.5 rounded-lg border border-white/5"
+                          >
+                            <span className="font-semibold text-violet-300">{p.civilian || p.wordA}</span>
+                            <span className="text-white/30 text-[10px]">vs</span>
+                            <span className="font-semibold text-pink-300">{p.undercover || p.wordB}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="flex flex-wrap gap-1.5 pt-1 pb-1">
+                        {getPackWords(pack).map((w, idx) => (
+                          <span
+                            key={idx}
+                            className="bg-white/10 text-white/90 text-xs px-2.5 py-1 rounded-lg border border-white/5"
+                          >
+                            {w}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </motion.div>
                 )}
               </AnimatePresence>
