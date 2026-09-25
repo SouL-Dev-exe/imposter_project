@@ -324,6 +324,79 @@ export const wordPacks = [
       "زلزال قتالي", "بركان ناري", "فيضان", "شلال ماء", "نهر جارٍ", "بحيرة هادئة", "صحراء قاحلة", "جزيرة استوائية", "كهف مظلم", "واحة خضراء",
       "نسيم عليل", "شروق الشمس", "غروب الشمس", "ندى الصباح"
     ]
+  },
+  {
+    id: "cat-anime-series-movies",
+    icon: "🏮",
+    category: "مسلسلات وأفلام أنمي",
+    categoryEn: "Anime Series & Movies",
+    price: 500,
+    isFree: false,
+    words: [
+      "هجوم العمالقة", "ون بيس", "ناروتو شيبودن", "قاتل الشياطين", "جوجوتسو كايسن", "مذكرة الموت (Death Note)",
+      "هنتر x هنتر", "دراجون بول Z", "بليتش", "تشينسو مان", "سولو ليفلينغ", "طوكيو غول", "كود غياس",
+      "الخيميائي الفولاذي", "فينلاند ساغا", "مونستر", "بلو لوك", "هايكيو", "إيفانجيليون", "برسيرك",
+      "اسمك (Your Name)", "صوت صامت (A Silent Voice)", "رحلة شيهيرو (Spirited Away)", "قلعة هاول المتحركة",
+      "قطار الموغين", "جوجوتسو كايسن 0", "سورد آرت أونلاين", "أكاديمية بطلائي", "المحقق كونان"
+    ]
+  },
+  {
+    id: "cat-blockbuster-movies",
+    icon: "🎥",
+    category: "أفلام سينمائية عالمية",
+    categoryEn: "Blockbuster Movies",
+    price: 500,
+    isFree: false,
+    words: [
+      "Inception (بداية)", "Interstellar (بين النجوم)", "The Dark Knight (باتمان)", "Titanic (تايتنيك)",
+      "Avatar (أفاتار)", "Joker (جوكر)", "Avengers: Endgame", "The Godfather (العراب)", "Fight Club (نادي القتال)",
+      "Pulp Fiction", "Harry Potter (هاري بوتر)", "Lord of the Rings (سيد الخواتم)", "Gladiator (المصارع)",
+      "Oppenheimer (أوبنهايمر)", "Barbie (باربي)", "The Matrix (ماتريكس)", "Spider-Man: No Way Home",
+      "Pirates of the Caribbean (قراصنة الكاريبي)", "Jurassic Park (الحديقة الجوراسية)", "Fast & Furious",
+      "Forrest Gump", "The Shawshank Redemption", "Dune (كثبان)", "Cars (سيارات)", "Schindler's List"
+    ]
+  },
+  {
+    id: "cat-tv-series-global",
+    icon: "📺",
+    category: "مسلسلات عالمية مشهورة",
+    categoryEn: "Popular TV Series",
+    price: 750,
+    isFree: false,
+    words: [
+      "Breaking Bad", "Game of Thrones", "Stranger Things", "Peaky Blinders", "Squid Game (لعبة الحبار)",
+      "The Walking Dead", "Better Call Saul", "La Casa de Papel (البروفيسور)", "Dark", "Prison Break",
+      "Friends", "The Office", "Chernobyl", "Suits", "House of the Dragon", "Wednesday", "Narcos",
+      "Dexter", "Lost", "The Boys", "Vikings", "Sherlock", "Black Mirror", "True Detective", "The Last of Us"
+    ]
+  },
+  {
+    id: "cat-nostalgia-cartoons",
+    icon: "✨",
+    category: "كرتون ونوستالجيا سبيستون",
+    categoryEn: "Nostalgic Cartoons & Spacetoon",
+    price: 0,
+    isFree: true,
+    words: [
+      "المحقق كونان", "أبطال الديجيتال", "القناص", "دراغون بول", "هزيم الرعد", "صقور الأرض", "دروب ريمي",
+      "عهد الأصدقاء", "الكابتن ماجد", "أبطال الكرة", "أنا وأخي", "سابق ولاحق", "النمر المقنع", "سلام دانك",
+      "فرسان الأرض", "أجنحة كامدام", "أوفسايد", "داعي الشجاع", "توم وجيري", "سبونج بوب", "فتيات القوة",
+      "مغامرات حنين", "سالي", "الشبح", "كرتون كوكب أكشن"
+    ]
+  },
+  {
+    id: "cat-arab-dz-cinema",
+    icon: "🎭",
+    category: "سينما ودراما عربية وجزائرية",
+    categoryEn: "Arab & Algerian Cinema",
+    price: 500,
+    isFree: false,
+    words: [
+      "باب الحارة", "عشور العاشر", "دقيانوس", "المفتش طاهر", "عمارة حاج لخضر", "بوزيد دايز", "طاش ما طاش",
+      "بقعة ضوء", "الاختيار", "جعفر العمدة", "البرنس", "عائلة الحاج متولي", "الناظر", "صعيدي في الجامعة الأمريكية",
+      "الفيل الأزرق", "كيرة والجن", "ولاد رزق", "الجزيرة", "عسل أسود", "مرجان أحمد مرجان", "إكس لارج",
+      "المكتوب", "أولاد الحلال", "الخاوة", "دموع اللؤلؤ"
+    ]
   }
 ];
 
