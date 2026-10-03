@@ -1,6 +1,84 @@
 import { create } from 'zustand';
-import { supabase } from '../utils/supabase';
+import { supabase } from '../lib/supabaseClient';
 import { useAuthStore } from './authStore';
+import { tallyVotes } from '../utils/gameLogic';
+
+let disconnectTimer = null;
+
+// Cast vote f-database
+export const submitVote = async (roomId, voterId, votedId) => {
+  const { error } = await supabase
+    .from('room_votes')
+    .upsert(
+      { room_id: roomId, voter_id: voterId, voted_id: votedId },
+      { onConflict: 'room_id, voter_id' }
+    );
+  if (error) console.error('Error submitting vote:', error);
+};
+
+// Realtime Listener f-Room bch ga3 l-clients y-shoufou tally f-nafs l-waqt
+export const subscribeToVotes = (roomId, activePlayerCount, onVotingComplete) => {
+  const channel = supabase
+    .channel(`votes_${roomId}`)
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'room_votes', filter: `room_id=eq.${roomId}` },
+      async () => {
+        // Fetch all current votes for this room
+        const { data: votesData } = await supabase
+          .from('room_votes')
+          .select('voter_id, voted_id')
+          .eq('room_id', roomId);
+
+        if (!votesData) return;
+
+        const voteMap = {};
+        votesData.forEach((v) => {
+          voteMap[v.voter_id] = v.voted_id;
+        });
+
+        // Ki y-votiou ga3 l-players, y-ssra tally automatic
+        if (Object.keys(voteMap).length >= activePlayerCount) {
+          const result = tallyVotes(voteMap); // Uses existing tallyVotes logic
+          onVotingComplete(result);
+        }
+      }
+    )
+    .subscribe();
+
+  return () => supabase.removeChannel(channel);
+};
+
+export const handleHostDisconnect = async (roomId, currentHostId) => {
+  // Grace Period ta3 30 seconds qbel ma t-t-emha l-room
+  disconnectTimer = setTimeout(async () => {
+    // Check remaining players f-room
+    const { data: remainingPlayers } = await supabase
+      .from('room_players')
+      .select('*')
+      .eq('room_id', roomId)
+      .order('created_at', { ascending: true });
+
+    if (!remainingPlayers || remainingPlayers.length === 0) {
+      // Room empty -> Hard Delete
+      await supabase.from('rooms').delete().eq('id', roomId);
+    } else {
+      // Transfer Host l-akbar player baqi f-list
+      const newHost = remainingPlayers[0];
+      await supabase
+        .from('rooms')
+        .update({ host_id: newHost.user_id })
+        .eq('id', roomId);
+    }
+  }, 30000); // 30s Grace Period
+};
+
+export const cancelHostDisconnectTimer = () => {
+  if (disconnectTimer) {
+    clearTimeout(disconnectTimer);
+    disconnectTimer = null;
+  }
+};
 
 export const useMultiplayerStore = create((set, get) => ({
   roomCode: null,
@@ -10,6 +88,7 @@ export const useMultiplayerStore = create((set, get) => ({
   messages: [],
   reactions: [], // Array of { id, playerId, emoji, timestamp }
   channel: null,
+  votes: {},
 
   generateRoomCode: () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -119,21 +198,25 @@ export const useMultiplayerStore = create((set, get) => ({
     const channel = supabase.channel(`room_${roomId}`, {
       config: {
         presence: {
-          key: profile.id,
+          key: profile?.id || 'guest',
         },
       },
     });
 
     channel
       .on('presence', { event: 'sync' }, () => {
-        const newState = channel.presenceState();
-        // We could use presence to show online/offline, but DB fetch is safer for joining
+        // Presence synced
       })
       .on('presence', { event: 'join' }, ({ key, newPresences }) => {
         get().fetchRoomPlayers(roomId);
       })
       .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
         get().fetchRoomPlayers(roomId);
+        // If the host was disconnected, start host migration grace period
+        const { isHost, roomId: currentRoomId, players } = get();
+        if (!isHost && key) {
+          handleHostDisconnect(currentRoomId, key);
+        }
       })
       .on('broadcast', { event: 'chat' }, ({ payload }) => {
         set((state) => ({ messages: [...state.messages, payload] }));
@@ -155,7 +238,7 @@ export const useMultiplayerStore = create((set, get) => ({
       });
 
     channel.subscribe(async (status) => {
-      if (status === 'SUBSCRIBED') {
+      if (status === 'SUBSCRIBED' && profile) {
         await channel.track({
           user_id: profile.id,
           username: profile.username,
@@ -176,11 +259,8 @@ export const useMultiplayerStore = create((set, get) => ({
     
     if (roomId && user) {
       if (isHost) {
-        // Host leaves -> Delete room immediately from Supabase
-        await supabase
-          .from('rooms')
-          .delete()
-          .eq('id', roomId);
+        // Trigger host migration timer for other players
+        await handleHostDisconnect(roomId, user.id);
       } else {
         // Regular player leaves -> remove from room_players
         await supabase
@@ -241,5 +321,19 @@ export const useMultiplayerStore = create((set, get) => ({
       event: 'reaction',
       payload
     });
+  },
+
+  submitVote: async (voterId, votedId) => {
+    const { roomId } = get();
+    if (!roomId) return;
+    await submitVote(roomId, voterId, votedId);
+  },
+
+  subscribeToVotes: (activePlayerCount, onVotingComplete) => {
+    const { roomId } = get();
+    if (!roomId) return () => {};
+    return subscribeToVotes(roomId, activePlayerCount, onVotingComplete);
   }
 }));
+
+export default useMultiplayerStore;

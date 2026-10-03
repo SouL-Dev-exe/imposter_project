@@ -5,9 +5,10 @@ import { useAuthStore } from '../../store/authStore';
 import { useEconomyStore } from '../../store/economyStore';
 import { UserAvatar } from '../ui/UserAvatar';
 import { getStoreItem } from '../../data/economyCatalog';
+import { ChatSoundboard, listenToSoundEmotes } from './ChatSoundboard';
 
 export function LiveChat() {
-  const { messages, sendMessage } = useMultiplayerStore();
+  const { messages, sendMessage, roomId } = useMultiplayerStore();
   const { profile } = useAuthStore();
   const globalEquipped = useEconomyStore((s) => s.equipped);
   const [text, setText] = useState('');
@@ -19,6 +20,14 @@ export function LiveChat() {
       chatRef.current.scrollTop = chatRef.current.scrollHeight;
     }
   }, [messages]);
+
+  // Listen to remote sound emotes
+  useEffect(() => {
+    if (roomId) {
+      const unsub = listenToSoundEmotes(roomId);
+      return unsub;
+    }
+  }, [roomId]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -95,6 +104,11 @@ export function LiveChat() {
             })}
           </AnimatePresence>
         )}
+      </div>
+
+      {/* Chat Soundboard */}
+      <div className="px-3 pt-2">
+        <ChatSoundboard roomId={roomId} />
       </div>
 
       {/* Input */}

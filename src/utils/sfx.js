@@ -211,3 +211,53 @@ export function vibrate(pattern) {
     if (navigator?.vibrate) navigator.vibrate(pattern);
   } catch { /* noop */ }
 }
+
+// ─── 8. Realtime Chat Soundboard Synthesizer ──────────────────────────────────
+export const playSoundEffect = (type) => {
+  if (_muted) return;
+  try {
+    const ctx = getCtx() || new (window.AudioContext || window.webkitAudioContext)();
+    if (!ctx) return;
+    if (ctx.state === 'suspended') ctx.resume();
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    const now = ctx.currentTime;
+
+    if (type === 'whistle') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(1200, now);
+      osc.frequency.exponentialRampToValueAtTime(1800, now + 0.15);
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.linearRampToValueAtTime(0.0001, now + 0.3);
+      osc.start(now);
+      osc.stop(now + 0.3);
+      vibrate(30);
+    } else if (type === 'chuckle') {
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(300, now);
+      osc.frequency.setValueAtTime(400, now + 0.08);
+      osc.frequency.setValueAtTime(300, now + 0.16);
+      gain.gain.setValueAtTime(0.3, now);
+      gain.gain.linearRampToValueAtTime(0.0001, now + 0.25);
+      osc.start(now);
+      osc.stop(now + 0.25);
+      vibrate([20, 20, 20]);
+    } else if (type === 'sizzle') {
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(150, now);
+      osc.frequency.exponentialRampToValueAtTime(60, now + 0.4);
+      gain.gain.setValueAtTime(0.25, now);
+      gain.gain.linearRampToValueAtTime(0.0001, now + 0.4);
+      osc.start(now);
+      osc.stop(now + 0.4);
+      vibrate(50);
+    }
+  } catch (e) {
+    console.warn('AudioContext sound effect failed:', e);
+  }
+};
+

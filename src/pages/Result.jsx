@@ -15,11 +15,13 @@ import { ROLES } from '../utils/gameLogic';
 import { useEconomyStore } from '../store/economyStore';
 import MatchRewardsModal from '../components/economy/MatchRewardsModal';
 import { VictoryModal } from '../components/game/VictoryModal';
+import { MatchShareCard } from '../components/game/MatchShareCard';
 import { UserAvatar } from '../components/ui/UserAvatar';
 import { ScreenFXOverlay } from '../components/ui/ScreenFXOverlay';
 import { getStoreItem } from '../data/economyCatalog';
 import { toast } from '../store/toastStore';
 import { vibrate, playVictorySound, playCoinSound } from '../utils/sfx';
+import { useMultiplayerStore } from '../store/multiplayerStore';
 
 export default function Result() {
   const navigate = useNavigate();
@@ -47,8 +49,14 @@ export default function Result() {
   const [rewardBreakdown, setRewardBreakdown] = useState(null);
   const [showRewardsModal, setShowRewardsModal] = useState(false);
   const [showVictoryModal, setShowVictoryModal] = useState(false);
+  const [showShareCard, setShowShareCard] = useState(false);
   const recordMatchOutcome = useEconomyStore((s) => s.recordMatchOutcome);
   const globalEquipped = useEconomyStore((s) => s.equipped);
+  const roomCode = useMultiplayerStore((s) => s.roomCode) || 'PARTY';
+
+  const undercoverPlayer = players.find((p) => p.role === 'impostor' || p.role === 'mrwhite');
+  const foolPlayer = players.find((p) => p.role === 'fake_impostor' || p.role === ROLES.FAKE_IMPOSTOR);
+  const mvpPlayer = (winner === 'civilians' ? players.find((p) => p.role === 'civilian' && !p.isEliminated) : undercoverPlayer) || players[0];
 
   useEffect(() => {
     if (!players || players.length === 0) {
@@ -357,6 +365,16 @@ export default function Result() {
           </button>
         )}
 
+        {/* Share Story Card Button */}
+        <button
+          type="button"
+          onClick={() => setShowShareCard(true)}
+          className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-purple-600/30 via-pink-600/30 to-amber-600/30 hover:from-purple-600/40 hover:via-pink-600/40 hover:to-amber-600/40 border border-purple-500/40 text-white font-black text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-purple-900/20 cursor-pointer"
+        >
+          <span>📸</span>
+          <span>بارطاجي ملخص الجولة f-Story 🚀</span>
+        </button>
+
         <Button variant="primary" fullWidth size="xl" onClick={handlePlayAgain} icon="🔄">
           {t('result.playAgain')}
         </Button>
@@ -379,6 +397,17 @@ export default function Result() {
         wordPair={wordPair}
         onClose={() => setShowVictoryModal(false)}
       />
+
+      {/* Match MVP & Story Share Card */}
+      {showShareCard && (
+        <MatchShareCard
+          mvpName={mvpPlayer?.name || mvpPlayer?.username}
+          undercoverName={undercoverPlayer?.name || undercoverPlayer?.username}
+          foolName={foolPlayer?.name || foolPlayer?.username}
+          roomCode={roomCode}
+          onClose={() => setShowShareCard(false)}
+        />
+      )}
     </div>
   );
 }

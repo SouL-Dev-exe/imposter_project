@@ -1,5 +1,43 @@
 import { create } from 'zustand';
-import { supabase } from '../lib/supabase';
+import { supabase } from '../lib/supabaseClient';
+
+export const migrateGuestDataToCloud = async (userId) => {
+  try {
+    // 1. Read Guest Data m-localStorage
+    const localCoinsEconomy = JSON.parse(localStorage.getItem('soul_coins_economy') || '{}');
+    const guestProfile = JSON.parse(localStorage.getItem('guest_profile') || '{}');
+
+    if (!localCoinsEconomy.soulCoins && !localCoinsEconomy.inventory) {
+      return; // No guest progress to migrate
+    }
+
+    // 2. Prepare payload for public.user_economy
+    const economyPayload = {
+      user_id: userId,
+      soul_coins: localCoinsEconomy.soulCoins || 500,
+      total_coins_earned: localCoinsEconomy.totalCoinsEarned || 500,
+      season_xp: localCoinsEconomy.seasonXP || 0,
+      season_level: localCoinsEconomy.seasonLevel || 1,
+      inventory: localCoinsEconomy.inventory || { outfits: [], accessories: [], emotes: ["emote_hush"], screenFX: [], titles: ["Novice"] },
+      equipped: localCoinsEconomy.equipped || { outfit: null, accessory: null, emote: "emote_hush", screenFX: null, title: "Novice" },
+      updated_at: new Date().toISOString()
+    };
+
+    // 3. Upsert to Supabase
+    const { error } = await supabase
+      .from('user_economy')
+      .upsert(economyPayload, { onConflict: 'user_id' });
+
+    if (!error) {
+      // 4. Cleanup localStorage after successful cloud migration
+      localStorage.removeItem('soul_coins_economy');
+      localStorage.removeItem('guest_profile');
+      console.log('Guest profile successfully migrated to cloud account!');
+    }
+  } catch (err) {
+    console.error('Migration failed:', err);
+  }
+};
 
 export const useAuthStore = create((set, get) => ({
   session: null,
@@ -15,6 +53,7 @@ export const useAuthStore = create((set, get) => ({
     set({ user: data.user, session: data.session, isGuest: false });
     if (data.user) {
       await get().fetchProfile(data.user.id);
+      await migrateGuestDataToCloud(data.user.id);
     }
     return data;
   },
@@ -26,6 +65,7 @@ export const useAuthStore = create((set, get) => ({
     set({ user: data.user, session: data.session, isGuest: false });
     if (data.user) {
       await get().fetchProfile(data.user.id);
+      await migrateGuestDataToCloud(data.user.id);
     }
     return data;
   },
@@ -55,6 +95,7 @@ export const useAuthStore = create((set, get) => ({
       if (session?.user) {
         set({ session, user: session.user, isGuest: false });
         await get().fetchProfile(session.user.id);
+        await migrateGuestDataToCloud(session.user.id);
       } else {
         // Check for local guest session in localStorage
         const guestData = localStorage.getItem('guest_profile');
@@ -75,6 +116,7 @@ export const useAuthStore = create((set, get) => ({
       if (session?.user) {
         set({ session, user: session.user, isGuest: false });
         await get().fetchProfile(session.user.id);
+        await migrateGuestDataToCloud(session.user.id);
       } else {
         set({ session: null, user: null, profile: null });
       }
@@ -115,6 +157,7 @@ export const useAuthStore = create((set, get) => ({
       if (profileError) console.error('Profile init error:', profileError);
       set({ user: data.user, session: data.session, isGuest: false });
       await get().fetchProfile(data.user.id);
+      await migrateGuestDataToCloud(data.user.id);
     }
     return data;
   },
@@ -153,7 +196,9 @@ export const useAuthStore = create((set, get) => ({
     
     set({ profile: { ...profile, ...updates } });
     return { success: true };
-  }
+  },
+
+  migrateGuestDataToCloud: (userId) => migrateGuestDataToCloud(userId)
 }));
 
 export default useAuthStore;
