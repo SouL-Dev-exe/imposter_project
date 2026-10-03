@@ -90,8 +90,24 @@ export const useAuthStore = create((set, get) => ({
   initAuth: async () => {
     set({ loading: true });
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data, error } = await supabase.auth.getSession();
       
+      if (error) {
+        console.warn('Stale auth session encountered, clearing local tokens:', error.message);
+        // Clean stale supabase tokens from localStorage
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && (key.startsWith('sb-') || key.includes('auth-token'))) {
+            localStorage.removeItem(key);
+          }
+        }
+        localStorage.removeItem('sb-access-token');
+        localStorage.removeItem('sb-refresh-token');
+        set({ session: null, user: null, profile: null, isGuest: false });
+        return;
+      }
+
+      const session = data?.session;
       if (session?.user) {
         set({ session, user: session.user, isGuest: false });
         await get().fetchProfile(session.user.id);
@@ -100,25 +116,31 @@ export const useAuthStore = create((set, get) => ({
         // Check for local guest session in localStorage
         const guestData = localStorage.getItem('guest_profile');
         if (guestData) {
-          const parsed = JSON.parse(guestData);
-          set({ profile: parsed, isGuest: true, user: { id: 'guest' }, session: null });
+          try {
+            const parsed = JSON.parse(guestData);
+            set({ profile: parsed, isGuest: true, user: { id: parsed.id || 'guest' }, session: null });
+          } catch {
+            localStorage.removeItem('guest_profile');
+            set({ session: null, user: null, profile: null, isGuest: false });
+          }
         } else {
           set({ session: null, user: null, profile: null, isGuest: false });
         }
       }
     } catch (err) {
-      console.error('Auth initialization error:', err);
+      console.warn('Auth initialization recovered from error:', err?.message || err);
+      set({ session: null, user: null, profile: null, isGuest: false });
     } finally {
       set({ loading: false });
     }
 
     supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session?.user) {
+      if (event === 'SIGNED_OUT' || !session?.user) {
+        set({ session: null, user: null, profile: null, isGuest: false });
+      } else if (session?.user) {
         set({ session, user: session.user, isGuest: false });
         await get().fetchProfile(session.user.id);
         await migrateGuestDataToCloud(session.user.id);
-      } else {
-        set({ session: null, user: null, profile: null });
       }
     });
   },

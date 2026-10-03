@@ -33,17 +33,56 @@ export const sfxState = {
   },
 };
 
-// ─── AudioContext (lazy, singleton) ────────────────────────────────────────────
+// ─── AudioContext (lazy, unlocked on first user gesture) ─────────────────────────
 let _ctx = null;
+let _unlocked = false;
+
+function unlockAudio() {
+  if (_unlocked && _ctx && _ctx.state === 'running') return;
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (AudioCtx) {
+      if (!_ctx) _ctx = new AudioCtx();
+      if (_ctx.state === 'suspended') {
+        _ctx.resume().then(() => {
+          _unlocked = true;
+        }).catch(() => {});
+      } else if (_ctx.state === 'running') {
+        _unlocked = true;
+      }
+    }
+  } catch {
+    /* noop */
+  }
+}
+
+// Auto-register one-time user gesture listeners
+if (typeof window !== 'undefined') {
+  const userGestureEvents = ['click', 'pointerdown', 'keydown', 'touchstart'];
+  const onFirstInteraction = () => {
+    unlockAudio();
+    userGestureEvents.forEach((ev) => window.removeEventListener(ev, onFirstInteraction, true));
+  };
+  userGestureEvents.forEach((ev) => {
+    window.addEventListener(ev, onFirstInteraction, { once: true, capture: true, passive: true });
+  });
+}
+
 function getCtx() {
+  if (_muted) return null;
   if (!_ctx) {
     try {
-      _ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) _ctx = new AudioCtx();
     } catch {
       return null;
     }
   }
-  if (_ctx.state === 'suspended') _ctx.resume();
+  if (_ctx && _ctx.state === 'suspended') {
+    _ctx.resume().catch(() => {});
+    // If not yet unlocked by user interaction, defer sound output to prevent Chrome autoplay warnings
+    if (!_unlocked) return null;
+  }
   return _ctx;
 }
 
