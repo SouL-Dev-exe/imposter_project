@@ -6,7 +6,6 @@ import { Button } from '../components/ui/Button';
 import { useAuthStore } from '../store/authStore';
 import { useMultiplayerStore } from '../store/multiplayerStore';
 import { LiveChat } from '../components/game/LiveChat';
-import { ReactionPanel } from '../components/game/ReactionPanel';
 import { PlayerCard } from '../components/game/PlayerCard';
 
 export default function OnlineLobby() {
@@ -193,7 +192,7 @@ export default function OnlineLobby() {
           )}
         </div>
 
-        {/* Right side: Chat & Reactions */}
+        {/* Right side: Chat */}
         <div className="w-full md:w-80 flex flex-col gap-4">
           <div className="flex-1 min-h-[300px]">
             <LiveChat />
@@ -201,8 +200,6 @@ export default function OnlineLobby() {
         </div>
 
       </div>
-
-      <ReactionPanel />
     </div>
   );
 }
