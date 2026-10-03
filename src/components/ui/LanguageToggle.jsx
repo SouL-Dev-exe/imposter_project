@@ -1,12 +1,27 @@
 /**
  * LanguageToggle.jsx — Seamless toggle between English and Arabic.
- * Supports compact chip style, button with flags, and settings row style.
+ * Syncs BOTH the Zustand languageStore AND react-i18next so every system
+ * (existing t() calls and new useTranslation() calls) updates together.
+ *
+ * Supports:
+ *   variant="chip"          — Compact pill for headers/navbars (default)
+ *   variant="settings-row"  — Full row with label for settings panels
  */
 import { motion } from 'framer-motion';
 import { useLanguageStore } from '../../store/languageStore';
+import i18n from '../../i18n';
+
+function syncLanguage(lang) {
+  // 1. Update Zustand store (handles document.dir + localStorage)
+  useLanguageStore.getState().setLanguage(lang);
+  // 2. Update i18next (triggers useTranslation() re-renders)
+  if (i18n.language !== lang) i18n.changeLanguage(lang);
+}
 
 export function LanguageToggle({ variant = 'chip', className = '' }) {
-  const { language, setLanguage } = useLanguageStore();
+  const { language } = useLanguageStore();
+
+  const toggle = () => syncLanguage(language === 'en' ? 'ar' : 'en');
 
   if (variant === 'settings-row') {
     return (
@@ -26,7 +41,7 @@ export function LanguageToggle({ variant = 'chip', className = '' }) {
         <div className="flex bg-black/40 p-1 rounded-xl border border-white/10 gap-1">
           <button
             type="button"
-            onClick={() => setLanguage('en')}
+            onClick={() => syncLanguage('en')}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
               language === 'en'
                 ? 'bg-violet-600 text-white shadow-md'
@@ -37,7 +52,7 @@ export function LanguageToggle({ variant = 'chip', className = '' }) {
           </button>
           <button
             type="button"
-            onClick={() => setLanguage('ar')}
+            onClick={() => syncLanguage('ar')}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
               language === 'ar'
                 ? 'bg-violet-600 text-white shadow-md'
@@ -55,7 +70,7 @@ export function LanguageToggle({ variant = 'chip', className = '' }) {
   return (
     <motion.button
       type="button"
-      onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
+      onClick={toggle}
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
       className={`inline-flex items-center gap-1.5 bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/10 rounded-full px-3 py-1.5 text-xs font-semibold text-white/80 hover:text-white transition-all shadow-sm ${className}`}
