@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import soundsData from './sounds.json';
+import { supabase } from '../lib/supabase';
 
-export default function Soundboard() {
+export default function Soundboard({ roomId = null, onClose = null }) {
   const [search, setSearch] = useState('');
   const [favorites, setFavorites] = useState([]);
   const [activeTab, setActiveTab] = useState('all'); // 'all' | 'favs'
@@ -18,6 +19,15 @@ export default function Soundboard() {
     }
   }, []);
 
+  // Cleanup audio on unmount
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+    };
+  }, []);
+
   // Toggle favorite sound key
   const toggleFavorite = (key, e) => {
     e.stopPropagation();
@@ -30,7 +40,7 @@ export default function Soundboard() {
     });
   };
 
-  // Play audio logic
+  // Play audio logic + broadcast to room
   const playSound = (sound) => {
     if (audioRef.current) {
       audioRef.current.pause();
@@ -42,8 +52,23 @@ export default function Soundboard() {
     audio.play().catch((err) => console.error("Playback error:", err));
     audio.onended = () => setActiveSoundKey(null);
 
-    // OPTIONAL: Send network event to emit sound to other lobby players:
-    // socket.emit('play_lobby_sound', { soundKey: sound.key, url: sound.url });
+    // Broadcast sound to all players in the online room
+    if (roomId) {
+      try {
+        const channel = supabase.channel(`room_${roomId}`);
+        channel.send({
+          type: 'broadcast',
+          event: 'sound_emote',
+          payload: {
+            soundKey: sound.key,
+            soundUrl: sound.url,
+            soundName: sound.name,
+          },
+        }).catch((err) => console.warn('Broadcast sound error:', err));
+      } catch (err) {
+        console.warn('Soundboard realtime send failed:', err);
+      }
+    }
   };
 
   // Filter list by search query and active tab
@@ -57,32 +82,47 @@ export default function Soundboard() {
   }, [search, activeTab, favorites]);
 
   return (
-    <div className="w-full max-w-xl bg-slate-900 text-white rounded-xl shadow-2xl border border-slate-800 p-4 flex flex-col h-[550px]">
+    <div className="w-full max-w-xl bg-slate-900/95 backdrop-blur-md text-white rounded-2xl shadow-2xl border border-slate-700/80 p-4 flex flex-col h-[520px] max-h-[85vh] relative select-none">
       {/* Header & Tabs */}
-      <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-        <h2 className="text-lg font-bold tracking-wide flex items-center gap-2">
-          🔊 Lobby Soundboard
-          <span className="text-xs font-normal text-slate-400 bg-slate-800 px-2 py-0.5 rounded-full">
+      <div className="flex items-center justify-between pb-3 border-b border-slate-800 gap-2">
+        <div className="flex items-center gap-2">
+          <h2 className="text-base sm:text-lg font-bold tracking-wide flex items-center gap-2 text-indigo-300">
+            🔊 Lobby Soundboard
+          </h2>
+          <span className="text-[11px] font-medium text-slate-400 bg-slate-800 px-2 py-0.5 rounded-full border border-slate-700">
             {soundsData.length}
           </span>
-        </h2>
-        <div className="flex gap-1 bg-slate-800 p-1 rounded-lg text-xs font-semibold">
-          <button
-            onClick={() => setActiveTab('all')}
-            className={`px-3 py-1 rounded-md transition ${
-              activeTab === 'all' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            All
-          </button>
-          <button
-            onClick={() => setActiveTab('favs')}
-            className={`px-3 py-1 rounded-md transition flex items-center gap-1 ${
-              activeTab === 'favs' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            ★ Favorites ({favorites.length})
-          </button>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <div className="flex gap-1 bg-slate-800 p-1 rounded-lg text-xs font-semibold border border-slate-700">
+            <button
+              onClick={() => setActiveTab('all')}
+              className={`px-3 py-1 rounded-md transition ${
+                activeTab === 'all' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              All
+            </button>
+            <button
+              onClick={() => setActiveTab('favs')}
+              className={`px-3 py-1 rounded-md transition flex items-center gap-1 ${
+                activeTab === 'favs' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              ★ Favs ({favorites.length})
+            </button>
+          </div>
+
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition border border-slate-700 text-xs"
+              title="Close"
+            >
+              ✕
+            </button>
+          )}
         </div>
       </div>
 
@@ -93,12 +133,12 @@ export default function Soundboard() {
           placeholder="Search sounds (e.g. 'FAH', 'طفي', 'anime')..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full bg-slate-800 text-sm text-slate-100 placeholder-slate-500 rounded-lg pl-3 pr-8 py-2 border border-slate-700 focus:outline-none focus:border-indigo-500"
+          className="w-full bg-slate-800/90 text-sm text-slate-100 placeholder-slate-500 rounded-lg ps-3 pe-8 py-2 border border-slate-700 focus:outline-none focus:border-indigo-500 transition shadow-inner"
         />
         {search && (
           <button 
             onClick={() => setSearch('')}
-            className="absolute right-3 top-2.5 text-xs text-slate-400 hover:text-white"
+            className="absolute end-3 top-2.5 text-xs text-slate-400 hover:text-white"
           >
             ✕
           </button>
@@ -106,10 +146,10 @@ export default function Soundboard() {
       </div>
 
       {/* Scrollable Sounds Grid */}
-      <div className="flex-1 overflow-y-auto pr-1 grid grid-cols-2 sm:grid-cols-3 gap-2 align-content-start scrollbar-thin scrollbar-thumb-slate-700">
+      <div className="flex-1 overflow-y-auto pe-1 grid grid-cols-2 sm:grid-cols-3 gap-2 align-content-start scrollbar-thin scrollbar-thumb-slate-700">
         {filteredSounds.length === 0 ? (
           <div className="col-span-full text-center py-12 text-slate-500 text-sm">
-            {activeTab === 'favs' ? 'No favorite sounds added yet!' : 'No sounds match your search.'}
+            {activeTab === 'favs' ? 'No favorite sounds added yet! Click ★ to add.' : 'No sounds match your search.'}
           </div>
         ) : (
           filteredSounds.map((sound) => {
@@ -122,17 +162,18 @@ export default function Soundboard() {
                 onClick={() => playSound(sound)}
                 className={`group relative flex items-center justify-between p-2.5 rounded-lg border text-xs font-medium cursor-pointer transition select-none ${
                   isPlaying
-                    ? 'bg-indigo-900/60 border-indigo-500 text-indigo-200 animate-pulse'
-                    : 'bg-slate-800/60 border-slate-700/60 text-slate-200 hover:bg-slate-800 hover:border-slate-600'
+                    ? 'bg-indigo-900/80 border-indigo-400 text-indigo-100 shadow-md shadow-indigo-500/20 animate-pulse'
+                    : 'bg-slate-800/70 border-slate-700/60 text-slate-200 hover:bg-slate-700/80 hover:border-slate-500 hover:text-white'
                 }`}
               >
-                <span className="truncate pr-4">{sound.name}</span>
+                <span className="truncate pe-3">{sound.name}</span>
 
                 {/* Favorite Button Star */}
                 <button
+                  type="button"
                   onClick={(e) => toggleFavorite(sound.key, e)}
-                  className={`text-sm transition ${
-                    isFav ? 'text-amber-400' : 'text-slate-600 opacity-0 group-hover:opacity-100 hover:text-amber-300'
+                  className={`text-sm transition flex-shrink-0 ${
+                    isFav ? 'text-amber-400' : 'text-slate-500 opacity-0 group-hover:opacity-100 hover:text-amber-300'
                   }`}
                   title={isFav ? "Remove from Favorites" : "Add to Favorites"}
                 >

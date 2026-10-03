@@ -1,46 +1,70 @@
-import React, { useEffect } from 'react';
+import React, { useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { playSoundEffect } from '../../utils/sfx';
+import Soundboard from '../Soundboard';
 
 export const ChatSoundboard = ({ roomId }) => {
-  // Broadcast sound triggers over Supabase Realtime Channel
+  const [showFullSoundboard, setShowFullSoundboard] = useState(false);
+
+  // Broadcast quick sound triggers over Supabase Realtime Channel
   const triggerSound = async (soundType) => {
     playSoundEffect(soundType); // Play locally instantly
     if (!roomId) return;
-    const channel = supabase.channel(`room_${roomId}`);
-    await channel.send({
-      type: 'broadcast',
-      event: 'sound_emote',
-      payload: { soundType }
-    });
+    try {
+      const channel = supabase.channel(`room_${roomId}`);
+      await channel.send({
+        type: 'broadcast',
+        event: 'sound_emote',
+        payload: { soundType }
+      });
+    } catch (e) {
+      console.warn('Realtime quick sound trigger error:', e);
+    }
   };
 
   return (
-    <div className="flex gap-2 p-2 bg-black/30 border border-white/5 rounded-xl overflow-x-auto select-none">
-      <button 
-        type="button"
-        onClick={() => triggerSound('whistle')}
-        className="px-3 py-1.5 bg-purple-600/40 border border-purple-500/30 rounded-lg text-xs font-semibold text-white hover:bg-purple-600/60 active:scale-95 transition cursor-pointer flex items-center gap-1 shrink-0"
-      >
-        <span>😗</span>
-        <span>صفارة</span>
-      </button>
-      <button 
-        type="button"
-        onClick={() => triggerSound('chuckle')}
-        className="px-3 py-1.5 bg-amber-600/40 border border-amber-500/30 rounded-lg text-xs font-semibold text-white hover:bg-amber-600/60 active:scale-95 transition cursor-pointer flex items-center gap-1 shrink-0"
-      >
-        <span>😏</span>
-        <span>ضحكة</span>
-      </button>
-      <button 
-        type="button"
-        onClick={() => triggerSound('sizzle')}
-        className="px-3 py-1.5 bg-red-600/40 border border-red-500/30 rounded-lg text-xs font-semibold text-white hover:bg-red-600/60 active:scale-95 transition cursor-pointer flex items-center gap-1 shrink-0"
-      >
-        <span>🔥</span>
-        <span>تبنزين</span>
-      </button>
+    <div className="relative">
+      <div className="flex items-center gap-1.5 p-1.5 bg-black/40 border border-white/10 rounded-xl overflow-x-auto select-none">
+        <button 
+          type="button"
+          onClick={() => triggerSound('whistle')}
+          className="px-2.5 py-1 bg-purple-600/30 hover:bg-purple-600/60 border border-purple-500/30 rounded-lg text-xs font-semibold text-white active:scale-95 transition cursor-pointer flex items-center gap-1 shrink-0"
+        >
+          <span>😗</span>
+          <span>صفارة</span>
+        </button>
+        <button 
+          type="button"
+          onClick={() => triggerSound('chuckle')}
+          className="px-2.5 py-1 bg-amber-600/30 hover:bg-amber-600/60 border border-amber-500/30 rounded-lg text-xs font-semibold text-white active:scale-95 transition cursor-pointer flex items-center gap-1 shrink-0"
+        >
+          <span>😏</span>
+          <span>ضحكة</span>
+        </button>
+        <button 
+          type="button"
+          onClick={() => triggerSound('sizzle')}
+          className="px-2.5 py-1 bg-red-600/30 hover:bg-red-600/60 border border-red-500/30 rounded-lg text-xs font-semibold text-white active:scale-95 transition cursor-pointer flex items-center gap-1 shrink-0"
+        >
+          <span>🔥</span>
+          <span>تبنزين</span>
+        </button>
+        <button 
+          type="button"
+          onClick={() => setShowFullSoundboard((prev) => !prev)}
+          className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 border border-indigo-400/40 rounded-lg text-xs font-bold text-white active:scale-95 transition cursor-pointer flex items-center gap-1 shrink-0 shadow-sm"
+        >
+          <span>🔊</span>
+          <span>Soundboard</span>
+        </button>
+      </div>
+
+      {/* Floating Soundboard popover above chat */}
+      {showFullSoundboard && (
+        <div className="absolute bottom-full mb-2 start-0 z-50 w-[340px] sm:w-[420px] shadow-2xl">
+          <Soundboard roomId={roomId} onClose={() => setShowFullSoundboard(false)} />
+        </div>
+      )}
     </div>
   );
 };
@@ -51,7 +75,14 @@ export const listenToSoundEmotes = (roomId) => {
   const channel = supabase
     .channel(`room_${roomId}`)
     .on('broadcast', { event: 'sound_emote' }, ({ payload }) => {
-      if (payload?.soundType) {
+      if (payload?.soundUrl) {
+        try {
+          const audio = new Audio(payload.soundUrl);
+          audio.play().catch((err) => console.warn('Soundboard audio playback error:', err));
+        } catch (err) {
+          console.warn('Audio construction error:', err);
+        }
+      } else if (payload?.soundType) {
         playSoundEffect(payload.soundType);
       }
     })
