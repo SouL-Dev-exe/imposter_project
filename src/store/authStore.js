@@ -85,11 +85,14 @@ export const useAuthStore = create((set, get) => ({
         .maybeSingle();
 
       if (!profile) {
-        // Fallback: create the profile row immediately
+        // Fallback: create the profile row immediately with email
         const newProfile = {
           id: user.id,
+          email: user.email || null,
           username: user.user_metadata?.username || user.email?.split('@')[0] || 'Player',
           avatar_url: '🎭',
+          level: 1,
+          xp: 0,
           soul_coins: 500,
           inventory: ['title_novice', 'emote_hush'],
           stats: { wins: 0, games_played: 0, mvp_count: 0, win_streak: 0, impostor_wins: 0, civilian_wins: 0 },

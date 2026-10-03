@@ -6,6 +6,7 @@
 CREATE TABLE IF NOT EXISTS public.profiles (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     username TEXT,
+    email TEXT,
     avatar_url TEXT DEFAULT '🎭',
     level INTEGER DEFAULT 1,
     xp INTEGER DEFAULT 0,
@@ -32,16 +33,17 @@ ON public.profiles FOR INSERT WITH CHECK (auth.uid() = id);
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.profiles (id, username, avatar_url, soul_coins, inventory, stats)
+  INSERT INTO public.profiles (id, email, username, avatar_url, soul_coins, inventory, stats)
   VALUES (
     NEW.id,
+    NEW.email,
     COALESCE(NEW.raw_user_meta_data->>'username', 'Player_' || SUBSTRING(NEW.id::text, 1, 6)),
     '🎭',
     500,
     '["title_novice", "emote_hush"]'::jsonb,
     '{"wins": 0, "games_played": 0, "impostor_wins": 0, "civilian_wins": 0}'::jsonb
   )
-  ON CONFLICT (id) DO NOTHING;
+  ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -52,16 +54,17 @@ CREATE TRIGGER on_auth_user_created
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- 3. AUTO-SYNC EXISTING AUTH USERS (Run if profiles was dropped)
-INSERT INTO public.profiles (id, username, avatar_url, soul_coins, inventory, stats)
+INSERT INTO public.profiles (id, email, username, avatar_url, soul_coins, inventory, stats)
 SELECT 
   id,
+  email,
   COALESCE(raw_user_meta_data->>'username', 'Player_' || SUBSTRING(id::text, 1, 6)),
   '🎭',
   500,
   '["title_novice", "emote_hush"]'::jsonb,
   '{"wins": 0, "games_played": 0, "impostor_wins": 0, "civilian_wins": 0}'::jsonb
 FROM auth.users
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email;
 
 -- 4. ROOMS TABLE
 CREATE TABLE IF NOT EXISTS public.rooms (
