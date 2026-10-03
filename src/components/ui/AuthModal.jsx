@@ -56,12 +56,12 @@ export function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
       if (signInAnonymously) {
         await signInAnonymously();
       } else {
-        guestLogin(`Guest_${Math.floor(1000 + Math.random() * 9000)}`);
+        guestLogin('Guest01');
       }
       onClose();
     } catch (err) {
       // Fallback to local guest login
-      guestLogin(`Guest_${Math.floor(1000 + Math.random() * 9000)}`);
+      guestLogin('Guest01');
       onClose();
     } finally {
       setLoading(false);

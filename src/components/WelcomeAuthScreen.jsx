@@ -40,11 +40,10 @@ export default function WelcomeAuthScreen() {
           </label>
           <input
             type="text"
-            placeholder="أدخل اسمك (مثال: كريمو)"
+            placeholder="Guest01"
             value={guestName}
             onChange={(e) => setGuestName(e.target.value)}
-            className="w-full p-3 bg-slate-800 text-white rounded-xl border border-slate-700 text-center focus:outline-none focus:border-purple-500 text-sm placeholder:text-slate-500"
-            required
+            className="w-full p-3 bg-slate-800 text-white rounded-xl border border-slate-700 text-center focus:outline-none focus:border-purple-500 text-sm placeholder:text-slate-500 font-medium"
             maxLength={20}
           />
           <button

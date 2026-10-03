@@ -129,8 +129,8 @@ export function Header({
             )}
           </button>
 
-          {/* Language Toggle & Discord (desktop) */}
-          <div className="hidden md:flex items-center gap-1.5 ms-1">
+          {/* Language Toggle & Discord */}
+          <div className="flex items-center gap-1.5 ms-1">
             <LanguageToggle variant="chip" />
             <a
               href="https://discord.gg/XgVSFcvNM5"

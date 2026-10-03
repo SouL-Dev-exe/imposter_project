@@ -129,10 +129,10 @@ export const useAuthStore = create((set, get) => ({
 
   // Play as Guest
   loginAsGuest: (guestName) => {
-    const trimmed = guestName ? guestName.trim() : '';
+    const finalName = guestName?.trim() || 'Guest01';
     const guestProfile = {
       id: 'guest_' + Math.random().toString(36).substring(2, 9),
-      username: trimmed || 'زائر_' + Math.floor(1000 + Math.random() * 9000),
+      username: finalName,
       avatar_url: '🎭',
       soul_coins: 500,
       inventory: ['title_novice', 'emote_hush'],

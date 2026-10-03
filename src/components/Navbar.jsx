@@ -1,6 +1,8 @@
 import { useState, lazy, Suspense } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { useEconomyStore } from '../store/economyStore';
+import { LanguageToggle } from './ui/LanguageToggle';
+import { DiscordIcon } from './DiscordIcon';
 import AuthModal from './ui/AuthModal';
 
 const ProfileModal = lazy(() => import('./ui/ProfileModal'));
@@ -25,11 +27,30 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="w-full bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-3 sm:px-6 py-3 flex justify-between items-center relative z-40 select-none">
-        {/* Left: Game Brand / Title */}
-        <div className="font-black text-lg sm:text-xl bg-gradient-to-r from-purple-400 via-violet-400 to-indigo-400 bg-clip-text text-transparent flex items-center gap-2">
-          <span className="text-xl">🕵️</span>
-          <span>Undercover</span>
+      <nav className="w-full bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-3 sm:px-6 py-2.5 flex justify-between items-center relative z-40 select-none">
+        {/* Left: Brand + Discord + Language Switcher */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="font-black text-lg sm:text-xl bg-gradient-to-r from-purple-400 via-violet-400 to-indigo-400 bg-clip-text text-transparent flex items-center gap-1.5">
+            <span className="text-xl">🕵️</span>
+            <span>Undercover</span>
+          </div>
+
+          {/* Language Selector */}
+          <div className="flex items-center">
+            <LanguageToggle variant="chip" />
+          </div>
+
+          {/* Discord Community Link */}
+          <a
+            href="https://discord.gg/XgVSFcvNM5"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Join our Discord Community"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 bg-[#5865F2]/15 hover:bg-[#5865F2]/30 text-[#5865F2] border border-[#5865F2]/30 rounded-full transition cursor-pointer text-xs font-bold"
+          >
+            <DiscordIcon className="w-4 h-4" />
+            <span className="hidden sm:inline">Discord</span>
+          </a>
         </div>
 
         {/* Right: User Actions & Badges */}
@@ -62,14 +83,14 @@ export default function Navbar() {
               <button
                 type="button"
                 onClick={() => openProfile('loadout')}
-                title={`${profile.username || 'Player'} · Click to view Profile & Locker`}
+                title={`${profile.username || 'Guest01'} · Click to view Profile & Locker`}
                 className="flex items-center gap-1.5 sm:gap-2 bg-purple-600/15 hover:bg-purple-600/25 border border-purple-500/30 hover:border-purple-500/50 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs sm:text-sm cursor-pointer transition active:scale-95 shadow-sm group"
               >
                 <span className="text-base group-hover:scale-110 transition-transform">
                   {profile.avatar_url || '🎭'}
                 </span>
                 <span className="font-bold text-purple-100 max-w-[90px] sm:max-w-[140px] truncate">
-                  {profile.username || 'Player'}
+                  {profile.username || 'Guest01'}
                 </span>
                 {isGuest && (
                   <span className="bg-amber-500/25 text-amber-300 text-[10px] font-bold px-1.5 py-0.5 rounded border border-amber-500/40">
