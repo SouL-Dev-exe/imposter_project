@@ -149,7 +149,7 @@ export default function Soundboard({ roomId = null, onClose = null }) {
       </div>
 
       {/* Scrollable Sounds Grid */}
-      <div className="flex-1 overflow-y-auto pe-1 grid grid-cols-2 gap-1.5 align-content-start scrollbar-thin scrollbar-thumb-slate-700">
+      <div className="flex-1 overflow-y-auto pe-1 grid grid-cols-2 sm:grid-cols-3 gap-1.5 align-content-start scrollbar-thin scrollbar-thumb-slate-700 max-h-[60vh]">
         {filteredSounds.length === 0 ? (
           <div className="col-span-full text-center py-8 text-slate-500 text-xs">
             {activeTab === 'favs' ? 'No favorite sounds yet!' : 'No sounds match search.'}

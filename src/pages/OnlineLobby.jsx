@@ -133,7 +133,7 @@ export default function OnlineLobby() {
 
   // 2. In a room
   return (
-    <div className="min-h-screen flex flex-col pt-16 p-4 max-w-4xl mx-auto relative">
+    <div className="min-h-[100dvh] flex flex-col pt-16 p-3 sm:p-4 max-w-4xl w-full mx-auto relative">
       {/* Header */}
       <div className="absolute top-4 start-4 end-4 flex justify-between items-center z-20">
         <Button variant="ghost" size="sm" onClick={handleLeave} icon="⬅️">
@@ -145,15 +145,15 @@ export default function OnlineLobby() {
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col md:flex-row gap-6">
+      <div className="flex-1 flex flex-col md:flex-row gap-4 sm:gap-6">
 
         {/* Left side: Players */}
-        <div className="flex-1 space-y-6">
-          <h2 className="text-2xl font-black text-white text-center md:text-start">
+        <div className="flex-1 space-y-4 sm:space-y-6">
+          <h2 className="text-xl sm:text-2xl font-black text-white text-center md:text-start">
             {isArabic ? `اللاعبون (${players.length}/10)` : `Players (${players.length}/10)`}
           </h2>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 w-full">
             <AnimatePresence>
               {players.map((p, idx) => (
                 <PlayerCard
