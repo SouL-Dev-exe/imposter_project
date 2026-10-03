@@ -8,7 +8,7 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
-  base: './',
+  base: '/imposter_project/',
   build: {
     outDir: 'dist',
     // Increase chunk size warning limit for framer-motion
