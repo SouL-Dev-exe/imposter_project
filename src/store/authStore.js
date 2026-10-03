@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { supabase } from '../utils/supabase';
+import { supabase } from '../lib/supabase';
 
 export const useAuthStore = create((set, get) => ({
   session: null,
@@ -7,6 +7,45 @@ export const useAuthStore = create((set, get) => ({
   profile: null,
   isGuest: false,
   loading: true,
+
+  // 1. SIGN IN (Email/Password or Anonymous)
+  signIn: async (email, password) => {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    set({ user: data.user, session: data.session, isGuest: false });
+    if (data.user) {
+      await get().fetchProfile(data.user.id);
+    }
+    return data;
+  },
+
+  // Anonymous Sign In (Optional for quick play)
+  signInAnonymously: async () => {
+    const { data, error } = await supabase.auth.signInAnonymously();
+    if (error) throw error;
+    set({ user: data.user, session: data.session, isGuest: false });
+    if (data.user) {
+      await get().fetchProfile(data.user.id);
+    }
+    return data;
+  },
+
+  // 2. SIGN OUT (Fixes non-working signout)
+  signOut: async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.error("Signout error:", err);
+    } finally {
+      // Always reset local state and localStorage
+      localStorage.removeItem('sb-access-token');
+      localStorage.removeItem('sb-refresh-token');
+      localStorage.removeItem('guest_profile');
+      set({ user: null, profile: null, session: null, isGuest: false });
+    }
+  },
+
+  setUser: (user) => set({ user, loading: false }),
 
   initAuth: async () => {
     set({ loading: true });
@@ -63,33 +102,21 @@ export const useAuthStore = create((set, get) => ({
       email,
       password,
     });
-    if (error) return { success: false, error: error.message };
+    if (error) throw error;
 
     // Update profile after signup
     if (data.user) {
+      const nick = username || email.split('@')[0];
       const { error: profileError } = await supabase
         .from('profiles')
-        .update({ username, avatar_url: `https://api.dicebear.com/9.x/bottts/svg?seed=${username}` })
+        .update({ username: nick, avatar_url: `https://api.dicebear.com/9.x/bottts/svg?seed=${encodeURIComponent(nick)}` })
         .eq('id', data.user.id);
         
       if (profileError) console.error('Profile init error:', profileError);
+      set({ user: data.user, session: data.session, isGuest: false });
+      await get().fetchProfile(data.user.id);
     }
-    return { success: true };
-  },
-
-  signIn: async (email, password) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    if (error) return { success: false, error: error.message };
-    return { success: true };
-  },
-
-  signOut: async () => {
-    await supabase.auth.signOut();
-    localStorage.removeItem('guest_profile');
-    set({ session: null, user: null, profile: null, isGuest: false });
+    return data;
   },
 
   guestLogin: (username) => {
@@ -128,3 +155,5 @@ export const useAuthStore = create((set, get) => ({
     return { success: true };
   }
 }));
+
+export default useAuthStore;
