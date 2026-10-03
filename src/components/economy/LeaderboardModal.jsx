@@ -1,7 +1,7 @@
 /**
  * LeaderboardModal.jsx
  * Global Supabase Leaderboard — real-time top 100 players ranked by SouL Coins.
- * Fetches from user_economy via useEconomyStore.fetchLeaderboard().
+ * Fetches from public.profiles via useEconomyStore.fetchLeaderboard().
  * Displays each player's live UserAvatar style and equipped Title badge.
  */
 import { useState, useEffect } from 'react';
@@ -179,7 +179,7 @@ export default function LeaderboardModal({ isOpen, onClose }) {
 
           {/* Footer */}
           <div className="p-4 border-t border-white/10 bg-white/[0.02] text-center text-[11px] text-white/30">
-            Data sourced from Supabase user_economy in real-time. Updates after each match.
+            Data sourced from Supabase profiles in real-time. Updates after each match.
           </div>
         </motion.div>
       </div>

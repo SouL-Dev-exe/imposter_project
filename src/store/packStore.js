@@ -7,7 +7,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { generateId } from '../utils/gameLogic';
-import { fetchCloudPacks, savePackToCloud, deletePackFromCloud } from '../utils/supabase';
+import { supabase, fetchCloudPacks, savePackToCloud, deletePackFromCloud } from '../utils/supabase';
+import { useAuthStore } from './authStore';
 
 export const usePackStore = create(
   persist(
@@ -15,6 +16,45 @@ export const usePackStore = create(
       customPacks: [],   // Locally created packs (persisted to localStorage)
       cloudPacks: [],    // Read-only packs fetched from Supabase
       cloudStatus: 'idle', // 'idle' | 'loading' | 'synced' | 'error' | 'offline'
+
+      /**
+       * Buy a premium word pack using SouL Coins directly synced to public.profiles.
+       */
+      buyPack: async (packId, price) => {
+        const authStore = useAuthStore.getState();
+        const profile = authStore.profile;
+        const user = authStore.user;
+
+        if (!profile || (profile.soul_coins ?? 0) < price) {
+          throw new Error('لا يوجد رصيد كافي من العملات');
+        }
+
+        const currentInventory = Array.isArray(profile.inventory) ? profile.inventory : [];
+        const updatedInventory = [...new Set([...currentInventory, packId])];
+        const updatedCoins = (profile.soul_coins ?? 0) - price;
+
+        if (profile.id && !String(profile.id).startsWith('guest_') && user) {
+          const { error } = await supabase
+            .from('profiles')
+            .update({
+              soul_coins: updatedCoins,
+              inventory: updatedInventory,
+            })
+            .eq('id', profile.id);
+
+          if (error) throw error;
+          await authStore.fetchOrCreateProfile(user);
+        } else {
+          // Guest purchase: local storage update
+          const updatedProfile = {
+            ...profile,
+            soul_coins: updatedCoins,
+            inventory: updatedInventory,
+          };
+          localStorage.setItem('undercover_guest_player', JSON.stringify(updatedProfile));
+          useAuthStore.setState({ profile: updatedProfile });
+        }
+      },
 
       // ─── Cloud sync ──────────────────────────────────────────────────────────
 

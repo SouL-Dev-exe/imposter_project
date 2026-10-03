@@ -34,8 +34,13 @@ export function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
       onClose();
     } catch (err) {
       const msg = err?.message || 'حدث خطأ أثناء المصادقة';
-      if (msg.toLowerCase().includes('already registered') || msg.toLowerCase().includes('already exists')) {
-        setError('هذا الحساب مسجل مسبقاً. اضغط على "تسجيل الدخول" وأدخل كلمة المرور.');
+      if (
+        msg.toLowerCase().includes('already registered') ||
+        msg.toLowerCase().includes('already exists') ||
+        msg.toLowerCase().includes('user already exists')
+      ) {
+        setIsSignIn(true);
+        setError('هذا الحساب موجود بالفعل، تفضل بتسجيل الدخول');
       } else {
         setError(msg);
       }

@@ -1,176 +1,130 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
 
-const DEFAULT_PROFILE = {
-  level: 1,
-  xp: 0,
-  soul_coins: 500,
-  inventory: ['title_novice', 'emote_hush'],
-  stats: { matches_played: 0, wins: 0, impostor_wins: 0, civilian_wins: 0 },
-};
-
-/**
- * Migration helper: Sync local guest coins and profile into public.profiles
- */
-export const migrateGuestDataToCloud = async (userId) => {
-  if (!userId || userId === 'guest' || String(userId).startsWith('guest_')) return;
-  try {
-    const localCoinsEconomy = JSON.parse(localStorage.getItem('soul_coins_economy') || '{}');
-    const guestProfile = JSON.parse(
-      localStorage.getItem('undercover_guest_player') ||
-      localStorage.getItem('guest_profile') ||
-      '{}'
-    );
-
-    if (!localCoinsEconomy.soulCoins && !localCoinsEconomy.inventory && !guestProfile.username) {
-      return; // No guest progress to migrate
-    }
-
-    const payload = {
-      soul_coins: localCoinsEconomy.soulCoins || 500,
-      level: localCoinsEconomy.seasonLevel || 1,
-      xp: localCoinsEconomy.seasonXP || 0,
-      inventory: Array.isArray(localCoinsEconomy.inventory?.titles)
-        ? [...(localCoinsEconomy.inventory.titles || []), ...(localCoinsEconomy.inventory.emotes || [])]
-        : ['title_novice', 'emote_hush'],
-      stats: { matches_played: localCoinsEconomy.totalMatches || 0, wins: localCoinsEconomy.wins || 0 },
-    };
-
-    if (guestProfile.username && !guestProfile.username.startsWith('زائر_') && !guestProfile.username.startsWith('Guest_')) {
-      payload.username = guestProfile.username;
-    }
-    if (guestProfile.avatar_url) {
-      payload.avatar_url = guestProfile.avatar_url;
-    }
-
-    await supabase
-      .from('profiles')
-      .update(payload)
-      .eq('id', userId);
-
-    localStorage.removeItem('soul_coins_economy');
-    localStorage.removeItem('undercover_guest_player');
-    localStorage.removeItem('guest_profile');
-    console.log('[Auth] Guest data migrated successfully to profile.');
-  } catch (err) {
-    console.warn('[Auth] Guest migration skipped or failed:', err?.message || err);
-  }
-};
-
 export const useAuthStore = create((set, get) => ({
-  session: null,
   user: null,
   profile: null,
   isGuest: false,
   loading: true,
 
-  // 1. Initialize Auth on App Launch
   initAuth: async () => {
     set({ loading: true });
 
-    try {
-      // Check Supabase session
-      const { data, error } = await supabase.auth.getSession();
-
-      if (error) {
-        console.warn('[Auth] Stale session, clearing cache:', error.message);
-        get().clearSessionState();
-        return;
-      }
-
-      const session = data?.session;
-
+    // 1. Listen for real-time auth changes
+    supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
-        set({ user: session.user, session, isGuest: false });
-        await get().fetchProfile(session.user.id);
-        await migrateGuestDataToCloud(session.user.id);
-        set({ loading: false });
+        await get().fetchOrCreateProfile(session.user);
+        set({ user: session.user, isGuest: false, loading: false });
+      } else if (event === 'SIGNED_OUT') {
+        get().clearSession();
       } else {
-        // Check if guest session exists in local storage
+        // Check guest state
         const savedGuest =
           localStorage.getItem('undercover_guest_player') ||
           localStorage.getItem('guest_profile');
 
         if (savedGuest) {
           try {
-            const parsed = JSON.parse(savedGuest);
-            set({
-              user: null,
-              session: null,
-              profile: parsed,
-              isGuest: true,
-              loading: false,
-            });
+            set({ user: null, profile: JSON.parse(savedGuest), isGuest: true, loading: false });
           } catch {
             localStorage.removeItem('undercover_guest_player');
-            localStorage.removeItem('guest_profile');
-            set({ user: null, session: null, profile: null, isGuest: false, loading: false });
+            set({ user: null, profile: null, isGuest: false, loading: false });
           }
         } else {
-          // No account, no guest -> Show Landing Auth Screen
-          set({ user: null, session: null, profile: null, isGuest: false, loading: false });
+          set({ user: null, profile: null, isGuest: false, loading: false });
         }
       }
-    } catch (err) {
-      console.warn('[Auth] Initialization error:', err?.message || err);
-      set({ user: null, session: null, profile: null, isGuest: false, loading: false });
-    } finally {
-      set({ loading: false });
-    }
-
-    // Listen for auth state changes
-    supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session?.user) {
-        set({ user: session.user, session, isGuest: false, loading: false });
-        await get().fetchProfile(session.user.id);
-        await migrateGuestDataToCloud(session.user.id);
-      } else if (event === 'SIGNED_OUT') {
-        get().clearSessionState();
-      }
     });
-  },
 
-  // 2. Fetch Fresh Profile from Supabase
-  fetchProfile: async (userId) => {
-    if (!userId || userId === 'guest' || String(userId).startsWith('guest_')) return;
-
+    // 2. Check active Supabase session on app start
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .maybeSingle();
-
+      const { data: { session }, error } = await supabase.auth.getSession();
       if (error) {
-        console.error('Error loading profile from Supabase:', error);
+        console.warn('[Auth] Session retrieval error, resetting:', error.message);
+        get().clearSession();
         return;
       }
 
-      if (data) {
-        set({ profile: data });
+      if (session?.user) {
+        await get().fetchOrCreateProfile(session.user);
+        set({ user: session.user, isGuest: false, loading: false });
       } else {
-        // First login: create default profile row
-        const defaultProfile = {
-          id: userId,
-          username: `Player_${userId.slice(0, 4)}`,
-          avatar_url: `https://api.dicebear.com/9.x/bottts/svg?seed=${encodeURIComponent(userId)}`,
-          ...DEFAULT_PROFILE,
-        };
+        // Check guest state
+        const savedGuest =
+          localStorage.getItem('undercover_guest_player') ||
+          localStorage.getItem('guest_profile');
 
-        const { data: inserted } = await supabase
-          .from('profiles')
-          .upsert([defaultProfile], { onConflict: 'id' })
-          .select()
-          .single();
-
-        if (inserted) set({ profile: inserted });
+        if (savedGuest) {
+          try {
+            set({ user: null, profile: JSON.parse(savedGuest), isGuest: true, loading: false });
+          } catch {
+            localStorage.removeItem('undercover_guest_player');
+            set({ user: null, profile: null, isGuest: false, loading: false });
+          }
+        } else {
+          set({ user: null, profile: null, isGuest: false, loading: false });
+        }
       }
     } catch (err) {
-      console.error('Error loading profile from Supabase:', err);
+      console.warn('[Auth] initAuth error:', err?.message || err);
+      set({ user: null, profile: null, isGuest: false, loading: false });
+    } finally {
+      set({ loading: false });
     }
   },
 
-  // 3. Play as Guest
+  // Auto-creates profile row in public.profiles if it doesn't exist (Self-healing)
+  fetchOrCreateProfile: async (user) => {
+    if (!user?.id) return null;
+
+    try {
+      let { data: profile, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (!profile) {
+        // Fallback: create the profile row immediately
+        const newProfile = {
+          id: user.id,
+          username: user.user_metadata?.username || user.email?.split('@')[0] || 'Player',
+          avatar_url: '🎭',
+          soul_coins: 500,
+          inventory: ['title_novice', 'emote_hush'],
+          stats: { wins: 0, games_played: 0, mvp_count: 0, win_streak: 0, impostor_wins: 0, civilian_wins: 0 },
+        };
+
+        const { data: inserted, error: insertErr } = await supabase
+          .from('profiles')
+          .upsert(newProfile, { onConflict: 'id' })
+          .select()
+          .single();
+
+        if (insertErr) {
+          console.warn('[Auth] Error inserting profile row:', insertErr.message);
+        }
+        profile = inserted || newProfile;
+      }
+
+      set({ profile });
+      return profile;
+    } catch (err) {
+      console.error('Error fetching/creating profile:', err);
+      return null;
+    }
+  },
+
+  // Alias for fetchProfile
+  fetchProfile: async (userId) => {
+    const { user } = get();
+    if (user && user.id === userId) {
+      return get().fetchOrCreateProfile(user);
+    }
+    return get().fetchOrCreateProfile({ id: userId });
+  },
+
+  // Play as Guest
   loginAsGuest: (guestName) => {
     const trimmed = guestName ? guestName.trim() : '';
     const guestProfile = {
@@ -180,26 +134,21 @@ export const useAuthStore = create((set, get) => ({
       soul_coins: 500,
       inventory: ['title_novice', 'emote_hush'],
       is_guest: true,
-      stats: { matches_played: 0, wins: 0, impostor_wins: 0, civilian_wins: 0 },
-      created_at: new Date().toISOString(),
+      stats: { wins: 0, games_played: 0, mvp_count: 0, win_streak: 0 },
     };
-
     localStorage.setItem('undercover_guest_player', JSON.stringify(guestProfile));
-    set({ user: null, session: null, profile: guestProfile, isGuest: true, loading: false });
-    return { success: true };
+    set({ user: null, profile: guestProfile, isGuest: true, loading: false });
   },
 
-  // Alias for backward compatibility
   guestLogin: (guestName) => get().loginAsGuest(guestName),
 
-  // 4. Sign In (Email / Password)
+  // Sign In (Email / Password)
   signIn: async (email, password) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
-    set({ user: data.user, session: data.session, isGuest: false, loading: false });
-    if (data.user?.id) {
-      await get().fetchProfile(data.user.id);
-      await migrateGuestDataToCloud(data.user.id);
+    if (data.user) {
+      await get().fetchOrCreateProfile(data.user);
+      set({ user: data.user, isGuest: false, loading: false });
     }
     return data;
   },
@@ -208,37 +157,28 @@ export const useAuthStore = create((set, get) => ({
   signInAnonymously: async () => {
     const { data, error } = await supabase.auth.signInAnonymously();
     if (error) throw error;
-    set({ user: data.user, session: data.session, isGuest: false, loading: false });
-    if (data.user?.id) {
-      await get().fetchProfile(data.user.id);
-      await migrateGuestDataToCloud(data.user.id);
+    if (data.user) {
+      await get().fetchOrCreateProfile(data.user);
+      set({ user: data.user, isGuest: false, loading: false });
     }
     return data;
   },
 
   // Sign Up
   signUp: async (email, password, username) => {
+    const nick = username || email.split('@')[0];
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: { username: nick },
+      },
     });
     if (error) throw error;
 
-    if (data.user?.id) {
-      const nick = username || email.split('@')[0];
-      const newProfile = {
-        id: data.user.id,
-        username: nick,
-        avatar_url: `https://api.dicebear.com/9.x/bottts/svg?seed=${encodeURIComponent(nick)}`,
-        ...DEFAULT_PROFILE,
-      };
-
-      await supabase
-        .from('profiles')
-        .upsert([newProfile], { onConflict: 'id' });
-
-      set({ user: data.user, session: data.session, isGuest: false, profile: newProfile, loading: false });
-      await migrateGuestDataToCloud(data.user.id);
+    if (data.user) {
+      await get().fetchOrCreateProfile(data.user);
+      set({ user: data.user, isGuest: false, loading: false });
     }
     return data;
   },
@@ -266,20 +206,19 @@ export const useAuthStore = create((set, get) => ({
     return { success: true };
   },
 
-  // 5. Sign Out & Clear All Local Caches
+  // Sign Out
   signOut: async () => {
     try {
       await supabase.auth.signOut();
-    } catch (err) {
-      console.error('Signout error:', err);
+    } catch (e) {
+      console.error(e);
     } finally {
-      get().clearSessionState();
+      get().clearSession();
     }
   },
 
-  // 6. Clear Session State and Stale Caches
-  clearSessionState: () => {
-    // Clear browser caches causing stale money/data
+  // Clear Session & Local Caches
+  clearSession: () => {
     localStorage.removeItem('undercover_guest_player');
     localStorage.removeItem('guest_profile');
     localStorage.removeItem('soul_coins_economy');
@@ -297,11 +236,10 @@ export const useAuthStore = create((set, get) => ({
       /* noop */
     }
 
-    set({ user: null, session: null, profile: null, isGuest: false, loading: false });
+    set({ user: null, profile: null, isGuest: false, loading: false });
   },
 
-  setUser: (user) => set({ user, loading: false }),
-  migrateGuestDataToCloud: (userId) => migrateGuestDataToCloud(userId),
+  clearSessionState: () => get().clearSession(),
 }));
 
 export default useAuthStore;

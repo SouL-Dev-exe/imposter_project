@@ -2,7 +2,7 @@
  * economyStore.js
  * Hybrid economy store: Zustand + localStorage (optimistic cache) + Supabase backend sync.
  *
- * Source of truth for database schema: public.user_economy
+ * Source of truth for database schema: public.profiles
  * Columns:
  *  - id UUID PRIMARY KEY
  *  - user_id UUID NOT NULL REFERENCES public.profiles(id)
@@ -92,31 +92,41 @@ function getDayDiff(dateStrA, dateStrB) {
 }
 
 /**
- * Extract the economy snapshot formatted using exact column names of public.user_economy.
+/**
+ * Extract the economy snapshot formatted for public.profiles.
  */
-function buildEconomyPayload(state, userId, username) {
+function buildProfilesEconomyPayload(state) {
+  const inventoryList = Array.isArray(state.inventory)
+    ? state.inventory
+    : [
+        ...(state.inventory?.outfits || []),
+        ...(state.inventory?.accessories || []),
+        ...(state.inventory?.emotes || []),
+        ...(state.inventory?.screenFX || []),
+        ...(state.inventory?.titles || []),
+      ];
+
   return {
-    user_id: userId,
-    username: username || 'Player',
     soul_coins: Number(state.soulCoins) || 0,
-    season_xp: Number(state.seasonXP) || 0,
-    season_level: Number(state.seasonLevel) || 1,
-    streak_days: Number(state.streakDays) || 1,
-    last_login_date: state.lastLoginDate || getTodayString(),
-    win_streak: Number(state.winStreak) || 0,
-    inventory: state.inventory || DEFAULT_ECONOMY.inventory,
-    equipped: state.equipped || DEFAULT_ECONOMY.equipped,
-    quests: [...(state.dailyQuests || []), ...(state.weeklyQuests || [])],
-    unlocked_pass_tiers: state.unlockedPassTiers || [1],
-    equipped_avatar_style: state.equippedAvatarStyle || 'bottts',
-    owned_avatar_styles: state.ownedAvatarStyles || ['bottts'],
+    xp: Number(state.seasonXP) || 0,
+    level: Number(state.seasonLevel) || 1,
+    inventory: inventoryList,
+    stats: {
+      streak_days: Number(state.streakDays) || 1,
+      last_login_date: state.lastLoginDate || getTodayString(),
+      win_streak: Number(state.winStreak) || 0,
+      equipped: state.equipped || DEFAULT_ECONOMY.equipped,
+      quests: [...(state.dailyQuests || []), ...(state.weeklyQuests || [])],
+      unlocked_pass_tiers: state.unlockedPassTiers || [1],
+      equipped_avatar_style: state.equippedAvatarStyle || 'bottts',
+      owned_avatar_styles: state.ownedAvatarStyles || ['bottts'],
+    },
     updated_at: new Date().toISOString(),
   };
 }
 
 /**
- * Synchronise economy state to the public.user_economy table in Supabase.
- * Filters strictly by .eq('user_id', currentUser.id) using update() or upsert().
+ * Synchronise economy state directly to public.profiles table in Supabase.
  */
 async function syncToSupabase(state) {
   try {
@@ -125,40 +135,12 @@ async function syncToSupabase(state) {
     if (!currentUser?.id) return; // Guest or unauthenticated — skip cloud sync
 
     const userId = currentUser.id;
-    const username = currentUser.user_metadata?.username || 'Player';
-    const payload = buildEconomyPayload(state, userId, username);
+    const payload = buildProfilesEconomyPayload(state);
 
-    // Check if user record already exists in user_economy
-    const { data: existing, error: checkError } = await supabase
-      .from('user_economy')
-      .select('id')
-      .eq('user_id', userId)
-      .maybeSingle();
-
-    if (!checkError && existing?.id) {
-      // Record exists: perform targeted update()
-      await supabase
-        .from('user_economy')
-        .update({
-          soul_coins: payload.soul_coins,
-          season_xp: payload.season_xp,
-          season_level: payload.season_level,
-          streak_days: payload.streak_days,
-          last_login_date: payload.last_login_date,
-          win_streak: payload.win_streak,
-          inventory: payload.inventory,
-          equipped: payload.equipped,
-          quests: payload.quests,
-          unlocked_pass_tiers: payload.unlocked_pass_tiers,
-          updated_at: payload.updated_at,
-        })
-        .eq('user_id', userId);
-    } else {
-      // Record does not exist: upsert / insert initial row
-      await supabase
-        .from('user_economy')
-        .upsert(payload, { onConflict: 'user_id' });
-    }
+    await supabase
+      .from('profiles')
+      .update(payload)
+      .eq('id', userId);
   } catch (err) {
     console.warn('[Economy] Supabase sync failed — localStorage remains active.', err?.message);
   }
@@ -174,7 +156,7 @@ export const useEconomyStore = create(
 
       // ─── 0. Supabase Init & Hydration ──────────────────────────────────────
       /**
-       * Fetches user_economy state from Supabase by .eq('user_id', currentUser.id)
+       * Fetches profile state from Supabase by .eq('id', currentUser.id)
        * and hydrates local Zustand state. Falls back safely to localStorage.
        */
       initEconomy: async () => {
@@ -191,21 +173,21 @@ export const useEconomyStore = create(
           const userId = currentUser.id;
           set({ isSyncing: true });
 
-          // Query user_economy matching user_id
+          // Query profiles matching id
           const { data: row, error } = await supabase
-            .from('user_economy')
+            .from('profiles')
             .select('*')
-            .eq('user_id', userId)
+            .eq('id', userId)
             .maybeSingle();
 
           if (!error && row) {
-            // Parse quests array from row.quests JSONB
+            const rawStats = row.stats || {};
             let daily = DEFAULT_DAILY_QUESTS;
             let weekly = DEFAULT_WEEKLY_QUESTS;
 
-            if (Array.isArray(row.quests) && row.quests.length > 0) {
-              const d = row.quests.filter((q) => q.id?.startsWith('q'));
-              const w = row.quests.filter((q) => q.id?.startsWith('w'));
+            if (Array.isArray(rawStats.quests) && rawStats.quests.length > 0) {
+              const d = rawStats.quests.filter((q) => q.id?.startsWith('q'));
+              const w = rawStats.quests.filter((q) => q.id?.startsWith('w'));
               if (d.length > 0) daily = d;
               if (w.length > 0) weekly = w;
             }
@@ -213,26 +195,20 @@ export const useEconomyStore = create(
             set({
               soulCoins: row.soul_coins ?? DEFAULT_ECONOMY.soulCoins,
               totalCoinsEarned: row.soul_coins ?? DEFAULT_ECONOMY.totalCoinsEarned,
-              seasonXP: row.season_xp ?? 0,
-              seasonLevel: row.season_level ?? 1,
-              streakDays: row.streak_days ?? 1,
-              lastLoginDate: row.last_login_date ?? getTodayString(),
-              winStreak: row.win_streak ?? 0,
-              inventory: row.inventory ?? DEFAULT_ECONOMY.inventory,
-              equipped: row.equipped ?? DEFAULT_ECONOMY.equipped,
+              seasonXP: row.xp ?? 0,
+              seasonLevel: row.level ?? 1,
+              streakDays: rawStats.streak_days ?? 1,
+              lastLoginDate: rawStats.last_login_date ?? getTodayString(),
+              winStreak: rawStats.win_streak ?? 0,
+              equipped: rawStats.equipped ?? DEFAULT_ECONOMY.equipped,
               dailyQuests: daily,
               weeklyQuests: weekly,
-              unlockedPassTiers: Array.isArray(row.unlocked_pass_tiers) ? row.unlocked_pass_tiers : [1],
-              equippedAvatarStyle: row.equipped_avatar_style ?? 'bottts',
-              ownedAvatarStyles: Array.isArray(row.owned_avatar_styles) && row.owned_avatar_styles.length > 0
-                ? row.owned_avatar_styles
+              unlockedPassTiers: Array.isArray(rawStats.unlocked_pass_tiers) ? rawStats.unlocked_pass_tiers : [1],
+              equippedAvatarStyle: rawStats.equipped_avatar_style ?? 'bottts',
+              ownedAvatarStyles: Array.isArray(rawStats.owned_avatar_styles) && rawStats.owned_avatar_styles.length > 0
+                ? rawStats.owned_avatar_styles
                 : ['bottts'],
             });
-          } else if (!row) {
-            // First time user in user_economy: create initial row
-            const username = currentUser.user_metadata?.username || 'Player';
-            const initialPayload = buildEconomyPayload(get(), userId, username);
-            await supabase.from('user_economy').insert([initialPayload]);
           }
 
           set({ isSyncing: false });
@@ -612,72 +588,38 @@ export const useEconomyStore = create(
 
       // ─── 7. Global Leaderboard Query ───────────────────────────────────────
       /**
-       * Fetches top 100 players from public.user_economy ordered by soul_coins DESC.
+       * Fetches top 100 players from public.profiles ordered by soul_coins DESC.
        */
       fetchLeaderboard: async () => {
         try {
-          // Attempt join with public.profiles for avatar and username
           const { data, error } = await supabase
-            .from('user_economy')
-            .select(`
-              id,
-              user_id,
-              username,
-              soul_coins,
-              season_level,
-              season_xp,
-              win_streak,
-              equipped,
-              equipped_avatar_style,
-              profiles (
-                avatar_url,
-                username
-              )
-            `)
+            .from('profiles')
+            .select('id, username, avatar_url, level, xp, soul_coins, stats')
             .order('soul_coins', { ascending: false })
             .limit(100);
 
-          if (error) {
-            // Direct query fallback if join relation is not exposed
-            const { data: simpleData, error: simpleError } = await supabase
-              .from('user_economy')
-              .select('id, user_id, username, soul_coins, season_level, equipped, equipped_avatar_style')
-              .order('soul_coins', { ascending: false })
-              .limit(100);
-
-            if (simpleError) throw simpleError;
-
-            return (simpleData || []).map((row, index) => ({
-              rank: index + 1,
-              id: row.id,
-              userId: row.user_id,
-              username: row.username || 'Player',
-              avatar_url: `https://api.dicebear.com/9.x/${row.equipped_avatar_style || 'bottts'}/svg?seed=${encodeURIComponent(row.username || 'Player')}`,
-              equippedAvatarStyle: row.equipped_avatar_style || 'bottts',
-              equipped: row.equipped || {},
-              soulCoins: row.soul_coins ?? 0,
-              seasonLevel: row.season_level ?? 1,
-              equippedTitle: row.equipped?.title ?? 'Novice',
-            }));
-          }
+          if (error) throw error;
 
           return (data || []).map((row, index) => {
-            const uname = row.profiles?.username || row.username || 'Player';
-            const avatar = row.profiles?.avatar_url && row.profiles?.avatar_url !== 'default_avatar.png'
-              ? row.profiles.avatar_url
-              : `https://api.dicebear.com/9.x/${row.equipped_avatar_style || 'bottts'}/svg?seed=${encodeURIComponent(uname)}`;
+            const rawStats = row.stats || {};
+            const uname = row.username || 'Player';
+            const avatar = row.avatar_url && row.avatar_url !== 'default_avatar.png'
+              ? row.avatar_url
+              : `https://api.dicebear.com/9.x/bottts/svg?seed=${encodeURIComponent(uname)}`;
 
             return {
               rank: index + 1,
               id: row.id,
-              userId: row.user_id,
+              userId: row.id,
               username: uname,
               avatar_url: avatar,
-              equippedAvatarStyle: row.equipped_avatar_style || 'bottts',
-              equipped: row.equipped || {},
+              equippedAvatarStyle: rawStats.equipped_avatar_style || 'bottts',
+              equipped: rawStats.equipped || {},
               soulCoins: row.soul_coins ?? 0,
-              seasonLevel: row.season_level ?? 1,
-              equippedTitle: row.equipped?.title ?? 'Novice',
+              seasonLevel: row.level ?? 1,
+              equippedTitle: rawStats.equipped?.title ?? 'Novice',
+              seasonXP: row.xp ?? 0,
+              winStreak: rawStats.win_streak ?? 0,
             };
           });
         } catch (err) {
