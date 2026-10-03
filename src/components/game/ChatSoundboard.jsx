@@ -23,7 +23,7 @@ export const ChatSoundboard = ({ roomId }) => {
   };
 
   return (
-    <div className="relative">
+    <>
       <div className="flex items-center gap-1.5 p-1.5 bg-black/40 border border-white/10 rounded-xl overflow-x-auto select-none">
         <button 
           type="button"
@@ -52,20 +52,24 @@ export const ChatSoundboard = ({ roomId }) => {
         <button 
           type="button"
           onClick={() => setShowFullSoundboard((prev) => !prev)}
-          className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 border border-indigo-400/40 rounded-lg text-xs font-bold text-white active:scale-95 transition cursor-pointer flex items-center gap-1 shrink-0 shadow-sm"
+          className={`px-2.5 py-1 border rounded-lg text-xs font-bold text-white active:scale-95 transition cursor-pointer flex items-center gap-1 shrink-0 shadow-sm ${
+            showFullSoundboard 
+              ? 'bg-indigo-500 border-indigo-300' 
+              : 'bg-indigo-600 hover:bg-indigo-500 border-indigo-400/40'
+          }`}
         >
           <span>🔊</span>
           <span>Soundboard</span>
         </button>
       </div>
 
-      {/* Floating Soundboard popover above chat */}
+      {/* Floating Soundboard overlay floating above chat messages */}
       {showFullSoundboard && (
-        <div className="absolute bottom-full mb-2 start-0 z-50 w-[340px] sm:w-[420px] shadow-2xl">
+        <div className="absolute bottom-16 start-2 end-2 z-50 shadow-2xl rounded-2xl overflow-hidden border border-slate-700 bg-slate-900/95 backdrop-blur-md animate-in fade-in zoom-in-95 duration-150">
           <Soundboard roomId={roomId} onClose={() => setShowFullSoundboard(false)} />
         </div>
       )}
-    </div>
+    </>
   );
 };
 

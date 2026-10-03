@@ -8,7 +8,6 @@ import { useMultiplayerStore } from '../store/multiplayerStore';
 import { LiveChat } from '../components/game/LiveChat';
 import { ReactionPanel } from '../components/game/ReactionPanel';
 import { PlayerCard } from '../components/game/PlayerCard';
-import Soundboard from '../components/Soundboard';
 
 export default function OnlineLobby() {
   const { t, i18n } = useTranslation();
@@ -22,7 +21,6 @@ export default function OnlineLobby() {
   const [joinCode, setJoinCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [showSoundboardModal, setShowSoundboardModal] = useState(false);
 
   const isArabic = i18n?.language?.startsWith('ar');
 
@@ -142,18 +140,9 @@ export default function OnlineLobby() {
         <Button variant="ghost" size="sm" onClick={handleLeave} icon="⬅️">
           {t('online.leave_room')}
         </Button>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowSoundboardModal(true)}
-            className="bg-indigo-600/80 hover:bg-indigo-600 border border-indigo-500/40 text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-md active:scale-95 transition"
-          >
-            <span>🔊</span>
-            <span className="hidden sm:inline">Soundboard</span>
-          </button>
-          <div className="bg-white/10 border border-white/20 px-4 py-1.5 rounded-full flex items-center gap-2">
-            <span className="text-white/50 text-xs font-bold uppercase tracking-widest">{t('online.room_code_label')}</span>
-            <span className="text-white font-black tracking-widest">{roomCode}</span>
-          </div>
+        <div className="bg-white/10 border border-white/20 px-4 py-1.5 rounded-full flex items-center gap-2">
+          <span className="text-white/50 text-xs font-bold uppercase tracking-widest">{t('online.room_code_label')}</span>
+          <span className="text-white font-black tracking-widest">{roomCode}</span>
         </div>
       </div>
 
@@ -214,29 +203,6 @@ export default function OnlineLobby() {
       </div>
 
       <ReactionPanel />
-
-      {/* Soundboard Modal */}
-      <AnimatePresence>
-        {showSoundboardModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
-            onClick={() => setShowSoundboardModal(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0, y: 10 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 10 }}
-              onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-xl"
-            >
-              <Soundboard roomId={roomId} onClose={() => setShowSoundboardModal(false)} />
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

@@ -82,23 +82,23 @@ export default function Soundboard({ roomId = null, onClose = null }) {
   }, [search, activeTab, favorites]);
 
   return (
-    <div className="w-full max-w-xl bg-slate-900/95 backdrop-blur-md text-white rounded-2xl shadow-2xl border border-slate-700/80 p-4 flex flex-col h-[520px] max-h-[85vh] relative select-none">
+    <div className="w-full bg-slate-900/95 backdrop-blur-md text-white rounded-2xl shadow-2xl border border-slate-700/80 p-3.5 flex flex-col h-[420px] max-h-[70vh] relative select-none">
       {/* Header & Tabs */}
-      <div className="flex items-center justify-between pb-3 border-b border-slate-800 gap-2">
+      <div className="flex items-center justify-between pb-2.5 border-b border-slate-800 gap-2">
         <div className="flex items-center gap-2">
-          <h2 className="text-base sm:text-lg font-bold tracking-wide flex items-center gap-2 text-indigo-300">
-            🔊 Lobby Soundboard
+          <h2 className="text-sm sm:text-base font-bold tracking-wide flex items-center gap-1.5 text-indigo-300">
+            🔊 Soundboard
           </h2>
-          <span className="text-[11px] font-medium text-slate-400 bg-slate-800 px-2 py-0.5 rounded-full border border-slate-700">
+          <span className="text-[10px] font-medium text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded-full border border-slate-700">
             {soundsData.length}
           </span>
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="flex gap-1 bg-slate-800 p-1 rounded-lg text-xs font-semibold border border-slate-700">
+        <div className="flex items-center gap-1.5">
+          <div className="flex gap-1 bg-slate-800 p-0.5 rounded-lg text-xs font-semibold border border-slate-700">
             <button
               onClick={() => setActiveTab('all')}
-              className={`px-3 py-1 rounded-md transition ${
+              className={`px-2.5 py-1 rounded-md transition text-xs ${
                 activeTab === 'all' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'
               }`}
             >
@@ -106,18 +106,19 @@ export default function Soundboard({ roomId = null, onClose = null }) {
             </button>
             <button
               onClick={() => setActiveTab('favs')}
-              className={`px-3 py-1 rounded-md transition flex items-center gap-1 ${
+              className={`px-2.5 py-1 rounded-md transition flex items-center gap-1 text-xs ${
                 activeTab === 'favs' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'
               }`}
             >
-              ★ Favs ({favorites.length})
+              ★ ({favorites.length})
             </button>
           </div>
 
           {onClose && (
             <button
+              type="button"
               onClick={onClose}
-              className="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition border border-slate-700 text-xs"
+              className="w-6 h-6 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition border border-slate-700 text-xs cursor-pointer"
               title="Close"
             >
               ✕
@@ -127,18 +128,20 @@ export default function Soundboard({ roomId = null, onClose = null }) {
       </div>
 
       {/* Search Input */}
-      <div className="my-3 relative">
+      <div className="my-2.5 relative">
         <input
           type="text"
-          placeholder="Search sounds (e.g. 'FAH', 'طفي', 'anime')..."
+          dir="auto"
+          placeholder="Search sounds / بحث..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full bg-slate-800/90 text-sm text-slate-100 placeholder-slate-500 rounded-lg ps-3 pe-8 py-2 border border-slate-700 focus:outline-none focus:border-indigo-500 transition shadow-inner"
+          className="w-full bg-slate-800/90 text-xs text-slate-100 placeholder-slate-500 rounded-lg ps-3 pe-8 py-2 border border-slate-700 focus:outline-none focus:border-indigo-500 transition shadow-inner"
         />
         {search && (
           <button 
+            type="button"
             onClick={() => setSearch('')}
-            className="absolute end-3 top-2.5 text-xs text-slate-400 hover:text-white"
+            className="absolute end-2.5 top-2 text-xs text-slate-400 hover:text-white"
           >
             ✕
           </button>
@@ -146,10 +149,10 @@ export default function Soundboard({ roomId = null, onClose = null }) {
       </div>
 
       {/* Scrollable Sounds Grid */}
-      <div className="flex-1 overflow-y-auto pe-1 grid grid-cols-2 sm:grid-cols-3 gap-2 align-content-start scrollbar-thin scrollbar-thumb-slate-700">
+      <div className="flex-1 overflow-y-auto pe-1 grid grid-cols-2 gap-1.5 align-content-start scrollbar-thin scrollbar-thumb-slate-700">
         {filteredSounds.length === 0 ? (
-          <div className="col-span-full text-center py-12 text-slate-500 text-sm">
-            {activeTab === 'favs' ? 'No favorite sounds added yet! Click ★ to add.' : 'No sounds match your search.'}
+          <div className="col-span-full text-center py-8 text-slate-500 text-xs">
+            {activeTab === 'favs' ? 'No favorite sounds yet!' : 'No sounds match search.'}
           </div>
         ) : (
           filteredSounds.map((sound) => {
@@ -160,19 +163,19 @@ export default function Soundboard({ roomId = null, onClose = null }) {
               <div
                 key={sound.key}
                 onClick={() => playSound(sound)}
-                className={`group relative flex items-center justify-between p-2.5 rounded-lg border text-xs font-medium cursor-pointer transition select-none ${
+                className={`group relative flex items-center justify-between p-2 rounded-lg border text-[11px] font-medium cursor-pointer transition select-none ${
                   isPlaying
-                    ? 'bg-indigo-900/80 border-indigo-400 text-indigo-100 shadow-md shadow-indigo-500/20 animate-pulse'
+                    ? 'bg-indigo-900/80 border-indigo-400 text-indigo-100 shadow-sm animate-pulse'
                     : 'bg-slate-800/70 border-slate-700/60 text-slate-200 hover:bg-slate-700/80 hover:border-slate-500 hover:text-white'
                 }`}
               >
-                <span className="truncate pe-3">{sound.name}</span>
+                <span className="truncate pe-2">{sound.name}</span>
 
                 {/* Favorite Button Star */}
                 <button
                   type="button"
                   onClick={(e) => toggleFavorite(sound.key, e)}
-                  className={`text-sm transition flex-shrink-0 ${
+                  className={`text-xs transition flex-shrink-0 ${
                     isFav ? 'text-amber-400' : 'text-slate-500 opacity-0 group-hover:opacity-100 hover:text-amber-300'
                   }`}
                   title={isFav ? "Remove from Favorites" : "Add to Favorites"}
