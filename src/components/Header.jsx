@@ -160,7 +160,7 @@ export function Header({
             title="SouL Coins Balance · Click to open Store"
             className="text-xs py-1 px-2.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 font-bold flex items-center gap-1.5 cursor-pointer hover:bg-amber-500/20 transition-colors"
           >
-            <span className="tabular-nums">{soulCoins.toLocaleString()}</span>
+            <span className="tabular-nums">{(profile?.soul_coins ?? soulCoins ?? 500).toLocaleString()}</span>
             <span className="text-sm">🪙</span>
           </button>
 

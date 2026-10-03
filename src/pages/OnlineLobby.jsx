@@ -49,6 +49,10 @@ export default function OnlineLobby() {
   }, [roomCode, isHost, leaveRoom]);
 
   const handleCreate = async () => {
+    if (!profile?.username) {
+      setError('يرجى تسجيل الدخول أو إدخال اسمك كزائر أولاً');
+      return;
+    }
     setLoading(true);
     setError('');
     const res = await createRoom();
@@ -58,6 +62,10 @@ export default function OnlineLobby() {
 
   const handleJoin = async () => {
     if (!joinCode.trim()) return;
+    if (!profile?.username) {
+      setError('يرجى تسجيل الدخول أو إدخال اسمك كزائر أولاً');
+      return;
+    }
     setLoading(true);
     setError('');
     const res = await joinRoom(joinCode.trim());

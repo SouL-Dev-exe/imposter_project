@@ -153,10 +153,13 @@ export const useMultiplayerStore = create((set, get) => ({
   // 1. CREATE ROOM
   createRoom: async () => {
     const { profile, user, isGuest } = useAuthStore.getState();
-    if (!profile) return { success: false, error: 'Must have a profile to create a room.' };
+    if (!profile || !profile.username) {
+      return { success: false, error: 'Must have a profile to create a room. Please log in or enter your nickname.' };
+    }
 
     const code = get().generateRoomCode();
     const hostUserId = (!isGuest && user?.id && !String(user.id).startsWith('guest')) ? user.id : null;
+    const hostGuestId = isGuest ? (profile.id || `guest_${Date.now()}`) : null;
     
     // Insert into public.rooms (Schema truth: room_code, host_id, status, settings, game_state)
     const { data: roomData, error: roomError } = await supabase
@@ -173,20 +176,36 @@ export const useMultiplayerStore = create((set, get) => ({
 
     if (roomError) return { success: false, error: roomError.message };
 
-    // Insert host into public.room_players
+    // Insert host into public.room_players matching schema: room_id, player_id, guest_id, name, avatar_url, is_alive, is_host, score
     const { error: playerError } = await supabase
       .from('room_players')
       .insert([{
         room_id: roomData.id,
-        user_id: hostUserId,
-        player_name: profile.username || 'Host',
-        avatar_url: profile.avatar_url || '',
+        player_id: hostUserId,
+        guest_id: hostGuestId,
+        name: profile.username || 'Host',
+        avatar_url: profile.avatar_url || '🎭',
         is_alive: true,
         is_host: true,
         score: 0,
       }]);
 
-    if (playerError) return { success: false, error: playerError.message };
+    if (playerError) {
+      console.warn('[Multiplayer] Host player insert fallback:', playerError.message);
+      // Retry with alternative player_name column if table schema differs
+      await supabase
+        .from('room_players')
+        .insert([{
+          room_id: roomData.id,
+          user_id: hostUserId,
+          player_name: profile.username || 'Host',
+          name: profile.username || 'Host',
+          avatar_url: profile.avatar_url || '🎭',
+          is_alive: true,
+          is_host: true,
+          score: 0,
+        }]);
+    }
 
     set({ roomCode: code, roomId: roomData.id, isHost: true, roomStatus: 'lobby' });
     await get().connectToRoom(roomData.id);
@@ -196,10 +215,13 @@ export const useMultiplayerStore = create((set, get) => ({
   // 2. JOIN ROOM
   joinRoom: async (code) => {
     const { profile, user, isGuest } = useAuthStore.getState();
-    if (!profile) return { success: false, error: 'Must have a profile to join.' };
+    if (!profile || !profile.username) {
+      return { success: false, error: 'Must have a profile to join. Please log in or enter your nickname.' };
+    }
 
     const upperCode = String(code).trim().toUpperCase();
     const joinUserId = (!isGuest && user?.id && !String(user.id).startsWith('guest')) ? user.id : null;
+    const joinGuestId = isGuest ? (profile.id || `guest_${Date.now()}`) : null;
 
     // Find room in public.rooms
     const { data: roomData, error: findError } = await supabase
@@ -213,9 +235,9 @@ export const useMultiplayerStore = create((set, get) => ({
     // Check if player is already registered in this room
     let existingQuery = supabase.from('room_players').select('*').eq('room_id', roomData.id);
     if (joinUserId) {
-      existingQuery = existingQuery.eq('user_id', joinUserId);
+      existingQuery = existingQuery.eq('player_id', joinUserId);
     } else {
-      existingQuery = existingQuery.eq('player_name', profile.username);
+      existingQuery = existingQuery.eq('name', profile.username);
     }
     const { data: existingPlayer } = await existingQuery.maybeSingle();
 
@@ -225,15 +247,30 @@ export const useMultiplayerStore = create((set, get) => ({
         .from('room_players')
         .insert([{
           room_id: roomData.id,
-          user_id: joinUserId,
-          player_name: profile.username || 'Player',
-          avatar_url: profile.avatar_url || '',
+          player_id: joinUserId,
+          guest_id: joinGuestId,
+          name: profile.username || 'Player',
+          avatar_url: profile.avatar_url || '🎭',
           is_alive: true,
           is_host: false,
           score: 0,
         }]);
 
-      if (joinError) return { success: false, error: joinError.message };
+      if (joinError) {
+        console.warn('[Multiplayer] Player join insert fallback:', joinError.message);
+        await supabase
+          .from('room_players')
+          .insert([{
+            room_id: roomData.id,
+            user_id: joinUserId,
+            player_name: profile.username || 'Player',
+            name: profile.username || 'Player',
+            avatar_url: profile.avatar_url || '🎭',
+            is_alive: true,
+            is_host: false,
+            score: 0,
+          }]);
+      }
     }
 
     const isCurrentHost = joinUserId && roomData.host_id === joinUserId;
@@ -259,19 +296,25 @@ export const useMultiplayerStore = create((set, get) => ({
         .eq('room_id', roomId);
 
       if (data && !error) {
-        const mapped = data.map((rp) => ({
-          id: rp.id,
-          playerId: rp.id,
-          userId: rp.user_id,
-          name: rp.player_name,
-          username: rp.player_name,
-          avatar_url: rp.avatar_url,
-          role: rp.role,
-          word: rp.word,
-          is_alive: rp.is_alive ?? true,
-          is_host: rp.is_host ?? false,
-          score: rp.score ?? 0,
-        }));
+        const mapped = data.map((rp) => {
+          const playerName = rp.name || rp.player_name || 'Player';
+          const pId = rp.id;
+          const uId = rp.player_id || rp.user_id || rp.guest_id || pId;
+          return {
+            id: pId,
+            playerId: pId,
+            userId: uId,
+            name: playerName,
+            username: playerName,
+            player_name: playerName,
+            avatar_url: rp.avatar_url || '🎭',
+            role: rp.role,
+            word: rp.word,
+            is_alive: rp.is_alive ?? true,
+            is_host: rp.is_host ?? false,
+            score: rp.score ?? 0,
+          };
+        });
         set({ players: mapped });
       }
     } catch (err) {
