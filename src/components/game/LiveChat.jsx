@@ -5,13 +5,15 @@ import { useAuthStore } from '../../store/authStore';
 import { useEconomyStore } from '../../store/economyStore';
 import { UserAvatar } from '../ui/UserAvatar';
 import { getStoreItem } from '../../data/economyCatalog';
-import { ChatSoundboard, listenToSoundEmotes } from './ChatSoundboard';
+import { listenToSoundEmotes } from './ChatSoundboard';
+import Soundboard from '../Soundboard';
 
 export function LiveChat() {
   const { messages, sendMessage, roomId } = useMultiplayerStore();
   const { profile } = useAuthStore();
   const globalEquipped = useEconomyStore((s) => s.equipped);
   const [text, setText] = useState('');
+  const [showSoundboard, setShowSoundboard] = useState(false);
   const chatRef = useRef(null);
 
   // Auto-scroll to bottom
@@ -38,7 +40,7 @@ export function LiveChat() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-gray-900 border border-white/10 rounded-2xl overflow-hidden shadow-xl shadow-black/50">
+    <div className="relative flex flex-col h-full bg-gray-900 border border-white/10 rounded-2xl overflow-hidden shadow-xl shadow-black/50">
       {/* Header */}
       <div className="bg-white/5 border-b border-white/10 px-4 py-3 flex items-center justify-between">
         <span className="text-white font-bold text-sm flex items-center gap-2">💬 Room Chat</span>
@@ -106,13 +108,37 @@ export function LiveChat() {
         )}
       </div>
 
-      {/* Chat Soundboard */}
-      <div className="px-3 pt-2">
-        <ChatSoundboard roomId={roomId} />
-      </div>
+      {/* Floating Soundboard overlay floating cleanly above chat messages */}
+      <AnimatePresence>
+        {showSoundboard && (
+          <motion.div
+            initial={{ opacity: 0, y: 10, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.98 }}
+            transition={{ duration: 0.15 }}
+            className="absolute bottom-16 start-2 end-2 z-50 shadow-2xl rounded-2xl overflow-hidden border border-slate-700 bg-slate-900/95 backdrop-blur-md"
+          >
+            <Soundboard roomId={roomId} onClose={() => setShowSoundboard(false)} />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* Input */}
-      <form onSubmit={handleSubmit} className="p-3 bg-white/5 border-t border-white/10 flex gap-2">
+      {/* Chat Input & Soundboard trigger */}
+      <form onSubmit={handleSubmit} className="p-2.5 bg-white/5 border-t border-white/10 flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setShowSoundboard((prev) => !prev)}
+          className={`h-9 px-2.5 rounded-xl text-xs font-bold transition flex items-center gap-1 shrink-0 ${
+            showSoundboard
+              ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/30'
+              : 'bg-white/10 text-slate-300 hover:bg-white/15 hover:text-white'
+          }`}
+          title="Soundboard"
+        >
+          <span>🔊</span>
+          <span className="hidden sm:inline">Sounds</span>
+        </button>
+
         <input
           type="text"
           value={text}
@@ -121,10 +147,11 @@ export function LiveChat() {
           className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-violet-500/50"
           maxLength={100}
         />
+
         <button
           type="submit"
           disabled={!text.trim()}
-          className="bg-violet-600 hover:bg-violet-500 text-white rounded-xl px-4 py-2 text-sm font-bold disabled:opacity-50 transition-colors"
+          className="h-9 bg-violet-600 hover:bg-violet-500 text-white rounded-xl px-4 text-sm font-bold disabled:opacity-50 transition-colors shrink-0"
         >
           Send
         </button>
