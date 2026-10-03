@@ -5,70 +5,120 @@ import { tallyVotes } from '../utils/gameLogic';
 
 let disconnectTimer = null;
 
-// Cast vote f-database
-export const submitVote = async (roomId, voterId, votedId) => {
-  const { error } = await supabase
-    .from('room_votes')
-    .upsert(
-      { room_id: roomId, voter_id: voterId, voted_id: votedId },
-      { onConflict: 'room_id, voter_id' }
-    );
-  if (error) console.error('Error submitting vote:', error);
+// ─── Online Voting Helper ──────────────────────────────────────────────────────
+export const submitVote = async (roomId, voterId, votedId, round = 1) => {
+  if (!roomId || !voterId || !votedId) return { success: false, error: 'Missing parameters' };
+
+  try {
+    const { error } = await supabase
+      .from('room_votes')
+      .upsert(
+        {
+          room_id: roomId,
+          voter_id: String(voterId),
+          target_id: String(votedId),
+          round: Number(round) || 1,
+        },
+        { onConflict: 'room_id, voter_id, round' }
+      );
+
+    if (error) {
+      console.warn('[Multiplayer] Vote submission fallback:', error.message);
+      // Fallback without round constraint if table constraint is (room_id, voter_id)
+      await supabase
+        .from('room_votes')
+        .upsert({
+          room_id: roomId,
+          voter_id: String(voterId),
+          target_id: String(votedId),
+          round: Number(round) || 1,
+        });
+    }
+    return { success: true };
+  } catch (err) {
+    console.error('[Multiplayer] Failed to submit vote:', err);
+    return { success: false, error: err.message };
+  }
 };
 
-// Realtime Listener f-Room bch ga3 l-clients y-shoufou tally f-nafs l-waqt
-export const subscribeToVotes = (roomId, activePlayerCount, onVotingComplete) => {
+// ─── Realtime Vote Listener with Tie-Breaking Safety ──────────────────────────
+export const subscribeToVotes = (roomId, activePlayerCount, onVotingComplete, currentRound = 1) => {
+  if (!roomId) return () => {};
+
   const channel = supabase
     .channel(`votes_${roomId}`)
     .on(
       'postgres_changes',
       { event: '*', schema: 'public', table: 'room_votes', filter: `room_id=eq.${roomId}` },
       async () => {
-        // Fetch all current votes for this room
         const { data: votesData } = await supabase
           .from('room_votes')
-          .select('voter_id, voted_id')
+          .select('voter_id, target_id, round')
           .eq('room_id', roomId);
 
-        if (!votesData) return;
+        if (!votesData || votesData.length === 0) return;
 
+        // Filter votes for current round
+        const currentVotes = votesData.filter((v) => (v.round || 1) === (currentRound || 1));
         const voteMap = {};
-        votesData.forEach((v) => {
-          voteMap[v.voter_id] = v.voted_id;
+        currentVotes.forEach((v) => {
+          voteMap[v.voter_id] = v.target_id;
         });
 
-        // Ki y-votiou ga3 l-players, y-ssra tally automatic
-        if (Object.keys(voteMap).length >= activePlayerCount) {
-          const result = tallyVotes(voteMap); // Uses existing tallyVotes logic
-          onVotingComplete(result);
+        // When all active players cast their votes, evaluate tally
+        if (Object.keys(voteMap).length >= activePlayerCount && activePlayerCount > 0) {
+          const result = tallyVotes(voteMap);
+          onVotingComplete({
+            ...result,
+            voteMap,
+            totalVotes: Object.keys(voteMap).length,
+          });
         }
       }
     )
     .subscribe();
 
-  return () => supabase.removeChannel(channel);
+  return () => {
+    supabase.removeChannel(channel);
+  };
 };
 
+// ─── Host Disconnect Grace Period & Migration ────────────────────────────────
 export const handleHostDisconnect = async (roomId, currentHostId) => {
-  // Grace Period ta3 30 seconds qbel ma t-t-emha l-room
-  disconnectTimer = setTimeout(async () => {
-    // Check remaining players f-room
-    const { data: remainingPlayers } = await supabase
-      .from('room_players')
-      .select('*')
-      .eq('room_id', roomId)
-      .order('created_at', { ascending: true });
+  if (!roomId) return;
+  if (disconnectTimer) clearTimeout(disconnectTimer);
 
-    if (!remainingPlayers || remainingPlayers.length === 0) {
-      // Room empty -> Hard Delete
-      await supabase.from('rooms').delete().eq('id', roomId);
-    } else {
-      // Transfer Host l-akbar player baqi f-list
-      const newHost = remainingPlayers[0];
-      await supabase
-        .from('rooms')
-        .update({ host_id: newHost.user_id })
-        .eq('id', roomId);
+  disconnectTimer = setTimeout(async () => {
+    try {
+      const { data: remainingPlayers } = await supabase
+        .from('room_players')
+        .select('*')
+        .eq('room_id', roomId)
+        .order('id', { ascending: true });
+
+      if (!remainingPlayers || remainingPlayers.length === 0) {
+        // Room is empty -> clean delete
+        await supabase.from('rooms').delete().eq('id', roomId);
+      } else {
+        // Reassign host to first remaining player
+        const newHost = remainingPlayers[0];
+        
+        // Update rooms table
+        if (newHost.user_id) {
+          await supabase
+            .from('rooms')
+            .update({ host_id: newHost.user_id })
+            .eq('id', roomId);
+        }
+
+        // Update room_players is_host flag
+        await supabase
+          .from('room_players')
+          .update({ is_host: true })
+          .eq('id', newHost.id);
+      }
+    } catch (err) {
+      console.warn('[Multiplayer] Host migration error:', err);
     }
   }, 30000); // 30s Grace Period
 };
@@ -80,140 +130,184 @@ export const cancelHostDisconnectTimer = () => {
   }
 };
 
+// ─── Zustand Multiplayer Store ────────────────────────────────────────────────
 export const useMultiplayerStore = create((set, get) => ({
   roomCode: null,
   roomId: null,
   isHost: false,
+  roomStatus: 'lobby', // 'lobby' | 'reveal' | 'clues' | 'voting' | 'ended'
   players: [],
   messages: [],
-  reactions: [], // Array of { id, playerId, emoji, timestamp }
+  reactions: [],
   channel: null,
+  roomChannel: null,
   votes: {},
 
   generateRoomCode: () => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     let code = '';
     for (let i = 0; i < 4; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
     return code;
   },
 
+  // 1. CREATE ROOM
   createRoom: async () => {
-    const { profile, user } = useAuthStore.getState();
-    if (!profile) return { success: false, error: 'Must be logged in or guest to create a room.' };
+    const { profile, user, isGuest } = useAuthStore.getState();
+    if (!profile) return { success: false, error: 'Must have a profile to create a room.' };
 
     const code = get().generateRoomCode();
+    const hostUserId = (!isGuest && user?.id && !String(user.id).startsWith('guest')) ? user.id : null;
     
-    // Insert into rooms table
+    // Insert into public.rooms (Schema truth: room_code, host_id, status, settings, game_state)
     const { data: roomData, error: roomError } = await supabase
       .from('rooms')
-      .insert([{ room_code: code, host_id: user.id }])
+      .insert([{
+        room_code: code,
+        host_id: hostUserId,
+        status: 'lobby',
+        settings: { discussion_time: 120, game_mode: 'conscious' },
+        game_state: { round: 1, phase: 'lobby' },
+      }])
       .select()
       .single();
 
     if (roomError) return { success: false, error: roomError.message };
 
-    // Insert host into room_players
-    const { error: joinError } = await supabase
+    // Insert host into public.room_players
+    const { error: playerError } = await supabase
       .from('room_players')
-      .insert([{ room_id: roomData.id, user_id: user.id, player_id: user.id }]);
+      .insert([{
+        room_id: roomData.id,
+        user_id: hostUserId,
+        player_name: profile.username || 'Host',
+        avatar_url: profile.avatar_url || '',
+        is_alive: true,
+        is_host: true,
+        score: 0,
+      }]);
 
-    if (joinError) return { success: false, error: joinError.message };
+    if (playerError) return { success: false, error: playerError.message };
 
-    set({ roomCode: code, roomId: roomData.id, isHost: true });
+    set({ roomCode: code, roomId: roomData.id, isHost: true, roomStatus: 'lobby' });
     await get().connectToRoom(roomData.id);
-    return { success: true, roomCode: code };
+    return { success: true, roomCode: code, roomId: roomData.id };
   },
 
+  // 2. JOIN ROOM
   joinRoom: async (code) => {
-    const { profile, user } = useAuthStore.getState();
-    if (!profile) return { success: false, error: 'Must be logged in or guest to join.' };
+    const { profile, user, isGuest } = useAuthStore.getState();
+    if (!profile) return { success: false, error: 'Must have a profile to join.' };
 
-    const upperCode = code.toUpperCase();
+    const upperCode = String(code).trim().toUpperCase();
+    const joinUserId = (!isGuest && user?.id && !String(user.id).startsWith('guest')) ? user.id : null;
 
-    // Find room
+    // Find room in public.rooms
     const { data: roomData, error: findError } = await supabase
       .from('rooms')
       .select('*')
       .eq('room_code', upperCode)
-      .single();
+      .maybeSingle();
 
-    if (findError || !roomData) return { success: false, error: 'Room not found.' };
+    if (findError || !roomData) return { success: false, error: 'Room not found. Check code.' };
 
-    // Check if already in room
-    const { data: existingPlayer } = await supabase
-      .from('room_players')
-      .select('*')
-      .eq('room_id', roomData.id)
-      .eq('player_id', user.id)
-      .single();
+    // Check if player is already registered in this room
+    let existingQuery = supabase.from('room_players').select('*').eq('room_id', roomData.id);
+    if (joinUserId) {
+      existingQuery = existingQuery.eq('user_id', joinUserId);
+    } else {
+      existingQuery = existingQuery.eq('player_name', profile.username);
+    }
+    const { data: existingPlayer } = await existingQuery.maybeSingle();
 
     if (!existingPlayer) {
-      // Insert into room_players
+      // Insert new player in public.room_players
       const { error: joinError } = await supabase
         .from('room_players')
-        .insert([{ room_id: roomData.id, user_id: user.id, player_id: user.id }]);
+        .insert([{
+          room_id: roomData.id,
+          user_id: joinUserId,
+          player_name: profile.username || 'Player',
+          avatar_url: profile.avatar_url || '',
+          is_alive: true,
+          is_host: false,
+          score: 0,
+        }]);
 
       if (joinError) return { success: false, error: joinError.message };
     }
 
+    const isCurrentHost = joinUserId && roomData.host_id === joinUserId;
+
     set({ 
       roomCode: upperCode, 
       roomId: roomData.id, 
-      isHost: roomData.host_id === user.id 
+      isHost: Boolean(isCurrentHost),
+      roomStatus: roomData.status || 'lobby',
     });
     
     await get().connectToRoom(roomData.id);
-    return { success: true };
+    return { success: true, roomCode: upperCode, roomId: roomData.id };
   },
 
+  // 3. FETCH ROOM PLAYERS
   fetchRoomPlayers: async (roomId) => {
-    const { user, isGuest, fetchProfile } = useAuthStore.getState();
-    if (user?.id && !isGuest && fetchProfile) {
-      await fetchProfile(user.id);
-    }
+    if (!roomId) return;
+    try {
+      const { data, error } = await supabase
+        .from('room_players')
+        .select('*')
+        .eq('room_id', roomId);
 
-    const { data, error } = await supabase
-      .from('room_players')
-      .select(`
-        player_id,
-        user_id,
-        profiles:user_id (id, username, avatar_url, level, xp)
-      `)
-      .eq('room_id', roomId);
-
-    if (data) {
-      // Map it to a cleaner array of profile objects
-      const mappedPlayers = data.map(rp => rp.profiles).filter(Boolean);
-      set({ players: mappedPlayers });
+      if (data && !error) {
+        const mapped = data.map((rp) => ({
+          id: rp.id,
+          playerId: rp.id,
+          userId: rp.user_id,
+          name: rp.player_name,
+          username: rp.player_name,
+          avatar_url: rp.avatar_url,
+          role: rp.role,
+          word: rp.word,
+          is_alive: rp.is_alive ?? true,
+          is_host: rp.is_host ?? false,
+          score: rp.score ?? 0,
+        }));
+        set({ players: mapped });
+      }
+    } catch (err) {
+      console.warn('[Multiplayer] Error fetching room players:', err);
     }
   },
 
+  // 4. REALTIME CONNECT
   connectToRoom: async (roomId) => {
     // Cleanup existing channel
     const existing = get().channel;
     if (existing) await supabase.removeChannel(existing);
+    const existingRoom = get().roomChannel;
+    if (existingRoom) await supabase.removeChannel(existingRoom);
 
     const { profile } = useAuthStore.getState();
 
+    // Channel 1: Presence & In-room Broadcast
     const channel = supabase.channel(`room_${roomId}`, {
       config: {
         presence: {
-          key: profile?.id || 'guest',
+          key: profile?.username || `player_${Math.random().toString(36).slice(2, 7)}`,
         },
       },
     });
 
     channel
       .on('presence', { event: 'sync' }, () => {
-        // Presence synced
-      })
-      .on('presence', { event: 'join' }, ({ key, newPresences }) => {
         get().fetchRoomPlayers(roomId);
       })
-      .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
+      .on('presence', { event: 'join' }, () => {
         get().fetchRoomPlayers(roomId);
-        // If the host was disconnected, start host migration grace period
-        const { isHost, roomId: currentRoomId, players } = get();
+      })
+      .on('presence', { event: 'leave' }, ({ key }) => {
+        get().fetchRoomPlayers(roomId);
+        const { isHost, roomId: currentRoomId } = get();
         if (!isHost && key) {
           handleHostDisconnect(currentRoomId, key);
         }
@@ -228,111 +322,149 @@ export const useMultiplayerStore = create((set, get) => ({
           timestamp: Date.now()
         };
         set((state) => ({ reactions: [...state.reactions, reaction] }));
-        
-        // Auto-remove reaction after 2s
         setTimeout(() => {
           set((state) => ({
-            reactions: state.reactions.filter(r => r.id !== reaction.id)
+            reactions: state.reactions.filter((r) => r.id !== reaction.id),
           }));
         }, 2000);
       });
 
+    // Channel 2: Room Status Postgres Changes (Room lifecycle sync)
+    const roomChannel = supabase
+      .channel(`room_status_${roomId}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'rooms', filter: `id=eq.${roomId}` },
+        (payload) => {
+          if (payload.new) {
+            set({
+              roomStatus: payload.new.status,
+            });
+          }
+        }
+      )
+      .subscribe();
+
     channel.subscribe(async (status) => {
       if (status === 'SUBSCRIBED' && profile) {
         await channel.track({
-          user_id: profile.id,
           username: profile.username,
-          avatar_url: profile.avatar_url
+          avatar_url: profile.avatar_url,
         });
         get().fetchRoomPlayers(roomId);
       }
     });
 
-    set({ channel, messages: [], reactions: [] });
+    set({ channel, roomChannel, messages: [], reactions: [] });
   },
 
+  // 5. LEAVE ROOM
   leaveRoom: async () => {
-    const { channel, roomId, isHost } = get();
-    const { user } = useAuthStore.getState();
+    const { channel, roomChannel, roomId, isHost } = get();
+    const { profile, user } = useAuthStore.getState();
 
+    cancelHostDisconnectTimer();
     if (channel) await supabase.removeChannel(channel);
+    if (roomChannel) await supabase.removeChannel(roomChannel);
     
-    if (roomId && user) {
+    if (roomId) {
       if (isHost) {
-        // Trigger host migration timer for other players
-        await handleHostDisconnect(roomId, user.id);
+        await handleHostDisconnect(roomId, user?.id);
       } else {
-        // Regular player leaves -> remove from room_players
-        await supabase
-          .from('room_players')
-          .delete()
-          .eq('room_id', roomId)
-          .eq('player_id', user.id);
+        // Delete player record
+        let deleteQuery = supabase.from('room_players').delete().eq('room_id', roomId);
+        if (user?.id && !String(user.id).startsWith('guest')) {
+          deleteQuery = deleteQuery.eq('user_id', user.id);
+        } else if (profile?.username) {
+          deleteQuery = deleteQuery.eq('player_name', profile.username);
+        }
+        await deleteQuery;
       }
     }
 
-    set({ roomCode: null, roomId: null, isHost: false, players: [], channel: null, messages: [], reactions: [] });
+    set({
+      roomCode: null,
+      roomId: null,
+      isHost: false,
+      roomStatus: 'lobby',
+      players: [],
+      channel: null,
+      roomChannel: null,
+      messages: [],
+      reactions: [],
+      votes: {},
+    });
   },
 
+  // 6. SEND CHAT MESSAGE
   sendMessage: async (text) => {
     const { channel } = get();
     const { profile } = useAuthStore.getState();
     if (!channel || !profile || !text.trim()) return;
 
     const payload = {
-      user_id: profile.id,
-      username: profile.username,
+      username: profile.username || 'Player',
       avatar_url: profile.avatar_url,
       text: text.trim(),
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
 
-    // Optimistic UI
     set((state) => ({ messages: [...state.messages, payload] }));
 
     await channel.send({
       type: 'broadcast',
       event: 'chat',
-      payload
+      payload,
     });
   },
 
+  // 7. SEND REACTION
   sendReaction: async (emoji) => {
     const { channel } = get();
     const { profile } = useAuthStore.getState();
     if (!channel || !profile) return;
 
     const payload = {
-      playerId: profile.id,
-      emoji
+      playerId: profile.username || 'me',
+      emoji,
     };
 
-    // Optimistic local update
     const reaction = { id: Math.random().toString(36).substring(7), ...payload, timestamp: Date.now() };
     set((state) => ({ reactions: [...state.reactions, reaction] }));
     setTimeout(() => {
       set((state) => ({
-        reactions: state.reactions.filter(r => r.id !== reaction.id)
+        reactions: state.reactions.filter((r) => r.id !== reaction.id),
       }));
     }, 2000);
 
     await channel.send({
       type: 'broadcast',
       event: 'reaction',
-      payload
+      payload,
     });
   },
 
-  submitVote: async (voterId, votedId) => {
+  // 8. UPDATE ROOM STATUS
+  updateRoomStatus: async (newStatus, gameState = {}) => {
     const { roomId } = get();
     if (!roomId) return;
-    await submitVote(roomId, voterId, votedId);
+    await supabase
+      .from('rooms')
+      .update({ status: newStatus, game_state: gameState })
+      .eq('id', roomId);
+    set({ roomStatus: newStatus });
   },
 
-  subscribeToVotes: (activePlayerCount, onVotingComplete) => {
+  submitVote: async (voterId, votedId, round = 1) => {
+    const { roomId } = get();
+    if (!roomId) return;
+    return await submitVote(roomId, voterId, votedId, round);
+  },
+
+  subscribeToVotes: (activePlayerCount, onVotingComplete, currentRound = 1) => {
     const { roomId } = get();
     if (!roomId) return () => {};
-    return subscribeToVotes(roomId, activePlayerCount, onVotingComplete);
+    return subscribeToVotes(roomId, activePlayerCount, onVotingComplete, currentRound);
   }
 }));
 

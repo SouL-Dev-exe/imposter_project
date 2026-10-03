@@ -226,23 +226,38 @@ export function assignRoles(playerNames, gameModeOrOptions, optionsOrWordPair, m
 
 /**
  * Tally votes and return the player name with the most votes.
- * In case of a tie, returns null.
- * @param {object} votes  - { voterName: votedForName }
- * @returns {{ eliminated: string|null, isTie: boolean, tally: object }}
+ * In case of a tie, returns null for eliminated and populates tiedPlayers array.
+ * @param {object|Array} votes  - { voterId: votedTargetId } or array of vote entries
+ * @returns {{ eliminated: string|null, isTie: boolean, tiedPlayers: string[], tally: object }}
  */
-export function tallyVotes(votes) {
+export function tallyVotes(votes = {}) {
   const tally = {};
-  for (const voted of Object.values(votes)) {
-    tally[voted] = (tally[voted] || 0) + 1;
+  
+  if (Array.isArray(votes)) {
+    for (const v of votes) {
+      const target = v.target_id || v.voted_id || v.votedFor || v.target;
+      if (target) tally[target] = (tally[target] || 0) + 1;
+    }
+  } else if (votes && typeof votes === 'object') {
+    for (const voted of Object.values(votes)) {
+      if (voted) tally[voted] = (tally[voted] || 0) + 1;
+    }
   }
 
   const entries = Object.entries(tally).sort((a, b) => b[1] - a[1]);
-  if (entries.length === 0) return { eliminated: null, isTie: false, tally };
+  if (entries.length === 0) return { eliminated: null, isTie: false, tiedPlayers: [], tally: {} };
 
   const [topName, topCount] = entries[0];
-  const isTie = entries.length > 1 && entries[1][1] === topCount;
+  const tiedEntries = entries.filter((e) => e[1] === topCount);
+  const isTie = tiedEntries.length > 1;
+  const tiedPlayers = tiedEntries.map((e) => e[0]);
 
-  return { eliminated: isTie ? null : topName, isTie, tally };
+  return {
+    eliminated: isTie ? null : topName,
+    isTie,
+    tiedPlayers: isTie ? tiedPlayers : [],
+    tally,
+  };
 }
 
 /**
