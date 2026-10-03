@@ -21,9 +21,8 @@ export function ReactionPanel() {
                 animate={{ opacity: [0, 1, 1, 0], y: -300, x: xDrift, scale: [0.5, 1.5, 1, 0.8] }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 2, ease: 'easeOut' }}
-                className="absolute bottom-24 left-1/2 -translate-x-1/2 text-4xl"
+                className="absolute bottom-24 end-8 text-4xl"
                 style={{
-                  // Slight randomization so they don't perfectly stack
                   marginLeft: `${(Math.random() - 0.5) * 50}px`
                 }}
               >
@@ -34,13 +33,13 @@ export function ReactionPanel() {
         </AnimatePresence>
       </div>
 
-      {/* Reaction Bar */}
-      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 bg-gray-900/80 backdrop-blur-md border border-white/10 p-2 rounded-full shadow-2xl flex items-center gap-1">
+      {/* Reaction Bar — Positioned in the corner to never block chat inputs */}
+      <div className="fixed bottom-3 end-4 z-40 bg-gray-900/90 backdrop-blur-md border border-white/15 px-3 py-1.5 rounded-full shadow-2xl flex items-center gap-1">
         {EMOJIS.map((emoji) => (
           <button
             key={emoji}
             onClick={() => sendReaction(emoji)}
-            className="w-10 h-10 flex items-center justify-center text-xl rounded-full hover:bg-white/10 active:scale-90 transition-all focus:outline-none"
+            className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-lg sm:text-xl rounded-full hover:bg-white/10 active:scale-90 transition-all focus:outline-none cursor-pointer"
             title="React"
           >
             {emoji}

@@ -41,10 +41,26 @@ export function LiveChat() {
 
   return (
     <div className="relative flex flex-col h-full bg-gray-900 border border-white/10 rounded-2xl overflow-hidden shadow-xl shadow-black/50">
-      {/* Header */}
-      <div className="bg-white/5 border-b border-white/10 px-4 py-3 flex items-center justify-between">
-        <span className="text-white font-bold text-sm flex items-center gap-2">💬 Room Chat</span>
-        <span className="text-white/40 text-xs">{messages.length} msgs</span>
+      {/* Header with Soundboard Trigger */}
+      <div className="bg-white/5 border-b border-white/10 px-4 py-2.5 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <span className="text-white font-bold text-sm flex items-center gap-1.5">💬 Room Chat</span>
+          <span className="text-white/40 text-[11px] bg-white/5 px-2 py-0.5 rounded-full">{messages.length} msgs</span>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setShowSoundboard((prev) => !prev)}
+          className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer ${
+            showSoundboard
+              ? 'bg-indigo-600 text-white shadow-indigo-500/30'
+              : 'bg-indigo-600/30 hover:bg-indigo-600 text-indigo-200 hover:text-white border border-indigo-500/40'
+          }`}
+          title="Toggle Soundboard"
+        >
+          <span>🔊</span>
+          <span>Soundboard</span>
+        </button>
       </div>
 
       {/* Messages Area */}
@@ -124,19 +140,19 @@ export function LiveChat() {
       </AnimatePresence>
 
       {/* Chat Input & Soundboard trigger */}
-      <form onSubmit={handleSubmit} className="p-2.5 bg-white/5 border-t border-white/10 flex items-center gap-2">
+      <form onSubmit={handleSubmit} className="p-2.5 bg-white/5 border-t border-white/10 flex items-center gap-2 relative z-30">
         <button
           type="button"
           onClick={() => setShowSoundboard((prev) => !prev)}
-          className={`h-9 px-2.5 rounded-xl text-xs font-bold transition flex items-center gap-1 shrink-0 ${
+          className={`h-9 px-3 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 cursor-pointer ${
             showSoundboard
               ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/30'
-              : 'bg-white/10 text-slate-300 hover:bg-white/15 hover:text-white'
+              : 'bg-indigo-600/30 hover:bg-indigo-600 text-indigo-200 hover:text-white border border-indigo-500/40'
           }`}
           title="Soundboard"
         >
           <span>🔊</span>
-          <span className="hidden sm:inline">Sounds</span>
+          <span className="font-semibold">Soundboard</span>
         </button>
 
         <input
@@ -144,14 +160,14 @@ export function LiveChat() {
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="Type a message..."
-          className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-violet-500/50"
+          className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-violet-500/50 min-w-0"
           maxLength={100}
         />
 
         <button
           type="submit"
           disabled={!text.trim()}
-          className="h-9 bg-violet-600 hover:bg-violet-500 text-white rounded-xl px-4 text-sm font-bold disabled:opacity-50 transition-colors shrink-0"
+          className="h-9 bg-violet-600 hover:bg-violet-500 text-white rounded-xl px-4 text-sm font-bold disabled:opacity-50 transition-colors shrink-0 cursor-pointer"
         >
           Send
         </button>
