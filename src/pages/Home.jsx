@@ -67,7 +67,7 @@ export default function Home() {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950 text-white relative overflow-x-hidden">
+    <div className="min-h-[100dvh] w-full flex flex-col bg-slate-950 text-white relative overflow-y-auto overflow-x-hidden pb-12">
       {/* Top Single-Row Responsive Navigation Bar */}
       <Navbar />
 

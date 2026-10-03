@@ -78,7 +78,7 @@ export default function OnlineLobby() {
   // 1. Not in a room yet
   if (!roomCode) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4">
+      <div className="min-h-[100dvh] flex flex-col items-center justify-center p-4">
         <Button variant="ghost" onClick={() => navigate('/')} className="absolute top-4 start-4" icon="⬅️">
           {t('online.back')}
         </Button>
@@ -131,11 +131,11 @@ export default function OnlineLobby() {
     );
   }
 
-  // 2. In a room
+  // 2. In a room — Locked to 100dvh with internal scrolling
   return (
-    <div className="min-h-[100dvh] flex flex-col pt-16 p-3 sm:p-4 max-w-4xl w-full mx-auto relative">
-      {/* Header */}
-      <div className="absolute top-4 start-4 end-4 flex justify-between items-center z-20">
+    <div className="h-[100dvh] flex flex-col pt-16 p-3 sm:p-4 max-w-4xl w-full mx-auto relative overflow-hidden">
+      {/* Top Header */}
+      <div className="flex-none absolute top-4 start-4 end-4 flex justify-between items-center z-20">
         <Button variant="ghost" size="sm" onClick={handleLeave} icon="⬅️">
           {t('online.leave_room')}
         </Button>
@@ -145,58 +145,64 @@ export default function OnlineLobby() {
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col md:flex-row gap-4 sm:gap-6">
+      {/* Main Container */}
+      <div className="flex-1 flex flex-col md:flex-row gap-3 sm:gap-6 min-h-0 overflow-hidden">
 
-        {/* Left side: Players */}
-        <div className="flex-1 space-y-4 sm:space-y-6">
-          <h2 className="text-xl sm:text-2xl font-black text-white text-center md:text-start">
-            {isArabic ? `اللاعبون (${players.length}/10)` : `Players (${players.length}/10)`}
-          </h2>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 w-full">
-            <AnimatePresence>
-              {players.map((p, idx) => (
-                <PlayerCard
-                  key={p.id || idx}
-                  player={{ ...p, isMe: p.id === user?.id }}
-                  index={idx}
-                  isHost={p.is_host || idx === 0}
-                />
-              ))}
-            </AnimatePresence>
-
-            {/* Empty slots */}
-            {Array.from({ length: Math.max(0, 10 - players.length) }).map((_, i) => (
-              <div key={i} className="bg-white/5 border border-white/5 border-dashed rounded-2xl p-3 flex flex-col items-center justify-center gap-2 opacity-50">
-                <div className="w-16 h-16 rounded-full bg-white/5" />
-                <div className="w-16 h-3 bg-white/10 rounded-full" />
-              </div>
-            ))}
+        {/* Left side: Players column with internal scroll & sticky actions */}
+        <div className="flex-1 flex flex-col min-h-0">
+          <div className="flex-none mb-2">
+            <h2 className="text-lg sm:text-2xl font-black text-white text-center md:text-start">
+              {isArabic ? `اللاعبون (${players.length}/10)` : `Players (${players.length}/10)`}
+            </h2>
           </div>
 
-          {/* Host Controls */}
-          {isHost && (
-            <div className="pt-4">
-              <Button variant="primary" fullWidth size="xl" disabled={players.length < 3} icon="🚀">
-                {t('online.start_game')}
-              </Button>
-              {players.length < 3 && (
-                <p className="text-white/40 text-xs text-center mt-2">{t('online.waiting_players')}</p>
-              )}
+          {/* Player Grid - Internal scrolling */}
+          <div className="flex-1 overflow-y-auto pr-1 min-h-0 scrollbar-thin scrollbar-thumb-slate-700">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-2.5 w-full">
+              <AnimatePresence>
+                {players.map((p, idx) => (
+                  <PlayerCard
+                    key={p.id || idx}
+                    player={{ ...p, isMe: p.id === user?.id }}
+                    index={idx}
+                    isHost={p.is_host || idx === 0}
+                  />
+                ))}
+              </AnimatePresence>
+
+              {/* Empty slots */}
+              {Array.from({ length: Math.max(0, 10 - players.length) }).map((_, i) => (
+                <div key={i} className="bg-white/5 border border-white/5 border-dashed rounded-2xl p-2.5 flex flex-col items-center justify-center gap-1.5 opacity-50">
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/5" />
+                  <div className="w-12 h-2.5 bg-white/10 rounded-full" />
+                </div>
+              ))}
             </div>
-          )}
-          {!isHost && (
-            <div className="pt-4 text-center">
-              <p className="text-violet-300 font-medium animate-pulse">{t('online.waiting_host')}</p>
-            </div>
-          )}
+          </div>
+
+          {/* Host Action Controls — Fixed at bottom of player panel */}
+          <div className="flex-none pt-2">
+            {isHost && (
+              <div>
+                <Button variant="primary" fullWidth size="lg" disabled={players.length < 3} icon="🚀">
+                  {t('online.start_game')}
+                </Button>
+                {players.length < 3 && (
+                  <p className="text-white/40 text-xs text-center mt-1.5">{t('online.waiting_players')}</p>
+                )}
+              </div>
+            )}
+            {!isHost && (
+              <div className="text-center py-1">
+                <p className="text-violet-300 font-medium text-xs sm:text-sm animate-pulse">{t('online.waiting_host')}</p>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Right side: Chat */}
-        <div className="w-full md:w-80 flex flex-col gap-4">
-          <div className="flex-1 min-h-[300px]">
-            <LiveChat />
-          </div>
+        <div className="w-full md:w-80 flex-none md:flex-1 flex flex-col h-[270px] md:h-full min-h-0">
+          <LiveChat />
         </div>
 
       </div>

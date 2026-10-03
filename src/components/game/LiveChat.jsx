@@ -124,7 +124,7 @@ export function LiveChat() {
         )}
       </div>
 
-      {/* Floating Soundboard overlay floating cleanly above chat messages */}
+      {/* Floating Soundboard overlay floating cleanly above chat input bar */}
       <AnimatePresence>
         {showSoundboard && (
           <motion.div
@@ -132,7 +132,7 @@ export function LiveChat() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.98 }}
             transition={{ duration: 0.15 }}
-            className="absolute bottom-16 start-2 end-2 z-50 shadow-2xl rounded-2xl overflow-hidden border border-slate-700 bg-slate-900/95 backdrop-blur-md"
+            className="absolute bottom-full mb-2 start-2 end-2 z-50 shadow-2xl rounded-2xl overflow-hidden border border-slate-700 bg-slate-900/95 backdrop-blur-md max-h-[50vh] flex flex-col"
           >
             <Soundboard roomId={roomId} onClose={() => setShowSoundboard(false)} />
           </motion.div>
