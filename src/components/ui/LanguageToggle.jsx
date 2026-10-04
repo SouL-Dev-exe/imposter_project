@@ -71,13 +71,15 @@ export function LanguageToggle({ variant = 'chip', className = '' }) {
     <motion.button
       type="button"
       onClick={toggle}
-      whileHover={{ scale: 1.05 }}
+      whileHover={{ scale: 1.03 }}
       whileTap={{ scale: 0.95 }}
-      className={`inline-flex items-center gap-1.5 bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/10 rounded-full px-3 py-1.5 text-xs font-semibold text-white/80 hover:text-white transition-all shadow-sm ${className}`}
+      className={`flex items-center gap-1.5 bg-zinc-900/90 border border-zinc-800 hover:border-red-900/60 text-zinc-300 px-2.5 py-1 rounded-full text-xs font-mono transition-colors cursor-pointer shrink-0 ${className}`}
       title={language === 'en' ? 'Switch to Arabic (العربية)' : 'التبديل إلى الإنجليزية (English)'}
     >
-      <span className="text-sm">🌐</span>
-      <span>{language === 'en' ? 'العربية' : 'English'}</span>
+      <span className="text-xs">🌐</span>
+      <span className="text-[11px] font-medium font-mono">
+        {language === 'ar' ? 'العربية' : 'EN'}
+      </span>
     </motion.button>
   );
 }
