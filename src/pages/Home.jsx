@@ -67,26 +67,21 @@ export default function Home() {
   ];
 
   return (
-    <div className="min-h-[100dvh] w-full flex flex-col bg-slate-950 text-white relative overflow-y-auto overflow-x-hidden pb-12">
+    <div className="min-h-full w-full flex flex-col bg-transparent text-zinc-100 relative overflow-y-auto overflow-x-hidden pb-12 font-mono">
       {/* Top Single-Row Responsive Navigation Bar */}
       <Navbar />
 
-      {/* Animated background orbs */}
+      {/* Surveillance background subtle glow */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
         <motion.div
-          className="absolute -top-32 -left-32 w-96 h-96 bg-violet-600/20 rounded-full blur-3xl"
+          className="absolute -top-32 -left-32 w-96 h-96 bg-red-600/10 rounded-full blur-3xl"
           animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
           transition={{ duration: 6, repeat: Infinity }}
         />
         <motion.div
-          className="absolute -bottom-32 -right-32 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl"
+          className="absolute -bottom-32 -right-32 w-96 h-96 bg-red-950/20 rounded-full blur-3xl"
           animate={{ scale: [1.2, 1, 1.2], opacity: [0.3, 0.5, 0.3] }}
           transition={{ duration: 6, repeat: Infinity, delay: 3 }}
-        />
-        <motion.div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-pink-600/10 rounded-full blur-3xl"
-          animate={{ scale: [1, 1.4, 1], opacity: [0.2, 0.4, 0.2] }}
-          transition={{ duration: 8, repeat: Infinity, delay: 1.5 }}
         />
       </div>
 
@@ -98,9 +93,11 @@ export default function Home() {
           initial="initial"
           animate="animate"
         >
-          {/* Hero Icon — Clean Fixed-Size User Avatar */}
-          <motion.div variants={floatVariants} animate="animate" className="select-none py-1">
-            <div className="relative flex items-center justify-center p-2 rounded-full">
+          {/* Hero Icon with Reticle Target */}
+          <motion.div variants={floatVariants} animate="animate" className="select-none py-1 relative">
+            <div className="relative flex items-center justify-center p-3 border border-red-600/40 bg-zinc-950/90 shadow-[0_0_25px_rgba(220,38,38,0.25)]">
+              <div className="absolute -top-1 -left-1 w-2.5 h-2.5 border-t-2 border-l-2 border-red-600" />
+              <div className="absolute -bottom-1 -right-1 w-2.5 h-2.5 border-b-2 border-r-2 border-red-600" />
               <UserAvatar
                 username={username}
                 avatarStyle={equippedAvatarStyle}
@@ -112,13 +109,13 @@ export default function Home() {
 
           {/* Title */}
           <motion.div variants={fadeUp} className="text-center space-y-1.5">
-            <h1 className="text-4xl sm:text-5xl font-black tracking-tight">
-              <span className="bg-gradient-to-r from-violet-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+            <h1 className="text-3xl sm:text-4xl font-mono font-black tracking-widest uppercase">
+              <span className="bg-gradient-to-r from-red-500 via-rose-400 to-red-600 bg-clip-text text-transparent">
                 {strings.home.title}
               </span>
             </h1>
-            <p className="text-lg text-white/60 font-medium">{strings.home.tagline}</p>
-            <p className="text-white/40 text-xs sm:text-sm">
+            <p className="text-sm font-mono text-zinc-300 font-bold tracking-wider uppercase">{strings.home.tagline}</p>
+            <p className="text-zinc-500 text-xs font-mono uppercase tracking-widest">
               {strings.home.subtitle}
             </p>
           </motion.div>
@@ -131,7 +128,7 @@ export default function Home() {
               </Button>
             )}
             
-            <Button variant="primary" fullWidth size="xl" onClick={handleOnlineClick} icon="🌐">
+            <Button variant="primary" fullWidth size="xl" onClick={handleOnlineClick} icon="🎯">
               {strings.home.playOnline}
             </Button>
 
@@ -149,22 +146,23 @@ export default function Home() {
               variant="ghost"
               fullWidth
               onClick={() => navigate('/packs')}
-              icon="📦"
+              icon="📁"
             >
               {strings.home.wordPacks}
             </Button>
           </motion.div>
 
-          {/* Features grid */}
+          {/* Features grid with tactical borders */}
           <motion.div variants={fadeUp} className="grid grid-cols-2 gap-3 w-full pt-2">
             {featuresList.map((f, idx) => (
               <div
                 key={idx}
-                className="bg-white/5 border border-white/10 rounded-xl p-3 text-center space-y-1"
+                className="bg-zinc-950/80 border border-zinc-800 hover:border-red-900/80 p-3 text-center space-y-1 relative group transition-colors"
               >
+                <div className="absolute top-0 right-0 w-1.5 h-1.5 border-t border-r border-red-600/40" />
                 <div className="text-xl sm:text-2xl">{f.icon}</div>
-                <p className="text-white text-xs font-bold">{f.title}</p>
-                <p className="text-white/40 text-[11px] leading-tight">{f.desc}</p>
+                <p className="text-zinc-200 text-xs font-mono font-bold uppercase tracking-wider">{f.title}</p>
+                <p className="text-zinc-500 text-[10px] leading-tight font-mono">{f.desc}</p>
               </div>
             ))}
           </motion.div>

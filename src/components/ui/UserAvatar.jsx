@@ -1,22 +1,26 @@
 /**
  * UserAvatar.jsx — Core Reusable Avatar Component with Store Cosmetics Integration.
- * Pixel-perfect centered alignment across all avatar sizes with overlay protection.
+ * Two-layer architecture:
+ *   Layer 0 (z-0): Avatar image clipped to circle via overflow-hidden — NO ring here.
+ *   Layer 1 (z-10): Transparent ring overlay (absolute inset-0, bg-transparent) — ring only.
+ *   Layer 2 (z-20): Floating crests / crowns above the circle.
+ *   Layer 3 (z-30): Badge chip bottom-right.
  */
 import { useMemo, memo } from 'react';
 import { useEconomyStore } from '../../store/economyStore';
-import { getAccessoryStyle } from './ProfileModal';
+import { getAccessoryStyle } from '../../utils/accessories';
 
 const SIZE_CLASSES = {
-  xs: 'w-6 h-6 text-xs',
-  sm: 'w-8 h-8 text-sm',
-  md: 'w-12 h-12 text-base',
+  xs: 'w-7 h-7 text-xs',
+  sm: 'w-9 h-9 text-sm',
+  md: 'w-11 h-11 text-base',
   lg: 'w-16 h-16 text-xl',
   xl: 'w-20 h-20 text-2xl',
   '2xl': 'w-24 h-24 text-3xl',
 };
 
 const UserAvatar = memo(function UserAvatar({
-  username = 'Player',
+  username = 'player',
   avatarUrl,
   avatarStyle,
   equipped,
@@ -36,57 +40,73 @@ const UserAvatar = memo(function UserAvatar({
     ? equipped
     : equipped?.accessory || globalEquipped?.accessory || null;
 
-  // DiceBear SVG URL generator
-  const srcUrl = useMemo(() => {
-    if (avatarUrl && !avatarUrl.includes('default_avatar')) {
-      return avatarUrl;
-    }
-    return `https://api.dicebear.com/9.x/${activeStyle}/svg?seed=${encodeURIComponent(username || 'guest')}`;
-  }, [avatarUrl, activeStyle, username]);
+  // Determine raw avatar input
+  const rawAvatar = avatarUrl || avatarStyle || activeStyle || 'bottts';
 
-  // Accessory styling metadata (ring, crest, badge, color)
-  const accMeta = useMemo(() => {
-    return getAccessoryStyle(activeAccessoryId);
-  }, [activeAccessoryId]);
+  // Check if input is an emoji character
+  const isEmoji = useMemo(() => {
+    if (!rawAvatar || typeof rawAvatar !== 'string') return false;
+    return rawAvatar.length <= 4 && !rawAvatar.startsWith('http') && !/^[a-zA-Z0-9_-]+$/.test(rawAvatar);
+  }, [rawAvatar]);
+
+  // Resolve DiceBear URL if not an emoji
+  const imageSrc = useMemo(() => {
+    if (isEmoji) return null;
+    let src = rawAvatar;
+    if (!src || typeof src !== 'string' || !src.startsWith('http')) {
+      const styleName = (typeof src === 'string' && /^[a-zA-Z0-9_-]+$/.test(src)) ? src : activeStyle;
+      const seed = encodeURIComponent(username || 'player');
+      src = `https://api.dicebear.com/9.x/${styleName || 'bottts'}/svg?seed=${seed}`;
+    }
+    return src;
+  }, [isEmoji, rawAvatar, activeStyle, username]);
+
+  // Accessory styling metadata (ring class, crest emoji, badge emoji, color)
+  const accMeta = useMemo(() => getAccessoryStyle(activeAccessoryId), [activeAccessoryId]);
 
   const sizeClass = SIZE_CLASSES[size] || SIZE_CLASSES.md;
 
   return (
     <div
       onClick={onClick}
-      className={`relative flex items-center justify-center shrink-0 rounded-full bg-transparent overflow-visible border-none ${sizeClass} ${onClick ? 'cursor-pointer' : ''} ${className}`}
+      className={`relative inline-flex items-center justify-center shrink-0 ${sizeClass} ${onClick ? 'cursor-pointer' : ''} ${className}`}
     >
-      {/* Floating Top Crest (Halo / Horns / Crown) */}
+      {/* ── Layer 2: Floating Crest (crown/halo/horns above circle) ── */}
       {accMeta.crest && (
-        <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 z-20 text-xs sm:text-sm animate-bounce drop-shadow-[0_0_8px_rgba(255,255,255,0.8)] pointer-events-none">
+        <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 z-20 text-xs sm:text-sm animate-bounce drop-shadow-[0_0_8px_rgba(255,255,255,0.8)] pointer-events-none select-none">
           {accMeta.crest}
         </span>
       )}
 
-      {/* Avatar Image Container with Accessory Ring */}
-      <div className={`relative w-full h-full rounded-full overflow-hidden bg-gradient-to-br from-violet-900/40 to-slate-900 ${accMeta.ring || 'ring-2 ring-white/20'} transition-all duration-300`}>
-        <img
-          src={srcUrl}
-          alt={username}
-          className="w-full h-full object-cover rounded-full pointer-events-none"
-          onError={(e) => {
-            e.target.src = `https://api.dicebear.com/9.x/bottts/svg?seed=${encodeURIComponent(username || 'guest')}`;
-          }}
-        />
+      {/* ── Layer 0: Avatar image — clipped to circle, NO ring here ── */}
+      <div className="absolute inset-0 rounded-full overflow-hidden bg-slate-800 z-0">
+        {isEmoji ? (
+          <span className="flex items-center justify-center w-full h-full text-base leading-none select-none pointer-events-none">
+            {rawAvatar}
+          </span>
+        ) : (
+          <img
+            src={imageSrc}
+            alt={username}
+            className="block w-full h-full object-cover"
+            loading="lazy"
+            onError={(e) => {
+              const seed = encodeURIComponent(username || 'player');
+              e.currentTarget.src = `https://api.dicebear.com/9.x/bottts/svg?seed=${seed}`;
+            }}
+          />
+        )}
       </div>
 
-      {/* Constrained Frame Overlay Centered over Avatar */}
-      {accMeta.overlay && (
-        <div
-          className="absolute inset-0 m-auto w-full h-full pointer-events-none z-10 rounded-full border border-white/20"
-          style={{ borderColor: accMeta.color }}
-        />
-      )}
+      {/* ── Layer 1: Transparent ring overlay — bg-transparent so avatar shows through ── */}
+      <div
+        className={`absolute inset-0 rounded-full bg-transparent pointer-events-none z-10 transition-all duration-300 ${accMeta.ring || 'ring-1 ring-white/10'}`}
+      />
 
-      {/* Accessory Status Badge (Bottom-Right) */}
+      {/* ── Layer 3: Badge chip (bottom-right) ── */}
       {showBadge && accMeta.badge && (
         <div
-          className="absolute -bottom-0.5 -right-0.5 z-20 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-slate-900 border border-white/30 flex items-center justify-center text-[9px] sm:text-[10px] shadow-md drop-shadow pointer-events-none"
+          className="absolute -bottom-0.5 -right-0.5 z-30 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-slate-900 border border-white/30 flex items-center justify-center text-[9px] sm:text-[10px] shadow-md pointer-events-none"
           title={accMeta.label || 'Equipped Accessory'}
         >
           {accMeta.badge}

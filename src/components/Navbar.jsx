@@ -8,16 +8,10 @@ import { useAuthStore } from '../store/authStore';
 import { useEconomyStore } from '../store/economyStore';
 import { LanguageToggle } from './ui/LanguageToggle';
 import AuthModal from './ui/AuthModal';
+import SpyHeaderProfile from './ui/SpyHeaderProfile';
 
 const ProfileModal = lazy(() => import('./ui/ProfileModal'));
 const SouLStoreModal = lazy(() => import('./economy/SouLStoreModal'));
-
-const formatCoins = (num) => {
-  if (!num && num !== 0) return '0';
-  if (num >= 1000000) return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
-  if (num >= 10000) return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
-  return num.toLocaleString();
-};
 
 export default function Navbar() {
   const { t } = useTranslation();
@@ -39,69 +33,42 @@ export default function Navbar() {
 
   return (
     <>
-      <header className="w-full bg-slate-950/90 backdrop-blur-md border-b border-slate-800/60 px-3 py-2.5 flex items-center justify-between z-40 sticky top-0 select-none">
-        {/* Left: App Logo */}
-        <div className="flex items-center gap-1.5 shrink-0">
-          <span className="text-xl">🎩</span>
-          <span className="font-extrabold text-base sm:text-lg text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-violet-400 to-indigo-400">
-            Undercover
-          </span>
+      <header className="w-full bg-zinc-950/90 backdrop-blur-md border-b border-red-900/40 px-3 sm:px-4 py-2 flex items-center justify-between z-40 sticky top-0 select-none font-mono">
+        {/* Left: App Tactical Brand */}
+        <div className="flex items-center gap-2 shrink-0">
+          <div className="w-8 h-8 bg-red-950/60 border border-red-600/70 flex items-center justify-center text-lg shadow-[0_0_12px_rgba(220,38,38,0.35)] relative">
+            <div className="absolute -top-0.5 -left-0.5 w-1.5 h-1.5 border-t border-l border-red-500" />
+            <div className="absolute -bottom-0.5 -right-0.5 w-1.5 h-1.5 border-b border-r border-red-500" />
+            <span>🕵️‍♂️</span>
+          </div>
+          <div className="flex flex-col">
+            <span className="font-mono font-black text-xs sm:text-sm tracking-wider text-red-500">
+              CLASSIFIED // UNDERCOVER
+            </span>
+            <span className="text-[9px] text-zinc-500 tracking-widest uppercase hidden sm:inline">
+              SURVEILLANCE PROTOCOL
+            </span>
+          </div>
         </div>
 
-        {/* Right: Compact Badges + Profile Trigger */}
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          {/* Language Toggle Button */}
+        {/* Right: Language Toggle & Operative Header Profile */}
+        <div className="flex items-center gap-2 shrink-0">
           <LanguageToggle variant="chip" />
 
           {profile ? (
-            <>
-              {/* Streak Count */}
-              <button
-                type="button"
-                onClick={() => openProfile('stats')}
-                title={`${t('header.streak')}: ${currentStreak}`}
-                className="bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 text-xs px-2 sm:px-2.5 py-1 rounded-lg flex items-center gap-1 font-semibold transition cursor-pointer active:scale-95"
-              >
-                <span>🔥</span>
-                <span>{currentStreak}</span>
-              </button>
-
-              {/* Coin Balance (opens Shop Modal) */}
-              <button
-                type="button"
-                onClick={() => setIsShopOpen(true)}
-                title={`${t('header.shop')}: ${coinsBalance} ${t('header.coins')}`}
-                className="bg-yellow-500/10 hover:bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 text-xs px-2 sm:px-2.5 py-1 rounded-lg flex items-center gap-1 font-bold transition cursor-pointer active:scale-95"
-              >
-                <span>🪙</span>
-                <span className="tabular-nums">{formatCoins(coinsBalance)}</span>
-              </button>
-
-              {/* Profile Avatar Button */}
-              <button
-                type="button"
-                onClick={() => openProfile('loadout')}
-                className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-500 p-0.5 flex items-center justify-center shadow-lg active:scale-95 transition cursor-pointer shrink-0"
-                title={`${profile.username || 'Player'} · ${t('header.profile')}`}
-              >
-                <div className="w-full h-full bg-slate-900 rounded-full flex items-center justify-center text-xs overflow-hidden">
-                  {profile.avatar_url ? (
-                    <span className="text-sm">{profile.avatar_url}</span>
-                  ) : (
-                    <span>👤</span>
-                  )}
-                </div>
-              </button>
-            </>
+            <SpyHeaderProfile
+              profile={{ ...profile, soul_coins: coinsBalance }}
+              onOpenStore={() => setIsShopOpen(true)}
+              onOpenProfile={() => openProfile('loadout')}
+            />
           ) : (
-            /* Login Button if Logged Out */
             <button
               type="button"
               onClick={() => setIsAuthOpen(true)}
-              className="bg-purple-600 hover:bg-purple-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-md shadow-purple-600/25 active:scale-95 cursor-pointer flex items-center gap-1"
+              className="bg-red-950/90 hover:bg-red-600 hover:text-black text-red-200 border border-red-700/70 px-3 py-1.5 text-xs font-mono font-bold uppercase tracking-wider transition shadow-[0_0_15px_rgba(185,28,28,0.2)] active:scale-95 cursor-pointer flex items-center gap-1.5"
             >
               <span>🔐</span>
-              <span>{t('auth.login')}</span>
+              <span>AUTHORIZE AGENT</span>
             </button>
           )}
         </div>
@@ -132,3 +99,4 @@ export default function Navbar() {
 }
 
 export { Navbar };
+

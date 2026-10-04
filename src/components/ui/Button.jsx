@@ -5,12 +5,12 @@ import { motion } from 'framer-motion';
 import { playClickSound, vibrate } from '../../utils/sfx';
 
 const variants = {
-  primary: 'bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white shadow-lg shadow-violet-900/40',
-  secondary: 'bg-white/10 hover:bg-white/20 text-white border border-white/20',
-  danger: 'bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white shadow-lg shadow-red-900/40',
-  ghost: 'text-white/70 hover:text-white hover:bg-white/10',
-  success: 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-lg shadow-emerald-900/40',
-  warning: 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white shadow-lg shadow-amber-900/40',
+  primary: 'bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-500 hover:to-rose-600 text-white shadow-lg shadow-red-950/60 border border-red-500/40 font-mono tracking-wider uppercase',
+  secondary: 'bg-zinc-900/90 hover:bg-red-950 hover:text-white text-zinc-200 border border-zinc-800 hover:border-red-900/80 font-mono tracking-wider uppercase',
+  danger: 'bg-gradient-to-r from-red-700 to-red-900 hover:from-red-600 hover:to-red-800 text-white shadow-lg shadow-red-950/60 border border-red-600/40 font-mono tracking-wider uppercase',
+  ghost: 'text-zinc-400 hover:text-red-400 hover:bg-red-950/30 font-mono tracking-wider uppercase',
+  success: 'bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white shadow-lg shadow-emerald-950/40 font-mono tracking-wider uppercase',
+  warning: 'bg-gradient-to-r from-amber-500 to-red-600 hover:from-amber-400 hover:to-red-500 text-black font-black shadow-lg shadow-amber-950/40 font-mono tracking-wider uppercase',
 };
 
 const sizes = {

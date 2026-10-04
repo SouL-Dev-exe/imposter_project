@@ -106,11 +106,16 @@ function buildProfilesEconomyPayload(state) {
         ...(state.inventory?.titles || []),
       ];
 
+  const style = state.equippedAvatarStyle || 'bottts';
+  const newAvatarUrl = `https://api.dicebear.com/9.x/${style}/svg?seed=player`;
+
   return {
     soul_coins: Number(state.soulCoins) || 0,
     xp: Number(state.seasonXP) || 0,
     level: Number(state.seasonLevel) || 1,
     inventory: inventoryList,
+    avatar_url: newAvatarUrl,
+    equipped_avatar: style,
     stats: {
       streak_days: Number(state.streakDays) || 1,
       last_login_date: state.lastLoginDate || getTodayString(),
@@ -118,7 +123,7 @@ function buildProfilesEconomyPayload(state) {
       equipped: state.equipped || DEFAULT_ECONOMY.equipped,
       quests: [...(state.dailyQuests || []), ...(state.weeklyQuests || [])],
       unlocked_pass_tiers: state.unlockedPassTiers || [1],
-      equipped_avatar_style: state.equippedAvatarStyle || 'bottts',
+      equipped_avatar_style: style,
       owned_avatar_styles: state.ownedAvatarStyles || ['bottts'],
     },
     updated_at: new Date().toISOString(),
@@ -126,21 +131,47 @@ function buildProfilesEconomyPayload(state) {
 }
 
 /**
- * Synchronise economy state directly to public.profiles table in Supabase.
+ * Synchronise economy state directly to public.profiles and active room in Supabase.
  */
-async function syncToSupabase(state) {
+async function syncToSupabase(state, currentRoomId = null) {
   try {
     const { data: { session } } = await supabase.auth.getSession();
     const currentUser = session?.user;
     if (!currentUser?.id) return; // Guest or unauthenticated — skip cloud sync
 
     const userId = currentUser.id;
+    const username = currentUser.user_metadata?.username || currentUser.email?.split('@')[0] || 'player';
+    const style = state.equippedAvatarStyle || 'bottts';
+    const liveAvatarUrl = `https://api.dicebear.com/9.x/${style}/svg?seed=${encodeURIComponent(username)}`;
+
     const payload = buildProfilesEconomyPayload(state);
+    payload.avatar_url = liveAvatarUrl;
 
     await supabase
       .from('profiles')
       .update(payload)
       .eq('id', userId);
+
+    // Live Multiplayer Room Sync
+    let activeRoomId = currentRoomId;
+    let fetchPlayersFn = null;
+    try {
+      const { useMultiplayerStore } = await import('./multiplayerStore');
+      activeRoomId = activeRoomId || useMultiplayerStore.getState()?.roomId;
+      fetchPlayersFn = useMultiplayerStore.getState()?.fetchRoomPlayers;
+    } catch (_) {}
+
+    if (activeRoomId) {
+      await supabase
+        .from('room_players')
+        .update({ avatar_url: liveAvatarUrl })
+        .eq('room_id', activeRoomId)
+        .eq('user_id', userId);
+
+      if (fetchPlayersFn) {
+        fetchPlayersFn(activeRoomId);
+      }
+    }
   } catch (err) {
     console.warn('[Economy] Supabase sync failed — localStorage remains active.', err?.message);
   }
@@ -635,12 +666,12 @@ export const useEconomyStore = create(
        * @param {string} styleValue - DiceBear style key (e.g. 'adventurer')
        * @param {number} price - SC cost (0 for free/already owned)
        */
-      purchaseAvatarStyle: (styleValue, price) => {
+      purchaseAvatarStyle: async (styleValue, price, currentRoomId = null) => {
         const state = get();
         if (state.ownedAvatarStyles.includes(styleValue)) {
           // Already owned — just equip
           set({ equippedAvatarStyle: styleValue });
-          syncToSupabase(get());
+          await syncToSupabase(get(), currentRoomId);
           return { success: true, alreadyOwned: true };
         }
         if (state.soulCoins < price) {
@@ -651,19 +682,20 @@ export const useEconomyStore = create(
           ownedAvatarStyles: [...s.ownedAvatarStyles, styleValue],
           equippedAvatarStyle: styleValue,
         }));
-        syncToSupabase(get());
+        await syncToSupabase(get(), currentRoomId);
         return { success: true, alreadyOwned: false };
       },
 
       /**
        * Equip an already-owned avatar style (free).
        * @param {string} styleValue - DiceBear style key
+       * @param {string|null} currentRoomId - Optional active room ID for live multiplayer update
        */
-      equipAvatarStyle: (styleValue) => {
+      equipAvatarStyle: async (styleValue, currentRoomId = null) => {
         const { ownedAvatarStyles } = get();
         if (!ownedAvatarStyles.includes(styleValue)) return false;
         set({ equippedAvatarStyle: styleValue });
-        syncToSupabase(get());
+        await syncToSupabase(get(), currentRoomId);
         return true;
       },
     }),

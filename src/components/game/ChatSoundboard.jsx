@@ -10,6 +10,8 @@ export const listenToSoundEmotes = (roomId) => {
       if (payload?.soundUrl) {
         try {
           const audio = new Audio(payload.soundUrl);
+          audio.playsInline = true;
+          audio.volume = 0.8;
           audio.play().catch((err) => console.warn('Soundboard audio playback error:', err));
         } catch (err) {
           console.warn('Audio construction error:', err);

@@ -1,25 +1,20 @@
-/**
- * SouLStoreModal.jsx
- * The SouL Store and Inventory Customization modal.
- * 6 Tabbed Sections: Avatar Styles, Avatar Accessories, Outfits & Clothes, Banners & Titles, Screen FX, Emotes & Expressions.
- * Handles Purchase, Equip, and Unequip state dynamically.
- */
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEconomyStore } from '../../store/economyStore';
 import { useAuthStore } from '../../store/authStore';
-import { STORE_ITEMS, RARITIES } from '../../data/economyCatalog';
+import { STORE_ITEMS } from '../../data/economyCatalog';
 import { AVATAR_STYLES } from '../../data/avatarStyles';
 import { toast } from '../../store/toastStore';
 import { playClickSound, playCoinSound, vibrate } from '../../utils/sfx';
+import SpyItemCard from './SpyItemCard';
 
 const CATEGORY_TABS = [
-  { id: 'avatarStyles', label: 'Avatar Styles', icon: '🎨' },
-  { id: 'accessories', label: 'Avatar Accessories', icon: '⭕' },
-  { id: 'outfits', label: 'Outfits & Clothes', icon: '🧥' },
-  { id: 'titles', label: 'Banners & Titles', icon: '🏷️' },
-  { id: 'screenFX', label: 'Screen FX', icon: '✨' },
-  { id: 'emotes', label: 'Emotes & Expressions', icon: '🤫' },
+  { id: 'avatarStyles', label: 'OPERATIVE COVERS', icon: '👤' },
+  { id: 'accessories', label: 'TACTICAL GEAR', icon: '⭕' },
+  { id: 'outfits', label: 'FIELD ATTIRE', icon: '🧥' },
+  { id: 'titles', label: 'COVERT DOSSIERS', icon: '🏷️' },
+  { id: 'screenFX', label: 'SURVEILLANCE FX', icon: '✨' },
+  { id: 'emotes', label: 'CIPHER COMMS', icon: '🤫' },
 ];
 
 export default function SouLStoreModal({ isOpen, onClose, initialTab = 'avatarStyles' }) {
@@ -53,10 +48,10 @@ export default function SouLStoreModal({ isOpen, onClose, initialTab = 'avatarSt
     const res = purchaseItem(item.id);
     if (res.success) {
       playCoinSound();
-      setFeedback({ type: 'success', msg: `Purchased ${item.name}!` });
-      toast.success(`Purchased ${item.name}!`, `Added to your inventory`);
+      setFeedback({ type: 'success', msg: `Transfer Authorized: ${item.name} acquired!` });
+      toast.success(`Acquired ${item.name}!`, `Added to operative locker`);
     } else {
-      setFeedback({ type: 'error', msg: res.error || 'Purchase failed.' });
+      setFeedback({ type: 'error', msg: res.error || 'Authorization denied. Insufficient credits.' });
     }
     setTimeout(() => setFeedback(null), 3000);
   };
@@ -66,7 +61,7 @@ export default function SouLStoreModal({ isOpen, onClose, initialTab = 'avatarSt
     if (success) {
       const item = STORE_ITEMS.find((i) => i.id === itemId);
       toast.equip(item?.name || 'Item', category);
-      setFeedback({ type: 'info', msg: 'Item equipped!' });
+      setFeedback({ type: 'info', msg: 'Gear deployed to field!' });
     }
     setTimeout(() => setFeedback(null), 2000);
   };
@@ -75,48 +70,54 @@ export default function SouLStoreModal({ isOpen, onClose, initialTab = 'avatarSt
     playClickSound();
     vibrate(30);
     unequipItem(category);
-    setFeedback({ type: 'info', msg: 'Item unequipped.' });
+    setFeedback({ type: 'info', msg: 'Gear recalled from field.' });
     setTimeout(() => setFeedback(null), 2000);
   };
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/90 backdrop-blur-md font-mono">
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="relative w-full max-w-3xl bg-gray-900 border border-white/10 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+          className="relative w-full max-w-4xl bg-zinc-950 border border-red-900/60 shadow-[0_0_50px_rgba(220,38,38,0.25)] overflow-hidden flex flex-col max-h-[92vh]"
         >
+          {/* Tactical Reticle Corner Accents */}
+          <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-red-600 pointer-events-none z-20" />
+          <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-red-600 pointer-events-none z-20" />
+          <div className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-red-600 pointer-events-none z-20" />
+          <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-red-600 pointer-events-none z-20" />
+
           {/* Header */}
-          <div className="p-5 border-b border-white/10 bg-gradient-to-r from-violet-950/60 via-gray-900 to-indigo-950/60 flex items-center justify-between">
+          <div className="p-4 sm:p-5 border-b border-red-900/40 bg-zinc-950 flex flex-wrap items-center justify-between gap-3 relative">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-2xl shadow-lg shadow-amber-500/20">
-                🛒
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-950/60 border border-red-700/60 flex items-center justify-center text-xl sm:text-2xl shadow-[0_0_15px_rgba(220,38,38,0.3)]">
+                🎯
               </div>
               <div>
-                <h2 className="text-xl font-black text-white flex items-center gap-2">
-                  SouL Store & Locker
+                <h2 className="text-base sm:text-lg font-black text-red-100 flex items-center gap-2 uppercase tracking-wider">
+                  AGENCY ARMORY // BLACK MARKET
                 </h2>
-                <p className="text-white/40 text-xs" dir="ltr">
-                  Unlock 20+ cosmetics, outfits, avatar styles, screen effects & titles
+                <p className="text-zinc-500 text-[10px] sm:text-xs tracking-widest uppercase">
+                  CONFIDENTIAL FIELD ASSETS & CLASSIFIED GEAR
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              {/* SC balance badge with strict LTR text direction */}
-              <div
-                dir="ltr"
-                className="px-3.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 font-bold text-xs flex items-center gap-1.5 shadow-sm"
-              >
-                <span>Your balance:</span>
-                <span className="font-extrabold text-amber-300">{soulCoins.toLocaleString()} SC 🪙</span>
+            <div className="flex items-center gap-3 font-mono">
+              {/* Black Funds badge */}
+              <div className="px-3 py-1.5 bg-red-950/50 border border-red-900/70 text-red-200 text-xs flex items-center gap-1.5 shadow-sm">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                <span className="text-[10px] text-zinc-400">BLACK FUNDS:</span>
+                <span className="font-bold text-amber-400">{soulCoins.toLocaleString()}</span>
+                <span className="text-[9px] text-red-400">CREDITS</span>
               </div>
 
               <button
                 onClick={onClose}
-                className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-white/50 hover:text-white flex items-center justify-center text-sm transition-colors cursor-pointer"
+                className="w-8 h-8 bg-zinc-900 hover:bg-red-950 text-zinc-400 hover:text-white border border-zinc-800 hover:border-red-700 flex items-center justify-center text-sm transition-colors cursor-pointer"
+                title="Abort"
               >
                 ✕
               </button>
@@ -131,12 +132,12 @@ export default function SouLStoreModal({ isOpen, onClose, initialTab = 'avatarSt
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
                 dir="ltr"
-                className={`px-4 py-2 text-center text-xs font-bold ${
+                className={`px-4 py-2 text-center text-xs font-bold font-mono tracking-wider uppercase ${
                   feedback.type === 'success'
-                    ? 'bg-emerald-500/20 text-emerald-300 border-b border-emerald-500/30'
+                    ? 'bg-red-950/80 text-emerald-300 border-b border-emerald-600/40'
                     : feedback.type === 'error'
-                    ? 'bg-red-500/20 text-red-300 border-b border-red-500/30'
-                    : 'bg-blue-500/20 text-blue-300 border-b border-blue-500/30'
+                    ? 'bg-red-950/90 text-red-300 border-b border-red-600/60'
+                    : 'bg-zinc-900 text-amber-300 border-b border-amber-600/40'
                 }`}
               >
                 {feedback.msg}
@@ -144,16 +145,16 @@ export default function SouLStoreModal({ isOpen, onClose, initialTab = 'avatarSt
             )}
           </AnimatePresence>
 
-          {/* Sleek Horizontal Category Selector Bar */}
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-2 px-3 w-full flex-nowrap scroll-smooth border-b border-white/10 bg-black/40">
+          {/* Tactical Horizontal Category Selector Bar */}
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-2.5 px-3 w-full flex-nowrap scroll-smooth border-b border-zinc-900 bg-black/60 font-mono">
             {CATEGORY_TABS.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer shrink-0 ${
+                className={`px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer shrink-0 border ${
                   activeTab === tab.id
-                    ? 'bg-violet-600 text-white shadow-lg shadow-violet-600/30'
-                    : 'text-white/50 hover:text-white hover:bg-white/5'
+                    ? 'bg-red-600 text-black border-red-500 shadow-[0_0_15px_rgba(220,38,38,0.4)]'
+                    : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:border-red-900/60 hover:text-zinc-200'
                 }`}
               >
                 <span>{tab.icon}</span>
@@ -162,228 +163,106 @@ export default function SouLStoreModal({ isOpen, onClose, initialTab = 'avatarSt
             ))}
           </div>
 
-          {/* Catalog grid — Avatar Styles or regular items */}
+          {/* Catalog grid — Avatar Styles or regular items using SpyItemCard */}
           {activeTab === 'avatarStyles' ? (
-            <div className="overflow-y-auto p-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5 flex-1">
+            <div className="overflow-y-auto p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5 flex-1 bg-black/40">
               {AVATAR_STYLES.map((style) => {
-                const isActive  = equippedAvatarStyle === style.value;
+                const isActive = equippedAvatarStyle === style.value;
                 const isOwnedStyle = ownedAvatarStyles.includes(style.value);
-                const isLocked  = (seasonLevel ?? 1) < style.minLevel;
-                const canAfford = soulCoins >= style.price;
+                const isLocked = (seasonLevel ?? 1) < style.minLevel;
                 const avatarUrl = `https://api.dicebear.com/9.x/${style.value}/svg?seed=${encodeURIComponent(avatarSeed)}`;
 
-                const handleStyleAction = () => {
+                const styleItem = {
+                  id: style.value,
+                  name: style.label,
+                  description: isLocked ? `[RESTRICTED] Requires Clearance Level ${style.minLevel}` : (style.desc || 'Classified operative identity veil.'),
+                  price: style.price,
+                  rarity: isLocked ? `REQ-LVL-${style.minLevel}` : style.price === 0 ? 'STANDARD' : 'RESTRICTED',
+                  icon: isLocked ? (
+                    <span className="text-3xl text-red-500">🔒</span>
+                  ) : (
+                    <img
+                      src={avatarUrl}
+                      alt={style.label}
+                      className="w-16 h-16 object-contain p-1"
+                      loading="lazy"
+                    />
+                  ),
+                };
+
+                const handleStyleAction = async () => {
                   playClickSound();
                   vibrate(50);
                   if (isLocked) {
-                    setFeedback({ type: 'error', msg: `Reach Level ${style.minLevel} to unlock this style.` });
+                    setFeedback({ type: 'error', msg: `Clearance Denied. Reach Level ${style.minLevel} to unlock.` });
                     setTimeout(() => setFeedback(null), 3000);
                     return;
                   }
                   if (isOwnedStyle || style.price === 0) {
-                    const ok = equipAvatarStyle(style.value);
+                    const ok = await equipAvatarStyle(style.value);
                     if (ok || style.value === 'bottts') {
-                      toast.equip(style.label.replace(/^[^\s]+\s/, ''), 'Avatar Style');
-                      setFeedback({ type: 'info', msg: `${style.label} equipped!` });
+                      toast.equip(style.label.replace(/^[^\s]+\s/, ''), 'Cover Identity');
+                      setFeedback({ type: 'info', msg: `${style.label} deployed to field!` });
                       setTimeout(() => setFeedback(null), 2000);
                     }
                   } else {
-                    const res = purchaseAvatarStyle(style.value, style.price);
+                    const res = await purchaseAvatarStyle(style.value, style.price);
                     if (res.success) {
                       playCoinSound();
-                      toast.success(`Unlocked ${style.label}!`, `${style.price.toLocaleString()} SC spent · Style equipped`);
-                      setFeedback({ type: 'success', msg: `Unlocked & equipped ${style.label}!` });
+                      toast.success(`Authorized ${style.label}!`, `${style.price.toLocaleString()} Credits spent · Gear deployed`);
+                      setFeedback({ type: 'success', msg: `Transfer Authorized: ${style.label} deployed!` });
                     } else {
-                      setFeedback({ type: 'error', msg: res.error || 'Purchase failed.' });
+                      setFeedback({ type: 'error', msg: res.error || 'Authorization failed.' });
                     }
                     setTimeout(() => setFeedback(null), 3000);
                   }
                 };
 
                 return (
-                  <div
+                  <SpyItemCard
                     key={style.value}
-                    className={`relative p-4 rounded-2xl border transition-all flex flex-col ${
-                      isActive
-                        ? 'bg-violet-950/40 border-violet-500 shadow-[0_0_20px_rgba(139,92,246,0.35)] ring-1 ring-violet-400'
-                        : isOwnedStyle
-                        ? 'bg-white/[0.04] border-emerald-500/30'
-                        : isLocked
-                        ? 'bg-black/20 border-white/5 opacity-60'
-                        : 'bg-black/30 border-white/10 hover:border-white/20'
-                    }`}
-                  >
-                    {/* Status badge */}
-                    <div className="flex items-center justify-between mb-3" dir="ltr">
-                      <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full border ${
-                        isLocked
-                          ? 'text-white/40 border-white/10 bg-white/5'
-                          : style.price === 0
-                          ? 'text-emerald-400 border-emerald-500/40 bg-emerald-500/10'
-                          : 'text-amber-400 border-amber-500/30 bg-amber-500/10'
-                      }`}>
-                        {isLocked ? `🔒 Lv.${style.minLevel}` : style.price === 0 ? 'FREE' : `${style.price.toLocaleString()} SC`}
-                      </span>
-
-                      {isActive ? (
-                        <span className="text-[10px] font-black text-violet-300 bg-violet-600/30 border border-violet-400/50 px-2 py-0.5 rounded-full flex items-center gap-1">
-                          <span>✓</span> Active
-                        </span>
-                      ) : isOwnedStyle ? (
-                        <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-full">
-                          Owned
-                        </span>
-                      ) : null}
-                    </div>
-
-                    {/* DiceBear preview */}
-                    <div className="relative flex flex-col items-center my-2">
-                      <div className={`w-20 h-20 mx-auto rounded-2xl overflow-hidden bg-white/5 border ${
-                        isActive ? 'border-violet-500/50' : 'border-white/10'
-                      } flex items-center justify-center mb-3 transition-all ${
-                        isActive ? 'shadow-[0_0_15px_rgba(139,92,246,0.4)]' : ''
-                      }`}>
-                        {isLocked ? (
-                          <span className="text-3xl">🔒</span>
-                        ) : (
-                          <img
-                            src={avatarUrl}
-                            alt={style.label}
-                            className="w-full h-full object-contain p-1"
-                            loading="lazy"
-                          />
-                        )}
-                      </div>
-                      <h3 className="text-sm font-bold text-white leading-tight mb-0.5">{style.label}</h3>
-                      <p className="text-[11px] text-white/40 text-center leading-snug" dir="ltr">{style.desc}</p>
-                      {style.minLevel > 1 && (
-                        <p className="text-[10px] text-white/30 mt-1" dir="ltr">Requires Level {style.minLevel}</p>
-                      )}
-                    </div>
-
-                    {/* Action button */}
-                    <div className="mt-auto pt-3 border-t border-white/5">
-                      <button
-                        onClick={handleStyleAction}
-                        disabled={isLocked || (!canAfford && !isOwnedStyle && style.price > 0)}
-                        className={`w-full py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-                          isActive
-                            ? 'bg-violet-600/30 border border-violet-500/40 text-violet-300 cursor-default'
-                            : isOwnedStyle
-                            ? 'bg-violet-600 hover:bg-violet-500 text-white shadow-md shadow-violet-600/20 cursor-pointer hover:scale-[1.02]'
-                            : isLocked
-                            ? 'bg-white/5 text-white/25 border border-white/5 cursor-not-allowed'
-                            : canAfford
-                            ? 'bg-amber-500 hover:bg-amber-400 text-black shadow-lg shadow-amber-500/25 cursor-pointer hover:scale-[1.02]'
-                            : 'bg-white/5 text-white/30 border border-white/5 cursor-not-allowed'
-                        }`}
-                      >
-                        <span dir="ltr">
-                          {isActive ? '✓ Equipped' : isOwnedStyle ? 'Equip' : isLocked ? `🔒 Locked` : `${style.price.toLocaleString()} SC 🪙`}
-                        </span>
-                      </button>
-                    </div>
-                  </div>
+                    item={styleItem}
+                    isEquipped={isActive}
+                    isOwned={isOwnedStyle || style.price === 0}
+                    onAction={handleStyleAction}
+                  />
                 );
               })}
             </div>
           ) : (
-          <div className="overflow-y-auto p-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5 flex-1">
-            {currentItems.map((item) => {
-              const owned = isOwned(item.id, item.category);
-              const active = isEquipped(item.id, item.category);
-              const rarityInfo = RARITIES[item.rarity] || RARITIES.common;
-              const canAfford = soulCoins >= item.price;
+            <div className="overflow-y-auto p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5 flex-1 bg-black/40">
+              {currentItems.map((item) => {
+                const owned = isOwned(item.id, item.category);
+                const active = isEquipped(item.id, item.category);
 
-              return (
-                <div
-                  key={item.id}
-                  className={`relative p-4 rounded-2xl border transition-all flex flex-col justify-between ${
-                    active
-                      ? 'bg-violet-950/40 border-violet-500 shadow-[0_0_20px_rgba(139,92,246,0.35)] ring-1 ring-violet-400'
-                      : owned
-                      ? 'bg-white/[0.04] border-emerald-500/30'
-                      : 'bg-black/30 border-white/10 hover:border-white/20'
-                  }`}
-                >
-                  {/* Top rarity & equipped badge */}
-                  <div className="flex items-center justify-between mb-3" dir="ltr">
-                    <span
-                      className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full border ${rarityInfo.color} ${rarityInfo.border} ${rarityInfo.bg}`}
-                    >
-                      {rarityInfo.name}
-                    </span>
-
-                    {active ? (
-                      <span className="text-[10px] font-black text-violet-300 bg-violet-600/30 border border-violet-400/50 px-2 py-0.5 rounded-full shadow-sm shadow-violet-500/20 flex items-center gap-1">
-                        <span>✓</span> Equipped
-                      </span>
-                    ) : owned ? (
-                      <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-full">
-                        Owned
-                      </span>
-                    ) : null}
-                  </div>
-
-                  {/* Icon & Details */}
-                  <div className="text-center my-2">
-                    <div
-                      className="w-16 h-16 mx-auto rounded-2xl flex items-center justify-center text-3xl mb-2 transition-transform hover:scale-110"
-                      style={{
-                        background: `radial-gradient(circle, ${item.accent}30 0%, transparent 70%)`,
-                      }}
-                    >
-                      {item.icon}
-                    </div>
-                    <h3 className="text-sm font-bold text-white leading-tight mb-1" dir="ltr">{item.name}</h3>
-                    <p className="text-[11px] text-white/40 leading-snug line-clamp-2 text-left" dir="ltr">{item.desc}</p>
-                  </div>
-
-                  {/* Action buttons */}
-                  <div className="mt-4 pt-3 border-t border-white/5">
-                    {active ? (
-                      <button
-                        onClick={() => handleUnequip(item.category)}
-                        className="w-full py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white/70 hover:text-white text-xs font-semibold transition-all cursor-pointer border border-white/10"
-                      >
-                        Unequip
-                      </button>
-                    ) : owned ? (
-                      <button
-                        onClick={() => handleEquip(item.category, item.id)}
-                        className="w-full py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold transition-all shadow-md shadow-violet-600/20 cursor-pointer hover:scale-[1.02] active:scale-98"
-                      >
-                        Equip
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => handleBuy(item)}
-                        disabled={!canAfford}
-                        className={`w-full py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-                          canAfford
-                            ? 'bg-amber-500 hover:bg-amber-400 text-black shadow-lg shadow-amber-500/25 cursor-pointer hover:scale-[1.02] active:scale-98'
-                            : 'bg-white/5 text-white/30 border border-white/5 cursor-not-allowed'
-                        }`}
-                      >
-                        <span dir="ltr">
-                          {item.price === 0 ? 'Free' : `${item.price.toLocaleString()} SC 🪙`}
-                        </span>
-                      </button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                return (
+                  <SpyItemCard
+                    key={item.id}
+                    item={item}
+                    isEquipped={active}
+                    isOwned={owned}
+                    onAction={(targetItem) => {
+                      if (active) {
+                        handleUnequip(targetItem.category);
+                      } else if (owned) {
+                        handleEquip(targetItem.category, targetItem.id);
+                      } else {
+                        handleBuy(targetItem);
+                      }
+                    }}
+                  />
+                );
+              })}
+            </div>
           )}
 
-          {/* Footer status */}
-          <div className="p-4 border-t border-white/10 bg-white/[0.02] flex items-center justify-between text-xs text-white/50" dir="ltr">
-            <span>
-              Category: <strong className="text-white font-semibold">{CATEGORY_TABS.find((t) => t.id === activeTab)?.label}</strong>
+          {/* Tactical Dossier Footer */}
+          <div className="p-3 sm:p-4 border-t border-red-900/30 bg-black/80 flex items-center justify-between text-xs text-zinc-500 font-mono tracking-wider">
+            <span className="uppercase text-[11px]">
+              PROTOCOL: <strong className="text-zinc-200">{CATEGORY_TABS.find((t) => t.id === activeTab)?.label}</strong>
             </span>
-            <span>
-              Total Items: <strong className="text-white font-semibold">{activeTab === 'avatarStyles' ? AVATAR_STYLES.length : currentItems.length}</strong>
+            <span className="uppercase text-[11px]">
+              DOSSIERS: <strong className="text-red-400">{activeTab === 'avatarStyles' ? AVATAR_STYLES.length : currentItems.length} ACTIVE</strong>
             </span>
           </div>
         </motion.div>
@@ -391,3 +270,4 @@ export default function SouLStoreModal({ isOpen, onClose, initialTab = 'avatarSt
     </AnimatePresence>
   );
 }
+

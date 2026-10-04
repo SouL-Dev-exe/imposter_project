@@ -46,6 +46,8 @@ export default function Soundboard({ roomId = null, onClose = null }) {
       audioRef.current.pause();
     }
     const audio = new Audio(sound.url);
+    audio.playsInline = true;
+    audio.volume = 0.8;
     audioRef.current = audio;
     setActiveSoundKey(sound.key);
     

@@ -1,5 +1,5 @@
 /**
- * App.jsx — Root component with HashRouter routing and First-Time Welcome Gate.
+ * App.jsx — Root component with Classified Intelligence (Red & Black Spy Noir) Layout Wrapper.
  * Hash routing is required for GitHub Pages static hosting.
  * Pages are lazy-loaded for optimal initial bundle size.
  */
@@ -25,8 +25,8 @@ const PackEditor  = lazy(() => import('./pages/PackEditor'));
 // ─── Minimal full-screen loader shown while chunks download ───────────────
 function PageLoader() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-950">
-      <div className="w-10 h-10 rounded-full border-2 border-violet-500/40 border-t-violet-400 animate-spin" />
+    <div className="min-h-[50vh] flex items-center justify-center">
+      <div className="w-10 h-10 rounded-full border-2 border-red-600/40 border-t-red-500 animate-spin" />
     </div>
   );
 }
@@ -47,10 +47,11 @@ export default function App() {
   // 1. Loading State
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center gap-4">
+      <div className="min-h-screen bg-black text-zinc-100 bg-spy-radial bg-spy-grid relative flex flex-col items-center justify-center gap-4 font-mono">
+        <div className="h-0.5 w-full bg-gradient-to-r from-transparent via-red-600 to-transparent shadow-[0_0_10px_#dc2626] absolute top-0" />
         <div className="text-4xl animate-bounce">🕵️‍♂️</div>
-        <div className="w-8 h-8 rounded-full border-2 border-purple-500/30 border-t-purple-500 animate-spin" />
-        <span className="text-xs text-slate-400 font-medium">جاري التحميل...</span>
+        <div className="w-8 h-8 rounded-full border-2 border-red-600/30 border-t-red-500 animate-spin" />
+        <span className="text-xs text-red-400 font-mono tracking-widest uppercase">INITIALIZING CLASSIFIED PROTOCOLS...</span>
       </div>
     );
   }
@@ -59,43 +60,42 @@ export default function App() {
   const isAuthenticated = Boolean(user || isGuest || profile);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white font-sans antialiased flex flex-col dir-rtl">
-      {/* Subtle global noise texture */}
-      <div
-        className="fixed inset-0 pointer-events-none opacity-[0.015] z-0"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-        }}
-      />
+    <div className="min-h-screen bg-black text-zinc-100 bg-spy-radial bg-spy-grid relative overflow-x-hidden font-mono selection:bg-red-600 selection:text-black flex flex-col">
+      {/* Red Laser Overhead Alert Bar */}
+      <div className="h-0.5 w-full bg-gradient-to-r from-transparent via-red-600 to-transparent shadow-[0_0_10px_#dc2626] shrink-0 z-50" />
+
       <ToastContainer />
 
-      {!isAuthenticated ? (
-        // First-Time Welcome Gate
-        <div className="relative z-10 flex-1 flex flex-col">
-          <Navbar />
-          <WelcomeAuthScreen />
-        </div>
-      ) : (
-        // Direct Main Game Routes
-        <HashRouter>
+      {/* Active App View Container */}
+      <main className="max-w-7xl mx-auto px-4 py-6 w-full flex-1 flex flex-col">
+        {!isAuthenticated ? (
+          // First-Time Welcome Gate
           <div className="relative z-10 flex-1 flex flex-col">
-            <Suspense fallback={<PageLoader />}>
-              <Routes>
-                <Route path="/"       element={<Home />} />
-                <Route path="/lobby"  element={<Lobby />} />
-                <Route path="/online" element={<OnlineLobby />} />
-                <Route path="/reveal" element={<Reveal />} />
-                <Route path="/clues"  element={<Clues />} />
-                <Route path="/vote"   element={<Vote />} />
-                <Route path="/result" element={<Result />} />
-                <Route path="/packs"  element={<PackEditor />} />
-                {/* Catch-all */}
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </Suspense>
+            <Navbar />
+            <WelcomeAuthScreen />
           </div>
-        </HashRouter>
-      )}
+        ) : (
+          // Direct Main Game Routes
+          <HashRouter>
+            <div className="relative z-10 flex-1 flex flex-col">
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
+                  <Route path="/"       element={<Home />} />
+                  <Route path="/lobby"  element={<Lobby />} />
+                  <Route path="/online" element={<OnlineLobby />} />
+                  <Route path="/reveal" element={<Reveal />} />
+                  <Route path="/clues"  element={<Clues />} />
+                  <Route path="/vote"   element={<Vote />} />
+                  <Route path="/result" element={<Result />} />
+                  <Route path="/packs"  element={<PackEditor />} />
+                  {/* Catch-all */}
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+              </Suspense>
+            </div>
+          </HashRouter>
+        )}
+      </main>
     </div>
   );
 }
