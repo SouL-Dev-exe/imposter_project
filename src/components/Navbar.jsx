@@ -8,6 +8,7 @@ import { useAuthStore } from '../store/authStore';
 import { useEconomyStore } from '../store/economyStore';
 import { LanguageToggle } from './ui/LanguageToggle';
 import AuthModal from './ui/AuthModal';
+import UserAvatar from './ui/UserAvatar';
 import SpyHeaderProfile from './ui/SpyHeaderProfile';
 
 const ProfileModal = lazy(() => import('./ui/ProfileModal'));
