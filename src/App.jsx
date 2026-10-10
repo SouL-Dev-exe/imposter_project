@@ -1,7 +1,5 @@
 /**
- * App.jsx — Root component with Premium Clean Dark Mode Layout Wrapper.
- * Hash routing is required for GitHub Pages static hosting.
- * Pages are lazy-loaded for optimal initial bundle size.
+ * App.jsx — Noir Tactical Viewport-Locked Layout
  */
 import { lazy, Suspense, useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
@@ -26,7 +24,7 @@ const PackEditor  = lazy(() => import('./pages/PackEditor'));
 function PageLoader() {
   return (
     <div className="min-h-[50vh] flex items-center justify-center">
-      <div className="w-8 h-8 rounded-full border-2 border-zinc-800 border-t-indigo-500 animate-spin" />
+      <div className="w-8 h-8 rounded-full border-2 border-rose-900 border-t-rose-500 animate-spin" />
     </div>
   );
 }
@@ -36,7 +34,6 @@ export default function App() {
   const initEconomy = useEconomyStore((s) => s.initEconomy);
   const { user, profile, isGuest, loading, initAuth } = useAuthStore();
 
-  // Fetch global cloud packs, init auth, then hydrate economy
   useEffect(() => {
     syncCloudPacks();
     initAuth().then(() => {
@@ -44,35 +41,34 @@ export default function App() {
     });
   }, []);
 
-  // 1. Loading State
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#09090b] text-zinc-100 relative flex flex-col items-center justify-center gap-6 font-sans">
-        <div className="w-8 h-8 rounded-full border-2 border-zinc-800 border-t-indigo-500 animate-spin" />
-        <span className="text-sm text-zinc-500 font-medium tracking-wide">Loading workspace...</span>
+      <div className="h-screen w-screen bg-[#08080a] bg-spy-radial text-zinc-100 relative flex flex-col items-center justify-center gap-6 font-mono overflow-hidden">
+        <div className="absolute inset-0 bg-crt-lines z-0" />
+        <div className="relative z-10 w-8 h-8 rounded-full border-2 border-rose-900 border-t-rose-600 animate-spin" />
+        <span className="relative z-10 text-xs text-rose-500 font-bold tracking-widest uppercase">Booting Terminal...</span>
       </div>
     );
   }
 
-  // 2. Authentication Check: User logged in or playing as Guest
   const isAuthenticated = Boolean(user || isGuest || profile);
 
   return (
-    <div className="min-h-screen bg-[#09090b] text-zinc-100 relative overflow-x-hidden font-sans selection:bg-indigo-500/30 selection:text-indigo-200 flex flex-col">
+    <div className="h-screen w-screen bg-[#08080a] bg-spy-radial text-zinc-100 relative overflow-hidden font-mono selection:bg-rose-600/30 selection:text-rose-200 flex flex-col">
+      {/* CRT Scanline Overlay */}
+      <div className="absolute inset-0 bg-crt-lines pointer-events-none z-[100]" />
+
       <ToastContainer />
 
-      {/* Active App View Container */}
-      <main className="max-w-4xl mx-auto px-4 py-6 w-full flex-1 flex flex-col">
+      <main className="max-w-3xl mx-auto w-full h-full flex flex-col relative z-10">
         {!isAuthenticated ? (
-          // First-Time Welcome Gate
-          <div className="relative z-10 flex-1 flex flex-col">
+          <div className="flex-1 flex flex-col overflow-y-auto">
             <Navbar />
             <WelcomeAuthScreen />
           </div>
         ) : (
-          // Direct Main Game Routes
           <HashRouter>
-            <div className="relative z-10 flex-1 flex flex-col">
+            <div className="flex-1 flex flex-col h-full overflow-hidden">
               <Suspense fallback={<PageLoader />}>
                 <Routes>
                   <Route path="/"       element={<Home />} />
@@ -83,7 +79,6 @@ export default function App() {
                   <Route path="/vote"   element={<Vote />} />
                   <Route path="/result" element={<Result />} />
                   <Route path="/packs"  element={<PackEditor />} />
-                  {/* Catch-all */}
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
               </Suspense>

@@ -1,11 +1,12 @@
 /**
- * Navbar.jsx — Premium Clean Dark Mode Header
+ * Navbar.jsx — Noir Tactical HUD Header
  */
 import { useState, lazy, Suspense } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../store/authStore';
 import { useEconomyStore } from '../store/economyStore';
 import AuthModal from './ui/AuthModal';
+import { UserAvatar } from './ui/UserAvatar';
 
 const OperativeMenuModal = lazy(() => import('./OperativeMenuModal'));
 const SouLStoreModal = lazy(() => import('./economy/SouLStoreModal'));
@@ -14,7 +15,7 @@ const ProfileModal = lazy(() => import('./ui/ProfileModal'));
 export default function Navbar() {
   const { t } = useTranslation();
   const { profile } = useAuthStore();
-  const { soulCoins } = useEconomyStore();
+  const { soulCoins, equippedAvatarStyle, equipped } = useEconomyStore();
 
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -31,56 +32,83 @@ export default function Navbar() {
 
   return (
     <>
-      <header className="w-full bg-zinc-950/80 backdrop-blur-md border-b border-zinc-800/60 px-4 py-3 flex items-center justify-between gap-4 shadow-sm sticky top-0 z-40 rounded-t-2xl sm:rounded-t-none">
+      <header className="w-full bg-[#111116] border-b border-zinc-800/80 px-3 py-2 flex items-center justify-between gap-2 shadow-[0_0_15px_rgba(0,0,0,0.5)] shrink-0 z-40 relative">
         
-        {/* LEFT: Clean Logo */}
+        {/* Left: Call-sign & Avatar */}
         <div className="flex items-center gap-2 shrink-0">
-          <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center">
-            <span className="text-lg leading-none pb-0.5">🕵️</span>
+          <div className="relative w-9 h-9 border border-zinc-700 bg-zinc-950 flex items-center justify-center p-0.5">
+            {/* Square Viewfinder */}
+            <div className="absolute top-0 left-0 w-1.5 h-1.5 border-t border-l border-rose-600" />
+            <div className="absolute bottom-0 right-0 w-1.5 h-1.5 border-b border-r border-rose-600" />
+            
+            {profile ? (
+              <UserAvatar
+                username={profile?.username}
+                avatarStyle={equippedAvatarStyle}
+                equipped={equipped}
+                size="xs"
+              />
+            ) : (
+              <span className="text-sm">🕵️</span>
+            )}
           </div>
-          <div className="font-sans text-sm font-semibold tracking-tight text-white truncate leading-tight">
-            <span>Undercover</span>
+          <div className="flex flex-col">
+            <span className="text-xs font-bold text-zinc-200 tracking-wider">
+              {profile?.username || 'UNKNOWN AGENT'}
+            </span>
+            <span className="text-[9px] text-amber-500 font-bold uppercase tracking-widest">
+              LVL {profile?.stats?.level || 1}
+            </span>
           </div>
         </div>
 
-        {/* RIGHT: Credits, Armory, and 3-Dots */}
-        <div className="flex items-center gap-3 shrink-0">
+        {/* Center: Title (Hidden on small screens) */}
+        <div className="hidden md:flex flex-col items-center">
+          <span className="text-sm font-black tracking-[0.2em] text-white">UNDERCOVER</span>
+          <span className="text-[8px] text-zinc-500 tracking-[0.3em] uppercase">DECEPTIVE INTEL</span>
+        </div>
+
+        {/* Right: Funds, Armory, 3-Dots */}
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {profile ? (
             <>
-              {/* Balance / Credits Pill */}
+              {/* Black Funds Pill */}
               <button
                 type="button"
                 onClick={() => setIsShopOpen(true)}
-                className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 px-3 py-1.5 rounded-full text-xs font-medium text-zinc-300 hover:border-zinc-700 hover:text-white transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 bg-zinc-950 border border-amber-600/30 px-2 py-1 hover:border-amber-500 transition-colors cursor-pointer"
                 title={`${coinsBalance} Credits`}
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                <span>{coinsBalance.toLocaleString()}</span>
+                <span className="w-1.5 h-1.5 bg-rose-600 animate-pulse" />
+                <span className="font-bold tracking-wider text-amber-500 text-xs">
+                  {coinsBalance.toLocaleString()}
+                </span>
+                <span className="text-[9px] text-zinc-500 hidden sm:inline">BF</span>
               </button>
 
-              {/* Quick-access Armory */}
+              {/* Armory Icon */}
               <button
                 onClick={() => setIsShopOpen(true)}
-                className="hidden sm:flex bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 hover:border-zinc-700 px-3 py-1.5 rounded-full text-xs font-medium text-zinc-300 hover:text-white transition-all"
+                className="w-8 h-8 flex items-center justify-center border border-zinc-800 bg-zinc-900/80 hover:border-rose-600 hover:text-rose-400 text-zinc-300 transition-all"
               >
-                Store
+                <span className="text-sm">📦</span>
               </button>
 
-              {/* 3-Dots Menu Trigger */}
+              {/* Terminal Button 3-Dots */}
               <button
                 onClick={() => setIsMenuOpen(true)}
-                className="w-8 h-8 flex items-center justify-center bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-lg text-zinc-400 hover:text-white transition-all"
+                className="w-8 h-8 flex items-center justify-center border border-zinc-800 bg-zinc-900/80 hover:border-rose-600 text-zinc-300 transition-all"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+                <span className="text-lg pb-1 leading-none">⋮</span>
               </button>
             </>
           ) : (
             <button
               type="button"
               onClick={() => setIsAuthOpen(true)}
-              className="bg-indigo-600 hover:bg-indigo-500 text-white border-none px-4 py-1.5 rounded-full text-xs font-medium transition-all shadow-sm active:scale-95 cursor-pointer"
+              className="bg-rose-700 hover:bg-rose-600 text-white border border-rose-900 px-4 py-1.5 text-xs font-bold uppercase tracking-widest transition-all active:scale-95"
             >
-              Log In
+              AUTHORIZE
             </button>
           )}
         </div>

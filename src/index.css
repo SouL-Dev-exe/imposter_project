@@ -1,6 +1,6 @@
 /* index.css — Global styles */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700;800;900&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -31,58 +31,50 @@
     height: 100dvh;
     margin: 0;
     padding: 0;
-    overflow-x: hidden;
+    overflow: hidden; /* Viewport-Locked Terminal */
     padding-bottom: env(safe-area-inset-bottom);
   }
 
   html {
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: 'JetBrains Mono', monospace;
     color-scheme: dark;
-    scroll-behavior: smooth;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
   body {
-    background-color: #09090b;
-    color: #f4f4f5;
+    background-color: #08080a; /* Deep Charcoal Base */
+    color: #e4e4e7;
     overscroll-behavior: none;
   }
 
-  /* Custom modern scrollbar */
   ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 4px;
+    height: 4px;
   }
   ::-webkit-scrollbar-track {
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: #27272a;
-    border-radius: 9999px;
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    background: #3f3f46;
-  }
-
-  /* Input autofill override */
-  input:-webkit-autofill,
-  input:-webkit-autofill:hover,
-  input:-webkit-autofill:focus {
-    -webkit-text-fill-color: white;
-    -webkit-box-shadow: 0 0 0px 1000px rgba(255,255,255,0.05) inset;
-    transition: background-color 5000s ease-in-out 0s;
+    background: #e11d48; /* Crimson Red scroll */
+    border-radius: 2px;
   }
 }
 
 @layer utilities {
+  .bg-spy-radial {
+    background: radial-gradient(circle at center, rgba(225, 29, 72, 0.15) 0%, rgba(17, 17, 22, 0.9) 60%, #08080a 100%);
+  }
+
+  .bg-crt-lines {
+    background-image: linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+    background-size: 100% 3px;
+    pointer-events: none;
+  }
+
   .no-select {
     user-select: none;
     -webkit-user-select: none;
-  }
-
-  .touch-none {
-    touch-action: none;
   }
 
   .no-scrollbar {
@@ -91,9 +83,5 @@
   }
   .no-scrollbar::-webkit-scrollbar {
     display: none;
-  }
-
-  .tabular-nums {
-    font-variant-numeric: tabular-nums;
   }
 }
