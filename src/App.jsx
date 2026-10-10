@@ -1,5 +1,7 @@
 /**
- * App.jsx — Noir Tactical Viewport-Locked Layout
+ * App.jsx — Root component with Classified Intelligence (Red & Black Spy Noir) Layout Wrapper.
+ * Hash routing is required for GitHub Pages static hosting.
+ * Pages are lazy-loaded for optimal initial bundle size.
  */
 import { lazy, Suspense, useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
@@ -11,20 +13,20 @@ import WelcomeAuthScreen from './components/WelcomeAuthScreen';
 import Navbar from './components/Navbar';
 
 // ─── Lazy-loaded page chunks ───────────────────────────────────────────────
-const Home        = lazy(() => import('./pages/Home'));
-const Lobby       = lazy(() => import('./pages/Lobby'));
+const Home = lazy(() => import('./pages/Home'));
+const Lobby = lazy(() => import('./pages/Lobby'));
 const OnlineLobby = lazy(() => import('./pages/OnlineLobby'));
-const Reveal      = lazy(() => import('./pages/Reveal'));
-const Clues       = lazy(() => import('./pages/Clues'));
-const Vote        = lazy(() => import('./pages/Vote'));
-const Result      = lazy(() => import('./pages/Result'));
-const PackEditor  = lazy(() => import('./pages/PackEditor'));
+const Reveal = lazy(() => import('./pages/Reveal'));
+const Clues = lazy(() => import('./pages/Clues'));
+const Vote = lazy(() => import('./pages/Vote'));
+const Result = lazy(() => import('./pages/Result'));
+const PackEditor = lazy(() => import('./pages/PackEditor'));
 
 // ─── Minimal full-screen loader shown while chunks download ───────────────
 function PageLoader() {
   return (
     <div className="min-h-[50vh] flex items-center justify-center">
-      <div className="w-8 h-8 rounded-full border-2 border-rose-900 border-t-rose-500 animate-spin" />
+      <div className="w-10 h-10 rounded-full border-2 border-red-600/40 border-t-red-500 animate-spin" />
     </div>
   );
 }
@@ -34,6 +36,7 @@ export default function App() {
   const initEconomy = useEconomyStore((s) => s.initEconomy);
   const { user, profile, isGuest, loading, initAuth } = useAuthStore();
 
+  // Fetch global cloud packs, init auth, then hydrate economy
   useEffect(() => {
     syncCloudPacks();
     initAuth().then(() => {
@@ -41,44 +44,51 @@ export default function App() {
     });
   }, []);
 
+  // 1. Loading State
   if (loading) {
     return (
-      <div className="h-screen w-screen bg-[#08080a] bg-spy-radial text-zinc-100 relative flex flex-col items-center justify-center gap-6 font-mono overflow-hidden">
-        <div className="absolute inset-0 bg-crt-lines z-0" />
-        <div className="relative z-10 w-8 h-8 rounded-full border-2 border-rose-900 border-t-rose-600 animate-spin" />
-        <span className="relative z-10 text-xs text-rose-500 font-bold tracking-widest uppercase">Booting Terminal...</span>
+      <div className="min-h-screen bg-black text-zinc-100 bg-spy-radial bg-spy-grid relative flex flex-col items-center justify-center gap-4 font-mono">
+        <div className="h-0.5 w-full bg-gradient-to-r from-transparent via-red-600 to-transparent shadow-[0_0_10px_#dc2626] absolute top-0" />
+        <div className="text-4xl animate-bounce">🕵️‍♂️</div>
+        <div className="w-8 h-8 rounded-full border-2 border-red-600/30 border-t-red-500 animate-spin" />
+        <span className="text-xs text-red-400 font-mono tracking-widest uppercase">INITIALIZING CLASSIFIED PROTOCOLS...</span>
       </div>
     );
   }
 
+  // 2. Authentication Check: User logged in or playing as Guest
   const isAuthenticated = Boolean(user || isGuest || profile);
 
   return (
-    <div className="h-screen w-screen bg-[#08080a] bg-spy-radial text-zinc-100 relative overflow-hidden font-mono selection:bg-rose-600/30 selection:text-rose-200 flex flex-col">
-      {/* CRT Scanline Overlay */}
-      <div className="absolute inset-0 bg-crt-lines pointer-events-none z-[100]" />
+    <div className="min-h-screen bg-black text-zinc-100 bg-spy-radial bg-spy-grid relative overflow-x-hidden font-mono selection:bg-red-600 selection:text-black flex flex-col">
+      {/* Red Laser Overhead Alert Bar */}
+      <div className="h-0.5 w-full bg-gradient-to-r from-transparent via-red-600 to-transparent shadow-[0_0_10px_#dc2626] shrink-0 z-50" />
 
       <ToastContainer />
 
-      <main className="max-w-3xl mx-auto w-full h-full flex flex-col relative z-10">
+      {/* Active App View Container */}
+      <main className="max-w-7xl mx-auto px-4 py-6 w-full flex-1 flex flex-col">
         {!isAuthenticated ? (
-          <div className="flex-1 flex flex-col overflow-y-auto">
+          // First-Time Welcome Gate
+          <div className="relative z-10 flex-1 flex flex-col">
             <Navbar />
             <WelcomeAuthScreen />
           </div>
         ) : (
+          // Direct Main Game Routes
           <HashRouter>
-            <div className="flex-1 flex flex-col h-full overflow-hidden">
+            <div className="relative z-10 flex-1 flex flex-col">
               <Suspense fallback={<PageLoader />}>
                 <Routes>
-                  <Route path="/"       element={<Home />} />
-                  <Route path="/lobby"  element={<Lobby />} />
+                  <Route path="/" element={<Home />} />
+                  <Route path="/lobby" element={<Lobby />} />
                   <Route path="/online" element={<OnlineLobby />} />
                   <Route path="/reveal" element={<Reveal />} />
-                  <Route path="/clues"  element={<Clues />} />
-                  <Route path="/vote"   element={<Vote />} />
+                  <Route path="/clues" element={<Clues />} />
+                  <Route path="/vote" element={<Vote />} />
                   <Route path="/result" element={<Result />} />
-                  <Route path="/packs"  element={<PackEditor />} />
+                  <Route path="/packs" element={<PackEditor />} />
+                  {/* Catch-all */}
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
               </Suspense>

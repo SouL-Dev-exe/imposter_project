@@ -1,20 +1,28 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '../store/gameStore';
 import { useAuthStore } from '../store/authStore';
+import { useLanguageStore } from '../store/languageStore';
 import { AuthModal } from '../components/ui/AuthModal';
+import Navbar from '../components/Navbar';
 
 export default function Home() {
   const navigate = useNavigate();
   const { currentPhase } = useGameStore();
   const { profile } = useAuthStore();
-  
+  const { t } = useLanguageStore();
+
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [isOnlineMode, setIsOnlineMode] = useState(true);
+  const [isOnlineMode, setIsOnlineMode] = useState(false);
   const [selectedMode, setSelectedMode] = useState('conscious'); // 'conscious' or 'blind'
 
   const hasActiveGame = currentPhase !== 'home' && currentPhase !== 'lobby' && currentPhase !== 'result';
+
+  const handleResume = () => {
+    const routes = { reveal: '/reveal', clues: '/clues', vote: '/vote', result: '/result' };
+    navigate(routes[currentPhase] || '/lobby');
+  };
 
   const handleStartOperation = () => {
     if (isOnlineMode) {
@@ -26,157 +34,178 @@ export default function Home() {
   };
 
   return (
-    <div className="flex-1 flex flex-col w-full h-full relative z-10 px-2 sm:px-4 pb-20 sm:pb-24 pt-4 overflow-y-auto no-scrollbar">
-      
-      {/* Zone A: Operational Frequency */}
-      <div className="w-full flex bg-[#111116] border border-zinc-800 p-1 mb-4">
-        <button
-          onClick={() => setIsOnlineMode(true)}
-          className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-bold tracking-widest uppercase transition-all ${
-            isOnlineMode ? 'bg-zinc-800 text-white' : 'text-zinc-500 hover:text-zinc-300'
-          }`}
-        >
-          <span className={`w-1.5 h-1.5 rounded-full ${isOnlineMode ? 'bg-cyan-500 animate-pulse shadow-[0_0_8px_#06b6d4]' : 'bg-zinc-600'}`} />
-          <span>ONLINE FREQUENCY</span>
-          {isOnlineMode && <span className="hidden sm:inline text-zinc-400 font-normal"> // ENCRYPTED</span>}
-        </button>
-        <button
-          onClick={() => setIsOnlineMode(false)}
-          className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-bold tracking-widest uppercase transition-all ${
-            !isOnlineMode ? 'bg-zinc-800 text-white' : 'text-zinc-500 hover:text-zinc-300'
-          }`}
-        >
-          <span>🔒</span>
-          <span>OFFLINE BUNKER</span>
-        </button>
-      </div>
+    <div className="min-h-full w-full flex flex-col bg-transparent text-zinc-100 relative overflow-x-hidden font-mono selection:bg-red-600 selection:text-black">
+      {/* Top Navbar */}
+      <Navbar />
 
-      {/* Zone B: Game Mode Matrix */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full mb-4">
-        <button
-          onClick={() => setSelectedMode('conscious')}
-          className={`relative p-4 border flex flex-col items-start transition-all ${
-            selectedMode === 'conscious'
-              ? 'bg-[#111116] border-rose-600 shadow-[0_0_20px_rgba(225,29,72,0.3)]'
-              : 'bg-[#0b0b0e] border-zinc-800 hover:border-rose-900/50'
-          }`}
-        >
-          {selectedMode === 'conscious' && (
-            <>
-              <div className="absolute top-0 left-0 w-1 h-1 border-t border-l border-rose-500" />
-              <div className="absolute top-0 right-0 w-1 h-1 border-t border-r border-rose-500" />
-              <div className="absolute bottom-0 left-0 w-1 h-1 border-b border-l border-rose-500" />
-              <div className="absolute bottom-0 right-0 w-1 h-1 border-b border-r border-rose-500" />
-            </>
-          )}
-          <span className="text-xl mb-2">🎭</span>
-          <span className={`text-xs font-bold tracking-widest mb-1 ${selectedMode === 'conscious' ? 'text-rose-500' : 'text-zinc-300'}`}>CONSCIOUS IMPOSTOR</span>
-          <span className="text-[9px] text-zinc-500 tracking-wider uppercase">ROLES REVEALED</span>
-        </button>
+      {/* Main Terminal View */}
+      <main className="flex-1 flex flex-col w-full max-w-md mx-auto relative z-10 pb-24 px-4 pt-6 space-y-6">
 
-        <button
-          onClick={() => setSelectedMode('blind')}
-          className={`relative p-4 border flex flex-col items-start transition-all ${
-            selectedMode === 'blind'
-              ? 'bg-[#111116] border-rose-600 shadow-[0_0_20px_rgba(225,29,72,0.3)]'
-              : 'bg-[#0b0b0e] border-zinc-800 hover:border-rose-900/50'
-          }`}
-        >
-          {selectedMode === 'blind' && (
-            <>
-              <div className="absolute top-0 left-0 w-1 h-1 border-t border-l border-rose-500" />
-              <div className="absolute top-0 right-0 w-1 h-1 border-t border-r border-rose-500" />
-              <div className="absolute bottom-0 left-0 w-1 h-1 border-b border-l border-rose-500" />
-              <div className="absolute bottom-0 right-0 w-1 h-1 border-b border-r border-rose-500" />
-            </>
-          )}
-          <span className="text-xl mb-2">👤</span>
-          <span className={`text-xs font-bold tracking-widest mb-1 ${selectedMode === 'blind' ? 'text-rose-500' : 'text-zinc-300'}`}>BLIND INFILTRATOR</span>
-          <span className="text-[9px] text-zinc-500 tracking-wider uppercase">HIDDEN ROLES / UNKNOWN ENEMY</span>
-        </button>
-      </div>
-
-      {/* Zone C: Deployment Pathways & Word Packs */}
-      <div className="flex flex-col gap-3 w-full mb-4">
-        
-        {isOnlineMode ? (
-          <div className="flex items-center justify-between p-3 bg-[#111116] border border-zinc-800">
-            <div className="flex items-center gap-3">
-              <span className="text-lg">🌐</span>
-              <div className="flex flex-col">
-                <span className="text-xs font-bold text-zinc-200 tracking-widest">INTERCEPT OPERATION</span>
-                <span className="text-[9px] text-cyan-500 tracking-wider uppercase">ONLINE LOBBY // FREQ: ACTIVE</span>
-              </div>
-            </div>
-            <span className="text-zinc-600">→</span>
+        {/* Zone 1: Intelligence Header */}
+        <div className="flex flex-col items-center justify-center text-center space-y-1">
+          <h1 className="text-4xl font-black tracking-widest text-zinc-100 drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">
+            UNDERCOVER
+          </h1>
+          <div className="bg-red-950/40 border border-red-900/50 px-3 py-1 mt-2">
+            <p className="text-[10px] text-red-400 font-bold uppercase tracking-widest">
+              CLASSIFIED INTELLIGENCE & DECEPTION // 3–10 OPERATIVES
+            </p>
           </div>
-        ) : (
-          <div className="flex items-center justify-between p-3 bg-[#111116] border border-zinc-800">
+        </div>
+
+        {/* Zone 2: Operational Frequency Toggle */}
+        <div className="flex w-full bg-zinc-950/60 border border-zinc-800 p-1 rounded-sm relative">
+          <button
+            onClick={() => setIsOnlineMode(true)}
+            className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] sm:text-xs font-bold tracking-widest uppercase transition-all z-10 ${isOnlineMode ? 'text-white' : 'text-zinc-500 hover:text-zinc-300'
+              }`}
+          >
+            <span className={`w-1.5 h-1.5 rounded-full ${isOnlineMode ? 'bg-cyan-400 animate-pulse' : 'bg-zinc-600'}`} />
+            NETWORK MODE
+          </button>
+          <button
+            onClick={() => setIsOnlineMode(false)}
+            className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] sm:text-xs font-bold tracking-widest uppercase transition-all z-10 ${!isOnlineMode ? 'text-white' : 'text-zinc-500 hover:text-zinc-300'
+              }`}
+          >
+            <span>🔒</span>
+            OFFLINE MODE
+          </button>
+
+          {/* Active indicator pill */}
+          <motion.div
+            layout
+            className="absolute top-1 bottom-1 w-[calc(50%-4px)] bg-red-900/30 border border-red-600/40"
+            animate={{ left: isOnlineMode ? '4px' : 'calc(50% + 2px)' }}
+            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+          />
+        </div>
+
+        {/* Zone 3: Game Modes Matrix */}
+        <div className="grid grid-cols-2 gap-3 w-full">
+          <button
+            onClick={() => setSelectedMode('conscious')}
+            className={`flex flex-col items-center justify-center p-4 border text-center transition-all relative ${selectedMode === 'conscious'
+                ? 'border-red-600 bg-red-950/20 shadow-[0_0_20px_rgba(220,38,38,0.35)] text-white'
+                : 'border-zinc-800 bg-zinc-950/60 text-zinc-400 hover:border-red-900/50 hover:bg-zinc-900'
+              }`}
+          >
+            {selectedMode === 'conscious' && (
+              <>
+                <div className="absolute top-0 left-0 w-1 h-1 border-t border-l border-red-500" />
+                <div className="absolute top-0 right-0 w-1 h-1 border-t border-r border-red-500" />
+                <div className="absolute bottom-0 left-0 w-1 h-1 border-b border-l border-red-500" />
+                <div className="absolute bottom-0 right-0 w-1 h-1 border-b border-r border-red-500" />
+              </>
+            )}
+            <span className="text-2xl mb-2">🕵️</span>
+            <span className="text-xs font-bold tracking-wider mb-1">CONSCIOUS IMPOSTOR</span>
+            <span className="text-[9px] text-zinc-500 tracking-widest">ROLES REVEALED</span>
+          </button>
+
+          <button
+            onClick={() => setSelectedMode('blind')}
+            className={`flex flex-col items-center justify-center p-4 border text-center transition-all relative ${selectedMode === 'blind'
+                ? 'border-red-600 bg-red-950/20 shadow-[0_0_20px_rgba(220,38,38,0.35)] text-white'
+                : 'border-zinc-800 bg-zinc-950/60 text-zinc-400 hover:border-red-900/50 hover:bg-zinc-900'
+              }`}
+          >
+            {selectedMode === 'blind' && (
+              <>
+                <div className="absolute top-0 left-0 w-1 h-1 border-t border-l border-red-500" />
+                <div className="absolute top-0 right-0 w-1 h-1 border-t border-r border-red-500" />
+                <div className="absolute bottom-0 left-0 w-1 h-1 border-b border-l border-red-500" />
+                <div className="absolute bottom-0 right-0 w-1 h-1 border-b border-r border-red-500" />
+              </>
+            )}
+            <span className="text-2xl mb-2">👤</span>
+            <span className="text-xs font-bold tracking-wider mb-1">BLIND INFILTRATOR</span>
+            <span className="text-[9px] text-zinc-500 tracking-widest">HIDDEN ROLES</span>
+          </button>
+        </div>
+
+        {/* Zone 4: Lobby Deployment Options */}
+        <div className="flex flex-col gap-2 w-full">
+          <button
+            onClick={() => { setIsOnlineMode(false); navigate('/lobby'); }}
+            className={`w-full flex items-center justify-between p-3 border transition-colors ${!isOnlineMode ? 'border-red-900/50 bg-red-950/10' : 'border-zinc-800 bg-zinc-950/60 hover:bg-zinc-900'
+              }`}
+          >
             <div className="flex items-center gap-3">
               <span className="text-lg">📱</span>
-              <div className="flex flex-col">
-                <span className="text-xs font-bold text-zinc-200 tracking-widest">LOCAL BRIEFING</span>
-                <span className="text-[9px] text-zinc-500 tracking-wider uppercase">PASS & PLAY</span>
+              <div className="text-left">
+                <div className="text-xs font-bold tracking-widest text-zinc-200">PASS & PLAY</div>
+                <div className="text-[10px] text-zinc-500 tracking-wider">LOCAL BRIEFING (OFFLINE)</div>
               </div>
             </div>
             <span className="text-zinc-600">→</span>
-          </div>
-        )}
+          </button>
 
+          <button
+            onClick={() => { setIsOnlineMode(true); if (!profile) setShowAuthModal(true); else navigate('/online'); }}
+            className={`w-full flex items-center justify-between p-3 border transition-colors ${isOnlineMode ? 'border-red-900/50 bg-red-950/10' : 'border-zinc-800 bg-zinc-950/60 hover:bg-zinc-900'
+              }`}
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-lg">🌐</span>
+              <div className="text-left">
+                <div className="text-xs font-bold tracking-widest text-zinc-200">INTERCEPT OPERATION</div>
+                <div className="text-[10px] text-zinc-500 tracking-wider">SECURE ONLINE FREQUENCY</div>
+              </div>
+            </div>
+            <span className="text-zinc-600">→</span>
+          </button>
+        </div>
+
+        {/* Zone 5: Word Packs Folder */}
         <button
           onClick={() => navigate('/packs')}
-          className="flex items-center justify-between p-3 bg-[#111116] border border-zinc-800 hover:border-amber-600/50 transition-colors group"
+          className="w-full flex items-center justify-between p-3 border border-zinc-800 bg-zinc-950/60 hover:bg-zinc-900 hover:border-red-900/50 transition-colors"
         >
           <div className="flex items-center gap-3">
             <span className="text-lg">📁</span>
-            <div className="flex flex-col text-left">
-              <span className="text-xs font-bold text-amber-500 tracking-widest">CLASSIFIED WORD PACKS</span>
-              <span className="text-[9px] text-zinc-500 tracking-wider uppercase">ACTIVE: Food, Anime, Tech...</span>
+            <div className="text-left">
+              <div className="text-xs font-bold tracking-widest text-amber-500 uppercase">CLASSIFIED WORD PACKS</div>
+              <div className="text-[10px] text-zinc-500 tracking-wider">MANAGE ASSETS & CATEGORIES</div>
             </div>
           </div>
-          <span className="text-[10px] text-zinc-500 group-hover:text-amber-500 tracking-widest uppercase">MANAGE</span>
+          <span className="text-zinc-600">→</span>
         </button>
 
-      </div>
+      </main>
 
-      {/* Sticky Command Dock */}
-      <div className="absolute bottom-0 left-0 right-0 p-3 bg-[#111116]/95 backdrop-blur-md border-t border-zinc-800/80 z-40 flex items-center gap-2 w-full pb-safe">
-        
-        {/* Secondary: Protocols */}
-        <button className="w-12 h-12 flex flex-col items-center justify-center border border-zinc-800 bg-[#08080a] hover:border-rose-600 transition-colors shrink-0">
-          <span className="text-sm mb-0.5">⚙️</span>
-          <span className="text-[7px] text-zinc-500 tracking-widest">SYS</span>
+      {/* Sticky Bottom Command Dock */}
+      <div className="fixed bottom-0 left-0 right-0 p-3 sm:p-4 bg-zinc-950/95 border-t border-red-900/50 backdrop-blur-md z-40 flex items-center justify-between max-w-md mx-auto w-full gap-2 pb-safe">
+
+        {/* Left Utility */}
+        <button className="w-12 h-12 flex flex-col items-center justify-center border border-zinc-800 bg-black hover:border-red-600 transition-colors shrink-0">
+          <span className="text-lg">⚙️</span>
+          <span className="text-[8px] text-zinc-500 tracking-widest uppercase mt-0.5">SYS</span>
         </button>
 
-        {/* Primary CTA */}
+        {/* Center Primary CTA */}
         <button
-          onClick={handleStartOperation}
-          className="flex-1 h-12 bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 flex flex-col items-center justify-center relative overflow-hidden transition-transform active:scale-[0.98] shadow-[0_0_15px_rgba(225,29,72,0.3)]"
+          onClick={hasActiveGame ? handleResume : handleStartOperation}
+          className="flex-1 h-12 relative group bg-gradient-to-r from-red-700 via-red-600 to-amber-600 border border-red-500 hover:border-amber-400 overflow-hidden flex flex-col items-center justify-center transition-all shadow-[0_0_20px_rgba(220,38,38,0.3)] hover:shadow-[0_0_25px_rgba(245,158,11,0.4)]"
         >
-          {/* Reticles */}
-          <div className="absolute top-0 left-0 w-1.5 h-1.5 border-t border-l border-white/50" />
-          <div className="absolute top-0 right-0 w-1.5 h-1.5 border-t border-r border-white/50" />
-          <div className="absolute bottom-0 left-0 w-1.5 h-1.5 border-b border-l border-white/50" />
-          <div className="absolute bottom-0 right-0 w-1.5 h-1.5 border-b border-r border-white/50" />
-          
-          <span className="text-xs font-black tracking-[0.2em] text-white">
+          <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors" />
+          <div className="absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 border-white/50" />
+          <div className="absolute top-0 right-0 w-2 h-2 border-t-2 border-r-2 border-white/50" />
+          <div className="absolute bottom-0 left-0 w-2 h-2 border-b-2 border-l-2 border-white/50" />
+          <div className="absolute bottom-0 right-0 w-2 h-2 border-b-2 border-r-2 border-white/50" />
+
+          <span className="relative z-10 text-white font-black tracking-[0.2em] text-sm uppercase">
             {hasActiveGame ? 'RESUME OPERATION' : 'START OPERATION'}
           </span>
-          <span className="text-[8px] text-white/80 font-bold tracking-widest uppercase mt-0.5">
-            {isOnlineMode ? 'READY: 8/10 AGENTS' : 'OFFLINE BUNKER READY'}
+          <span className="relative z-10 text-[9px] text-white/70 tracking-widest font-bold mt-0.5">
+            {isOnlineMode ? 'SECURE CONNECTION' : 'OFFLINE MODE READY'}
           </span>
         </button>
 
-        {/* Secondary: Dossier */}
-        <button className="hidden xs:flex w-12 h-12 flex-col items-center justify-center border border-zinc-800 bg-[#08080a] hover:border-rose-600 transition-colors shrink-0">
-          <span className="text-sm mb-0.5">📊</span>
-          <span className="text-[7px] text-zinc-500 tracking-widest">STAT</span>
-        </button>
-
-        {/* Secondary: Armory */}
-        <button className="w-12 h-12 flex flex-col items-center justify-center border border-zinc-800 bg-[#08080a] hover:border-amber-600 transition-colors shrink-0">
-          <span className="text-sm mb-0.5">📦</span>
-          <span className="text-[7px] text-amber-500 tracking-widest">ARMORY</span>
+        {/* Right Utility */}
+        <button onClick={() => navigate('/packs')} className="w-12 h-12 flex flex-col items-center justify-center border border-zinc-800 bg-black hover:border-red-600 transition-colors shrink-0">
+          <span className="text-lg">📦</span>
+          <span className="text-[8px] text-zinc-500 tracking-widest uppercase mt-0.5">ARMORY</span>
         </button>
       </div>
 
