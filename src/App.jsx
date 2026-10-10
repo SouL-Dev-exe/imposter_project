@@ -1,5 +1,5 @@
 /**
- * App.jsx — Root component with Classified Intelligence (Red & Black Spy Noir) Layout Wrapper.
+ * App.jsx — Root component with Premium Clean Dark Mode Layout Wrapper.
  * Hash routing is required for GitHub Pages static hosting.
  * Pages are lazy-loaded for optimal initial bundle size.
  */
@@ -26,7 +26,7 @@ const PackEditor  = lazy(() => import('./pages/PackEditor'));
 function PageLoader() {
   return (
     <div className="min-h-[50vh] flex items-center justify-center">
-      <div className="w-10 h-10 rounded-full border-2 border-red-600/40 border-t-red-500 animate-spin" />
+      <div className="w-8 h-8 rounded-full border-2 border-zinc-800 border-t-indigo-500 animate-spin" />
     </div>
   );
 }
@@ -47,11 +47,9 @@ export default function App() {
   // 1. Loading State
   if (loading) {
     return (
-      <div className="min-h-screen bg-black text-zinc-100 bg-spy-radial bg-spy-grid relative flex flex-col items-center justify-center gap-4 font-mono">
-        <div className="h-0.5 w-full bg-gradient-to-r from-transparent via-red-600 to-transparent shadow-[0_0_10px_#dc2626] absolute top-0" />
-        <div className="text-4xl animate-bounce">🕵️‍♂️</div>
-        <div className="w-8 h-8 rounded-full border-2 border-red-600/30 border-t-red-500 animate-spin" />
-        <span className="text-xs text-red-400 font-mono tracking-widest uppercase">INITIALIZING CLASSIFIED PROTOCOLS...</span>
+      <div className="min-h-screen bg-[#09090b] text-zinc-100 relative flex flex-col items-center justify-center gap-6 font-sans">
+        <div className="w-8 h-8 rounded-full border-2 border-zinc-800 border-t-indigo-500 animate-spin" />
+        <span className="text-sm text-zinc-500 font-medium tracking-wide">Loading workspace...</span>
       </div>
     );
   }
@@ -60,14 +58,11 @@ export default function App() {
   const isAuthenticated = Boolean(user || isGuest || profile);
 
   return (
-    <div className="min-h-screen bg-black text-zinc-100 bg-spy-radial bg-spy-grid relative overflow-x-hidden font-mono selection:bg-red-600 selection:text-black flex flex-col">
-      {/* Red Laser Overhead Alert Bar */}
-      <div className="h-0.5 w-full bg-gradient-to-r from-transparent via-red-600 to-transparent shadow-[0_0_10px_#dc2626] shrink-0 z-50" />
-
+    <div className="min-h-screen bg-[#09090b] text-zinc-100 relative overflow-x-hidden font-sans selection:bg-indigo-500/30 selection:text-indigo-200 flex flex-col">
       <ToastContainer />
 
       {/* Active App View Container */}
-      <main className="max-w-7xl mx-auto px-4 py-6 w-full flex-1 flex flex-col">
+      <main className="max-w-4xl mx-auto px-4 py-6 w-full flex-1 flex flex-col">
         {!isAuthenticated ? (
           // First-Time Welcome Gate
           <div className="relative z-10 flex-1 flex flex-col">

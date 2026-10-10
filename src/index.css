@@ -32,7 +32,6 @@
     margin: 0;
     padding: 0;
     overflow-x: hidden;
-    /* Protect against iOS home indicator bar */
     padding-bottom: env(safe-area-inset-bottom);
   }
 
@@ -40,28 +39,30 @@
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     color-scheme: dark;
     scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   body {
-    background-color: #050505;
-    color: white;
-    /* Prevent over-scroll bounce on iOS */
+    background-color: #09090b;
+    color: #f4f4f5;
     overscroll-behavior: none;
   }
 
-  /* Custom scrollbar */
+  /* Custom modern scrollbar */
   ::-webkit-scrollbar {
-    width: 4px;
+    width: 6px;
+    height: 6px;
   }
   ::-webkit-scrollbar-track {
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: rgba(220, 38, 38, 0.4);
-    border-radius: 2px;
+    background: #27272a;
+    border-radius: 9999px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(220, 38, 38, 0.8);
+    background: #3f3f46;
   }
 
   /* Input autofill override */
@@ -75,41 +76,15 @@
 }
 
 @layer utilities {
-  /* Gun barrel vignette: Pure black backdrop with a centered red spotlight */
-  .bg-spy-radial {
-    background: radial-gradient(circle at center, rgba(153, 27, 27, 0.25) 0%, rgba(15, 15, 18, 0.95) 55%, #050505 100%);
-  }
-
-  /* Tactical radar target grid */
-  .bg-spy-grid {
-    background-image: linear-gradient(to right, rgba(239, 68, 68, 0.05) 1px, transparent 1px),
-                      linear-gradient(to bottom, rgba(239, 68, 68, 0.05) 1px, transparent 1px);
-    background-size: 24px 24px;
-  }
-
-  /* Classified hazard stripes for restricted zones */
-  .bg-classified-stripe {
-    background: repeating-linear-gradient(
-      -45deg,
-      rgba(220, 38, 38, 0.15),
-      rgba(220, 38, 38, 0.15) 10px,
-      transparent 10px,
-      transparent 20px
-    );
-  }
-
-  /* Prevent text selection on interactive game elements */
   .no-select {
     user-select: none;
     -webkit-user-select: none;
   }
 
-  /* Touch action for hold-to-reveal */
   .touch-none {
     touch-action: none;
   }
 
-  /* Hide scrollbar while keeping scroll functionality */
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -118,7 +93,6 @@
     display: none;
   }
 
-  /* Tabular nums for coin counters */
   .tabular-nums {
     font-variant-numeric: tabular-nums;
   }

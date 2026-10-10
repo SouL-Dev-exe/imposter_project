@@ -1,5 +1,5 @@
 /**
- * Navbar.jsx — Minimalist Header Bar for Spy Noir Lobby
+ * Navbar.jsx — Premium Clean Dark Mode Header
  */
 import { useState, lazy, Suspense } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -31,63 +31,56 @@ export default function Navbar() {
 
   return (
     <>
-      <header className="w-full bg-zinc-950/90 border-b border-red-900/40 px-3 py-2 flex items-center justify-between gap-2 shadow-[0_0_15px_rgba(185,28,28,0.15)] sticky top-0 backdrop-blur-md font-mono select-none z-40">
+      <header className="w-full bg-zinc-950/80 backdrop-blur-md border-b border-zinc-800/60 px-4 py-3 flex items-center justify-between gap-4 shadow-sm sticky top-0 z-40 rounded-t-2xl sm:rounded-t-none">
         
-        {/* LEFT: Compact Logo */}
+        {/* LEFT: Clean Logo */}
         <div className="flex items-center gap-2 shrink-0">
-          <div className="relative p-1 border border-red-600/40 bg-red-950/20">
-            <span className="text-sm block">🕵️</span>
-            <div className="absolute -top-0.5 -left-0.5 w-1 h-1 border-t border-l border-red-500" />
-            <div className="absolute -bottom-0.5 -right-0.5 w-1 h-1 border-b border-r border-red-500" />
+          <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center">
+            <span className="text-lg leading-none pb-0.5">🕵️</span>
           </div>
-          <div className="font-mono text-[10px] sm:text-xs font-black tracking-widest truncate leading-tight uppercase">
-            <span className="text-red-500 block sm:inline">CLASSIFIED</span>
-            <span className="text-zinc-500 font-normal sm:ml-1 hidden sm:inline">// UNDERCOVER</span>
+          <div className="font-sans text-sm font-semibold tracking-tight text-white truncate leading-tight">
+            <span>Undercover</span>
           </div>
         </div>
 
         {/* RIGHT: Credits, Armory, and 3-Dots */}
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        <div className="flex items-center gap-3 shrink-0">
           {profile ? (
             <>
-              {/* Black Funds Balance Pill */}
+              {/* Balance / Credits Pill */}
               <button
                 type="button"
                 onClick={() => setIsShopOpen(true)}
-                className="flex items-center gap-1.5 bg-[#050507] border border-[#f59e0b]/40 hover:border-[#f59e0b] px-2.5 py-1 text-xs transition-colors cursor-pointer rounded-sm"
+                className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 px-3 py-1.5 rounded-full text-xs font-medium text-zinc-300 hover:border-zinc-700 hover:text-white transition-colors cursor-pointer"
                 title={`${coinsBalance} Credits`}
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-[#f59e0b] animate-pulse" />
-                <span className="font-bold tracking-wider text-[#f59e0b]">
-                  {coinsBalance.toLocaleString()}
-                </span>
-                <span className="text-[9px] text-[#f59e0b]/70 hidden xs:inline">CREDITS</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                <span>{coinsBalance.toLocaleString()}</span>
               </button>
 
               {/* Quick-access Armory */}
               <button
                 onClick={() => setIsShopOpen(true)}
-                className="hidden sm:flex bg-[#dc2626]/10 text-[#dc2626] border border-[#dc2626]/40 hover:border-[#dc2626] hover:bg-[#dc2626]/20 px-3 py-1 text-xs font-bold tracking-widest uppercase transition-all"
+                className="hidden sm:flex bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 hover:border-zinc-700 px-3 py-1.5 rounded-full text-xs font-medium text-zinc-300 hover:text-white transition-all"
               >
-                ARMORY
+                Store
               </button>
 
               {/* 3-Dots Menu Trigger */}
               <button
                 onClick={() => setIsMenuOpen(true)}
-                className="w-8 h-8 flex items-center justify-center border border-red-900/50 hover:border-red-600 bg-zinc-900 hover:bg-zinc-800 transition-colors text-zinc-300 hover:text-white"
+                className="w-8 h-8 flex items-center justify-center bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-lg text-zinc-400 hover:text-white transition-all"
               >
-                <span className="text-lg pb-1">⋮</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
               </button>
             </>
           ) : (
             <button
               type="button"
               onClick={() => setIsAuthOpen(true)}
-              className="bg-red-950/90 hover:bg-red-600 hover:text-black text-red-200 border border-red-700/70 px-3 py-1.5 text-xs font-mono font-bold uppercase tracking-wider transition shadow-[0_0_15px_rgba(185,28,28,0.2)] active:scale-95 cursor-pointer flex items-center gap-1"
+              className="bg-indigo-600 hover:bg-indigo-500 text-white border-none px-4 py-1.5 rounded-full text-xs font-medium transition-all shadow-sm active:scale-95 cursor-pointer"
             >
-              <span>🔐</span>
-              <span>AUTHORIZE</span>
+              Log In
             </button>
           )}
         </div>
@@ -101,7 +94,7 @@ export default function Navbar() {
           onClose={() => setIsMenuOpen(false)}
           onOpenProfile={() => openProfile('loadout')}
           onOpenStats={() => openProfile('stats')}
-          onOpenAudio={() => { /* TODO: Add audio modal trigger if exists */ }}
+          onOpenAudio={() => { /* TODO */ }}
         />
         {isProfileOpen && (
           <ProfileModal
@@ -120,5 +113,3 @@ export default function Navbar() {
     </>
   );
 }
-export { Navbar };
-
