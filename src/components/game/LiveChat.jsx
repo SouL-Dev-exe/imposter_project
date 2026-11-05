@@ -4,9 +4,13 @@ import { useMultiplayerStore } from '../../store/multiplayerStore';
 import { useAuthStore } from '../../store/authStore';
 import { useEconomyStore } from '../../store/economyStore';
 import { UserAvatar } from '../ui/UserAvatar';
+import { Corners } from '../ui/HudFrame';
 import { getStoreItem } from '../../data/economyCatalog';
 import { listenToSoundEmotes } from './ChatSoundboard';
 import Soundboard from '../Soundboard';
+import { playClickSound } from '../../utils/sfx';
+
+const spring = { type: 'spring', stiffness: 500, damping: 28 };
 
 export function LiveChat() {
   const { messages, sendMessage, roomId } = useMultiplayerStore();
@@ -16,104 +20,105 @@ export function LiveChat() {
   const [showSoundboard, setShowSoundboard] = useState(false);
   const chatRef = useRef(null);
 
-  // Auto-scroll to bottom
   useEffect(() => {
-    if (chatRef.current) {
-      chatRef.current.scrollTop = chatRef.current.scrollHeight;
-    }
+    const el = chatRef.current;
+    if (el) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
   }, [messages]);
 
-  // Listen to remote sound emotes
   useEffect(() => {
-    if (roomId) {
-      const unsub = listenToSoundEmotes(roomId);
-      return unsub;
-    }
+    if (!roomId) return undefined;
+    return listenToSoundEmotes(roomId);
   }, [roomId]);
+
+  useEffect(() => {
+    if (!showSoundboard) return undefined;
+    const onKey = (e) => e.key === 'Escape' && setShowSoundboard(false);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [showSoundboard]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (text.trim()) {
-      sendMessage(text);
-      setText('');
-    }
+    if (!text.trim()) return;
+    sendMessage(text);
+    setText('');
   };
 
-  return (
-    <div className="relative flex flex-col h-full bg-gray-900 border border-white/10 rounded-2xl overflow-hidden shadow-xl shadow-black/50">
-      {/* Header with Soundboard Trigger */}
-      <div className="bg-white/5 border-b border-white/10 px-4 py-2.5 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <span className="text-white font-bold text-sm flex items-center gap-1.5">💬 Room Chat</span>
-          <span className="text-white/40 text-[11px] bg-white/5 px-2 py-0.5 rounded-full">{messages.length} msgs</span>
-        </div>
+  const toggleSB = () => { playClickSound(); setShowSoundboard((p) => !p); };
 
-        <button
-          type="button"
-          onClick={() => setShowSoundboard((prev) => !prev)}
-          className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer ${
-            showSoundboard
-              ? 'bg-indigo-600 text-white shadow-indigo-500/30'
-              : 'bg-indigo-600/30 hover:bg-indigo-600 text-indigo-200 hover:text-white border border-indigo-500/40'
-          }`}
-          title="Toggle Soundboard"
-        >
-          <span>🔊</span>
-          <span>Soundboard</span>
-        </button>
+  const sbBtn = (extra = '') => (
+    <motion.button
+      type="button"
+      onClick={toggleSB}
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.93 }}
+      transition={spring}
+      aria-pressed={showSoundboard}
+      className={`h-9 px-3 text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 shrink-0 cursor-pointer border transition-colors ${
+        showSoundboard
+          ? 'bg-red-600 text-white border-red-400 shadow-[0_0_14px_rgba(220,38,38,0.5)]'
+          : 'bg-black text-zinc-300 border-zinc-700 hover:border-red-600 hover:text-white'
+      } ${extra}`}
+      title="Soundboard"
+    >
+      <span>🔊</span>
+      <span className="hidden sm:inline">Soundboard</span>
+    </motion.button>
+  );
+
+  return (
+    <div className="relative flex flex-col h-full min-h-0 bg-black border border-red-900/50 overflow-hidden shadow-[0_0_30px_rgba(220,38,38,0.12)] font-mono">
+      <Corners />
+
+      {/* Header */}
+      <div className="bg-zinc-950 border-b border-red-900/40 px-3 py-2 flex items-center justify-between gap-2 shrink-0">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="w-1.5 h-1.5 bg-red-600 animate-pulse shadow-[0_0_6px_#dc2626] shrink-0" />
+          <span className="text-white font-black text-xs uppercase tracking-[0.2em] truncate">Secure channel</span>
+          <span className="text-zinc-500 text-[10px] border border-zinc-800 px-1.5 py-0.5 shrink-0 tabular-nums">{messages.length} MSG</span>
+        </div>
+        {sbBtn()}
       </div>
 
-      {/* Messages Area */}
-      <div 
-        ref={chatRef}
-        className="flex-1 p-4 space-y-4 overflow-y-auto"
-        style={{ scrollBehavior: 'smooth' }}
-      >
+      {/* Messages */}
+      <div ref={chatRef} className="flex-1 min-h-0 p-3 sm:p-4 space-y-3.5 overflow-y-auto overscroll-contain" role="log" aria-live="polite">
         {messages.length === 0 ? (
           <div className="h-full flex items-center justify-center">
-            <p className="text-white/30 text-xs italic">No messages yet. Say hi!</p>
+            <p className="text-zinc-600 text-xs uppercase tracking-[0.3em]">// No transmissions</p>
           </div>
         ) : (
           <AnimatePresence initial={false}>
             {messages.map((msg, i) => {
               const isMe = msg.user_id === profile?.id;
               const titleId = msg.equipped_title || (isMe ? globalEquipped?.title : null) || 'title_novice';
-              const titleItem = getStoreItem(titleId) || { name: 'Novice', icon: '🌱', accent: '#3b82f6' };
+              const titleItem = getStoreItem(titleId) || { name: 'Novice', icon: '🌱' };
 
               return (
                 <motion.div
                   key={`${msg.timestamp}-${i}`}
-                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  initial={{ opacity: 0, y: 12, scale: 0.96 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ type: 'spring', stiffness: 380, damping: 26 }}
                   className={`flex gap-2.5 w-full ${isMe ? 'flex-row-reverse' : 'flex-row'}`}
                 >
-                  <UserAvatar
-                    username={msg.username || 'Player'}
-                    avatarUrl={msg.avatar_url}
-                    equipped={isMe ? globalEquipped : msg.equipped}
-                    size="sm"
-                  />
-                  <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} max-w-[75%]`}>
-                    <div className="flex items-center gap-1.5 mb-0.5 px-1">
-                      <span className="text-[10px] text-white/50 font-bold uppercase tracking-wider">
-                        {isMe ? 'You' : msg.username}
-                      </span>
-                      <span
-                        className="text-[9px] font-extrabold px-1.5 py-0.2 rounded border shadow-sm"
-                        style={{
-                          color: titleItem.accent || '#3b82f6',
-                          borderColor: `${titleItem.accent || '#3b82f6'}50`,
-                          backgroundColor: `${titleItem.accent || '#3b82f6'}20`,
-                        }}
-                      >
-                        {titleItem.icon} [{titleItem.name}]
+                  <UserAvatar username={msg.username || 'Player'} avatarUrl={msg.avatar_url} equipped={isMe ? globalEquipped : msg.equipped} size="sm" />
+                  <div className={`flex flex-col min-w-0 max-w-[78%] ${isMe ? 'items-end' : 'items-start'}`}>
+                    <div className={`flex items-center gap-1.5 mb-0.5 px-0.5 min-w-0 max-w-full ${isMe ? 'flex-row-reverse' : ''}`}>
+                      <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider truncate">{isMe ? 'You' : msg.username}</span>
+                      <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 border border-red-900/70 text-red-400 bg-black shrink-0 max-w-[110px] truncate">
+                        {titleItem.icon} {titleItem.name}
                       </span>
                     </div>
-                    <div className={`px-3 py-2 rounded-2xl text-sm ${
-                      isMe 
-                        ? 'bg-violet-600 text-white rounded-tr-sm shadow-md' 
-                        : 'bg-white/10 text-white rounded-tl-sm'
-                    }`}>
+                    <div
+                      className={`px-3 py-2 text-sm break-words [overflow-wrap:anywhere] max-w-full border ${
+                        isMe
+                          ? 'bg-red-600 text-white border-red-400/60 shadow-[0_0_14px_rgba(220,38,38,0.3)]'
+                          : 'bg-zinc-900 text-zinc-100 border-zinc-800'
+                      }`}
+                      style={{ clipPath: isMe
+                        ? 'polygon(0 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%)'
+                        : 'polygon(0 0,100% 0,100% 100%,8px 100%,0 calc(100% - 8px))' }}
+                    >
                       {msg.text}
                     </div>
                   </div>
@@ -124,59 +129,52 @@ export function LiveChat() {
         )}
       </div>
 
-      {/* Screen-Centered Fixed Soundboard Modal Overlay (bypasses parent overflow-hidden) */}
+      {/* Soundboard overlay */}
       <AnimatePresence>
         {showSoundboard && (
-          <div
-            className="fixed inset-0 z-[999] flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-sm"
+          <motion.div
+            key="sb"
+            className="fixed inset-0 z-[999] flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             onClick={() => setShowSoundboard(false)}
           >
             <motion.div
-              initial={{ scale: 0.95, opacity: 0, y: 15 }}
+              initial={{ scale: 0.94, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 15 }}
-              transition={{ duration: 0.15 }}
+              exit={{ scale: 0.94, opacity: 0, y: 20 }}
+              transition={{ type: 'spring', damping: 26, stiffness: 340 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-md shadow-2xl"
+              className="w-full max-w-md max-h-[90dvh] overflow-y-auto shadow-[0_0_50px_rgba(220,38,38,0.25)]"
             >
               <Soundboard roomId={roomId} onClose={() => setShowSoundboard(false)} />
             </motion.div>
-          </div>
+          </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Chat Input & Soundboard trigger */}
-      <form onSubmit={handleSubmit} className="p-2.5 bg-white/5 border-t border-white/10 flex items-center gap-2 relative z-30">
-        <button
-          type="button"
-          onClick={() => setShowSoundboard((prev) => !prev)}
-          className={`h-9 px-3 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 cursor-pointer ${
-            showSoundboard
-              ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/30'
-              : 'bg-indigo-600/30 hover:bg-indigo-600 text-indigo-200 hover:text-white border border-indigo-500/40'
-          }`}
-          title="Soundboard"
-        >
-          <span>🔊</span>
-          <span className="font-semibold">Soundboard</span>
-        </button>
-
+      {/* Input */}
+      <form onSubmit={handleSubmit} className="p-2.5 bg-zinc-950 border-t border-red-900/40 flex items-center gap-2 relative z-30 shrink-0">
         <input
           type="text"
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Type a message..."
-          className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-violet-500/50 min-w-0"
+          placeholder="Transmit message…"
+          aria-label="Message"
+          className="flex-1 bg-black border border-zinc-800 px-3 h-9 text-white text-sm placeholder-zinc-600 focus:outline-none focus:border-red-600 focus:shadow-[0_0_12px_rgba(220,38,38,0.3)] transition-all min-w-0"
           maxLength={100}
         />
-
-        <button
+        <motion.button
           type="submit"
           disabled={!text.trim()}
-          className="h-9 bg-violet-600 hover:bg-violet-500 text-white rounded-xl px-4 text-sm font-bold disabled:opacity-50 transition-colors shrink-0 cursor-pointer"
+          whileHover={text.trim() ? { scale: 1.05 } : undefined}
+          whileTap={text.trim() ? { scale: 0.92 } : undefined}
+          transition={spring}
+          className="h-9 bg-red-600 hover:bg-red-500 text-white border border-red-400/60 px-4 text-xs font-bold uppercase tracking-widest disabled:opacity-40 disabled:shadow-none shadow-[0_0_14px_rgba(220,38,38,0.4)] shrink-0 cursor-pointer disabled:cursor-not-allowed"
         >
           Send
-        </button>
+        </motion.button>
       </form>
     </div>
   );

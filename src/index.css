@@ -7,17 +7,11 @@
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
-  --color-violet-50: #f5f3ff;
-  --color-violet-100: #ede9fe;
-  --color-violet-200: #ddd6fe;
-  --color-violet-300: #c4b5fd;
-  --color-violet-400: #a78bfa;
-  --color-violet-500: #8b5cf6;
-  --color-violet-600: #7c3aed;
-  --color-violet-700: #6d28d9;
-  --color-violet-800: #5b21b6;
-  --color-violet-900: #4c1d95;
-  --color-violet-950: #2e1065;
+  --color-tactical-base: #020202;
+  --color-tactical-panel: #09090b;
+  --color-tactical-border: #18181b;
+  --color-tactical-red: #dc2626;
+  --color-tactical-crimson: #991b1b;
 }
 
 @layer base {
@@ -30,90 +24,123 @@
   body,
   #root {
     width: 100%;
-    height: 100dvh;
+    min-height: 100dvh;
     margin: 0;
     padding: 0;
     overflow-x: hidden;
-    /* Protect against iOS home indicator bar */
     padding-bottom: env(safe-area-inset-bottom);
   }
 
   html {
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: 'JetBrains Mono', 'Inter', monospace;
     color-scheme: dark;
     scroll-behavior: smooth;
+    background-color: #000000;
   }
 
   body {
-    background-color: #050505;
-    color: white;
-    /* Prevent over-scroll bounce on iOS */
+    background-color: #000000;
+    color: #f4f4f5;
     overscroll-behavior: none;
   }
 
-  /* Custom scrollbar */
+  /* Sleek Tactical Scrollbar */
   ::-webkit-scrollbar {
     width: 4px;
+    height: 4px;
   }
 
   ::-webkit-scrollbar-track {
-    background: transparent;
+    background: #09090b;
   }
 
   ::-webkit-scrollbar-thumb {
-    background: rgba(220, 38, 38, 0.4);
-    border-radius: 2px;
+    background: rgba(220, 38, 38, 0.45);
+    border-radius: 1px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(220, 38, 38, 0.8);
+    background: rgba(220, 38, 38, 0.9);
   }
 
   /* Input autofill override */
   input:-webkit-autofill,
   input:-webkit-autofill:hover,
   input:-webkit-autofill:focus {
-    -webkit-text-fill-color: white;
-    -webkit-box-shadow: 0 0 0px 1000px rgba(255, 255, 255, 0.05) inset;
+    -webkit-text-fill-color: #ffffff;
+    -webkit-box-shadow: 0 0 0px 1000px rgba(9, 9, 11, 0.95) inset;
     transition: background-color 5000s ease-in-out 0s;
   }
 }
 
 @layer utilities {
-
-  /* Gun barrel vignette: Pure black backdrop with a centered red spotlight */
-  .bg-spy-radial {
-    background: radial-gradient(circle at center, rgba(153, 27, 27, 0.25) 0%, rgba(15, 15, 18, 0.95) 55%, #050505 100%);
-  }
-
   /* Tactical radar target grid */
   .bg-spy-grid {
-    background-image: linear-gradient(to right, rgba(239, 68, 68, 0.05) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(239, 68, 68, 0.05) 1px, transparent 1px);
-    background-size: 24px 24px;
+    background-image: 
+      linear-gradient(to right, rgba(220, 38, 38, 0.06) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(220, 38, 38, 0.06) 1px, transparent 1px);
+    background-size: 32px 32px;
   }
 
-  /* Classified hazard stripes for restricted zones */
+  /* High-tech vignette: Obsidian with subtle crimson center glow */
+  .bg-spy-radial {
+    background: radial-gradient(circle at 50% 25%, rgba(185, 28, 28, 0.14) 0%, rgba(9, 9, 11, 0.96) 65%, #000000 100%);
+  }
+
+  /* Redacted Classified text block effect */
+  .redacted-block {
+    position: relative;
+    background-color: #09090b;
+    border-left: 2px solid #dc2626;
+  }
+
+  /* Tactical crosshair corners */
+  .reticle-corner {
+    position: relative;
+  }
+  .reticle-corner::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 6px;
+    height: 6px;
+    border-top: 2px solid #dc2626;
+    border-left: 2px solid #dc2626;
+    pointer-events: none;
+  }
+  .reticle-corner::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 6px;
+    height: 6px;
+    border-bottom: 2px solid #dc2626;
+    border-right: 2px solid #dc2626;
+    pointer-events: none;
+  }
+
+  /* Classified hazard stripes */
   .bg-classified-stripe {
-    background: repeating-linear-gradient(-45deg,
-        rgba(220, 38, 38, 0.15),
-        rgba(220, 38, 38, 0.15) 10px,
-        transparent 10px,
-        transparent 20px);
+    background: repeating-linear-gradient(
+      -45deg,
+      rgba(220, 38, 38, 0.12),
+      rgba(220, 38, 38, 0.12) 8px,
+      transparent 8px,
+      transparent 16px
+    );
   }
 
-  /* Prevent text selection on interactive game elements */
   .no-select {
     user-select: none;
     -webkit-user-select: none;
   }
 
-  /* Touch action for hold-to-reveal */
   .touch-none {
     touch-action: none;
   }
 
-  /* Hide scrollbar while keeping scroll functionality */
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -123,7 +150,6 @@
     display: none;
   }
 
-  /* Tabular nums for coin counters */
   .tabular-nums {
     font-variant-numeric: tabular-nums;
   }

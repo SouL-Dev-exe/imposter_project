@@ -1,23 +1,29 @@
 /**
- * Button.jsx — Reusable button component
+ * Button.jsx — Tactical Intelligence Button Component
  */
 import { motion } from 'framer-motion';
 import { playClickSound, vibrate } from '../../utils/sfx';
 
 const variants = {
-  primary: 'bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-500 hover:to-rose-600 text-white shadow-lg shadow-red-950/60 border border-red-500/40 font-mono tracking-wider uppercase',
-  secondary: 'bg-zinc-900/90 hover:bg-red-950 hover:text-white text-zinc-200 border border-zinc-800 hover:border-red-900/80 font-mono tracking-wider uppercase',
-  danger: 'bg-gradient-to-r from-red-700 to-red-900 hover:from-red-600 hover:to-red-800 text-white shadow-lg shadow-red-950/60 border border-red-600/40 font-mono tracking-wider uppercase',
-  ghost: 'text-zinc-400 hover:text-red-400 hover:bg-red-950/30 font-mono tracking-wider uppercase',
-  success: 'bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white shadow-lg shadow-emerald-950/40 font-mono tracking-wider uppercase',
-  warning: 'bg-gradient-to-r from-amber-500 to-red-600 hover:from-amber-400 hover:to-red-500 text-black font-black shadow-lg shadow-amber-950/40 font-mono tracking-wider uppercase',
+  primary:
+    'bg-red-600 hover:bg-red-500 text-white font-mono font-bold tracking-widest uppercase border border-red-500/80 shadow-[0_0_20px_rgba(220,38,38,0.4)] active:shadow-[0_0_8px_rgba(220,38,38,0.8)]',
+  secondary:
+    'bg-zinc-950 hover:bg-zinc-900 text-zinc-100 font-mono font-bold tracking-wider uppercase border border-zinc-800 hover:border-red-600/60 shadow-sm',
+  danger:
+    'bg-gradient-to-r from-red-700 to-rose-900 hover:from-red-600 hover:to-rose-800 text-white font-mono font-black tracking-widest uppercase border border-red-500 shadow-[0_0_25px_rgba(220,38,38,0.5)]',
+  ghost:
+    'bg-transparent hover:bg-red-950/20 text-zinc-400 hover:text-red-400 font-mono tracking-wider uppercase border border-transparent hover:border-red-950',
+  success:
+    'bg-zinc-950 hover:bg-zinc-900 text-emerald-400 font-mono font-bold tracking-wider uppercase border border-emerald-600/60 hover:border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.2)]',
+  warning:
+    'bg-red-950/40 hover:bg-red-900/60 text-amber-400 font-mono font-bold tracking-wider uppercase border border-amber-600/50',
 };
 
 const sizes = {
-  sm: 'px-3 py-1.5 text-sm',
-  md: 'px-5 py-2.5 text-base',
-  lg: 'px-7 py-3.5 text-lg',
-  xl: 'px-8 py-4 text-xl',
+  sm: 'px-3 py-1.5 text-xs',
+  md: 'px-5 py-2.5 text-sm',
+  lg: 'px-6 py-3.5 text-base',
+  xl: 'px-8 py-4 text-lg tracking-widest',
 };
 
 export function Button({
@@ -44,20 +50,23 @@ export function Button({
       type={type}
       onClick={handleClick}
       disabled={disabled}
-      whileHover={disabled ? {} : { scale: 1.02, y: -1 }}
-      whileTap={disabled ? {} : { scale: 0.97 }}
+      whileHover={disabled ? {} : { scale: 1.015, y: -1 }}
+      whileTap={disabled ? {} : { scale: 0.98, y: 1 }}
+      transition={{ type: 'spring', stiffness: 450, damping: 25 }}
       className={`
-        inline-flex items-center justify-center gap-2 rounded-xl font-semibold
-        transition-colors duration-200 select-none cursor-pointer
-        disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none
+        relative inline-flex items-center justify-center gap-2 rounded-sm
+        transition-all duration-150 select-none cursor-pointer
+        disabled:opacity-35 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none
         ${variants[variant]} ${sizes[size]}
         ${fullWidth ? 'w-full' : ''}
         ${className}
       `}
       {...props}
     >
-      {icon && <span className="text-xl leading-none">{icon}</span>}
-      {children}
+      {icon && <span className="text-base shrink-0">{icon}</span>}
+      <span className="truncate">{children}</span>
     </motion.button>
   );
 }
+
+export default Button;
