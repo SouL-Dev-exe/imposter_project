@@ -11,7 +11,7 @@ const spring = { type: 'spring', stiffness: 500, damping: 30 };
 
 export const MatchShareCard = ({ mvpName, undercoverName, foolName, roomCode = 'PARTY', onClose }) => {
   const { isRTL, t } = useLanguageStore();
-  const shareUrl = `https://soulundercover.app/join?code=${roomCode}`;
+  const shareUrl = `https://spyrole.app/join?code=${roomCode}`;
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(shareUrl)}`;
   const [copied, setCopied] = useState(false);
 
@@ -19,8 +19,8 @@ export const MatchShareCard = ({ mvpName, undercoverName, foolName, roomCode = '
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'Undercover Match Recap',
-          text: `Check out our match recap! MVP: ${mvpName || 'Operative'}`,
+          title: 'SpyRole - Undercover Word Game Recap',
+          text: `SpyRole: Check out our match recap! MVP: ${mvpName || 'Operative'}`,
           url: shareUrl,
         });
       } catch {

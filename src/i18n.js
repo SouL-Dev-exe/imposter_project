@@ -28,7 +28,9 @@ const resources = Object.fromEntries(
 // ── Detect persisted language from the same localStorage key used by languageStore
 const persistedLang = (() => {
   try {
-    const raw = localStorage.getItem('undercover-language');
+    const raw =
+      localStorage.getItem('spyrole-language') ||
+      localStorage.getItem('undercover-language');
     if (raw) return JSON.parse(raw)?.state?.language || 'ar';
   } catch {}
   return 'ar';
@@ -51,7 +53,7 @@ i18n
     detection: {
       order: ['localStorage', 'navigator'],
       caches: ['localStorage'],
-      lookupLocalStorage: 'undercover-i18n-lang',
+      lookupLocalStorage: 'spyrole-i18n-lang',
     },
   });
 

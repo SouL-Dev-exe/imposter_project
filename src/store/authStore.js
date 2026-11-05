@@ -20,6 +20,7 @@ export const useAuthStore = create((set, get) => ({
       } else {
         // Check guest state
         const savedGuest =
+          localStorage.getItem('spyrole_guest_player') ||
           localStorage.getItem('undercover_guest_player') ||
           localStorage.getItem('guest_profile');
 
@@ -27,6 +28,7 @@ export const useAuthStore = create((set, get) => ({
           try {
             set({ user: null, profile: JSON.parse(savedGuest), isGuest: true, loading: false });
           } catch {
+            localStorage.removeItem('spyrole_guest_player');
             localStorage.removeItem('undercover_guest_player');
             set({ user: null, profile: null, isGuest: false, loading: false });
           }
@@ -51,6 +53,7 @@ export const useAuthStore = create((set, get) => ({
       } else {
         // Check guest state
         const savedGuest =
+          localStorage.getItem('spyrole_guest_player') ||
           localStorage.getItem('undercover_guest_player') ||
           localStorage.getItem('guest_profile');
 
@@ -58,6 +61,7 @@ export const useAuthStore = create((set, get) => ({
           try {
             set({ user: null, profile: JSON.parse(savedGuest), isGuest: true, loading: false });
           } catch {
+            localStorage.removeItem('spyrole_guest_player');
             localStorage.removeItem('undercover_guest_player');
             set({ user: null, profile: null, isGuest: false, loading: false });
           }
@@ -139,7 +143,7 @@ export const useAuthStore = create((set, get) => ({
       is_guest: true,
       stats: { wins: 0, games_played: 0, mvp_count: 0, win_streak: 0 },
     };
-    localStorage.setItem('undercover_guest_player', JSON.stringify(guestProfile));
+    localStorage.setItem('spyrole_guest_player', JSON.stringify(guestProfile));
     set({ user: null, profile: guestProfile, isGuest: true, loading: false });
   },
 
@@ -193,7 +197,7 @@ export const useAuthStore = create((set, get) => ({
 
     if (isGuest || !user?.id || String(user.id).startsWith('guest_')) {
       const newProfile = { ...profile, ...updates };
-      localStorage.setItem('undercover_guest_player', JSON.stringify(newProfile));
+      localStorage.setItem('spyrole_guest_player', JSON.stringify(newProfile));
       set({ profile: newProfile });
       return { success: true };
     }
@@ -222,6 +226,7 @@ export const useAuthStore = create((set, get) => ({
 
   // Clear Session & Local Caches
   clearSession: () => {
+    localStorage.removeItem('spyrole_guest_player');
     localStorage.removeItem('undercover_guest_player');
     localStorage.removeItem('guest_profile');
     localStorage.removeItem('soul_coins_economy');

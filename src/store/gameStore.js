@@ -170,7 +170,17 @@ export const useGameStore = create(
       getCivilians: () => get().players.filter((p) => p.role === 'civilian'),
     }),
     {
-      name: 'undercover-game-session',
+      name: 'spyrole-game-session',
+      storage: {
+        getItem: (name) => {
+          const item = localStorage.getItem(name);
+          if (item) return JSON.parse(item);
+          const legacy = localStorage.getItem('undercover-game-session');
+          return legacy ? JSON.parse(legacy) : null;
+        },
+        setItem: (name, value) => localStorage.setItem(name, JSON.stringify(value)),
+        removeItem: (name) => localStorage.removeItem(name),
+      },
       // Only persist the config, not the full game state (to avoid stale mid-game state)
       partialize: (state) => ({
         playerNames: state.playerNames,

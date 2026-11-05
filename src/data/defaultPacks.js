@@ -1,6 +1,6 @@
 /**
  * defaultPacks.js
- * Built-in category pools and word packs for Undercover.
+ * Built-in category pools and word packs for SpyRole.
  */
 
 import { wordPacks } from './wordPacks.js';

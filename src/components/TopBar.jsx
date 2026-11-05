@@ -3,10 +3,11 @@
  * Clean AAA game styling: no emoji, no glow, Lucide icons.
  */
 import React from 'react';
-import { Shield, Globe } from 'lucide-react';
+import { Globe } from 'lucide-react';
 import UserAvatar from './ui/UserAvatar';
 import { useLanguageStore } from '../store/languageStore';
 import i18n from '../i18n';
+import spyRoleLogo from './assets/SpyRole_ favicon.png';
 
 export default function TopBar({ profile, onOpenStore, toggleLanguage, currentLang }) {
   const { language, setLanguage } = useLanguageStore();
@@ -23,12 +24,14 @@ export default function TopBar({ profile, onOpenStore, toggleLanguage, currentLa
     <header className="w-full bg-zinc-950 border-b border-zinc-900 px-3.5 py-2 flex items-center justify-between gap-2 relative z-50 font-sans">
       {/* 1. Brand Title */}
       <div className="flex items-center gap-2.5 min-w-0">
-        <div className="w-7 h-7 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-red-500 shrink-0">
-          <Shield size={15} />
+        <div className="w-7 h-7 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center overflow-hidden shrink-0 shadow-[0_0_8px_rgba(220,38,38,0.3)]">
+          <img src={spyRoleLogo} alt="SpyRole" className="w-5 h-5 object-contain" />
         </div>
 
-        <div className="font-mono text-xs font-bold tracking-wider truncate">
-          <span className="text-white">UNDERCOVER</span>
+        <div className="font-mono text-xs font-bold tracking-wider truncate flex items-center gap-1">
+          <span className="text-white drop-shadow-[0_0_8px_rgba(220,38,38,0.4)]">
+            SPY<span className="text-red-600">ROLE</span>
+          </span>
           <span className="hidden sm:inline text-zinc-500 font-normal ml-1.5">// PROTOCOL</span>
         </div>
       </div>

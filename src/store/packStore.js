@@ -51,7 +51,7 @@ export const usePackStore = create(
             soul_coins: updatedCoins,
             inventory: updatedInventory,
           };
-          localStorage.setItem('undercover_guest_player', JSON.stringify(updatedProfile));
+          localStorage.setItem('spyrole_guest_player', JSON.stringify(updatedProfile));
           useAuthStore.setState({ profile: updatedProfile });
         }
       },
@@ -283,7 +283,18 @@ export const usePackStore = create(
       },
     }),
     {
-      name: 'undercover-custom-packs',
+      name: 'spyrole-custom-packs',
+      // Migrate from undercover-custom-packs if found
+      storage: {
+        getItem: (name) => {
+          const item = localStorage.getItem(name);
+          if (item) return JSON.parse(item);
+          const legacy = localStorage.getItem('undercover-custom-packs');
+          return legacy ? JSON.parse(legacy) : null;
+        },
+        setItem: (name, value) => localStorage.setItem(name, JSON.stringify(value)),
+        removeItem: (name) => localStorage.removeItem(name),
+      },
       // Only persist local custom packs and cached cloud packs to localStorage
       partialize: (state) => ({
         customPacks: state.customPacks,

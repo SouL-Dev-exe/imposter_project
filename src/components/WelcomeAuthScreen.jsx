@@ -3,10 +3,11 @@
  * Clean AAA game styling: no emoji, no glow, Lucide icons, spring animations.
  */
 import { useState } from 'react';
-import { Shield, Play, LogIn, UserPlus } from 'lucide-react';
+import { Play, LogIn, UserPlus } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useLanguageStore } from '../store/languageStore';
 import AuthModal from './ui/AuthModal';
+import spyRoleLogo from './assets/SpyRole_ favicon.png';
 
 export default function WelcomeAuthScreen() {
   const { t, isRTL } = useLanguageStore();
@@ -28,12 +29,14 @@ export default function WelcomeAuthScreen() {
       <div className="max-w-md w-full bg-zinc-950 border border-zinc-800 p-6 sm:p-8 rounded-2xl text-center shadow-xl space-y-6 relative z-10">
         {/* Game Badge */}
         <div className="space-y-2">
-          <div className="w-14 h-14 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto text-red-500">
-            <Shield size={28} />
+          <div className="w-16 h-16 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto overflow-hidden shadow-[0_0_15px_rgba(220,38,38,0.35)]">
+            <img src={spyRoleLogo} alt="SpyRole" className="w-12 h-12 object-contain" />
           </div>
-          <h1 className="text-3xl font-black text-white tracking-tight">UNDERCOVER</h1>
+          <h1 className="text-3xl font-black text-white tracking-tight flex items-center justify-center gap-1 font-mono">
+            SPY<span className="text-red-600 drop-shadow-[0_0_10px_rgba(220,38,38,0.5)]">ROLE</span>
+          </h1>
           <p className="text-zinc-400 text-xs font-mono">
-            {isRTL ? 'بروتوكول الخداع الاستخباري والتكتيكي' : 'Tactical Deception & Intelligence Protocol'}
+            {isRTL ? 'SpyRole: لعبة الكلمات الخفية' : 'SpyRole: Undercover Word Game'}
           </p>
         </div>
 

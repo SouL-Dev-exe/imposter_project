@@ -13,7 +13,9 @@ import i18n from '../i18n';
 // Initial sync on load
 const savedLang = (() => {
   try {
-    const raw = localStorage.getItem('undercover-language');
+    const raw =
+      localStorage.getItem('spyrole-language') ||
+      localStorage.getItem('undercover-language');
     if (raw) {
       const parsed = JSON.parse(raw);
       return parsed?.state?.language || 'en';
@@ -96,7 +98,17 @@ export const useLanguageStore = create(
       },
     }),
     {
-      name: 'undercover-language',
+      name: 'spyrole-language',
+      storage: {
+        getItem: (name) => {
+          const item = localStorage.getItem(name);
+          if (item) return JSON.parse(item);
+          const legacy = localStorage.getItem('undercover-language');
+          return legacy ? JSON.parse(legacy) : null;
+        },
+        setItem: (name, value) => localStorage.setItem(name, JSON.stringify(value)),
+        removeItem: (name) => localStorage.removeItem(name),
+      },
     }
   )
 );

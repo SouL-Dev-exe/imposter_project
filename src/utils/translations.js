@@ -1,6 +1,6 @@
 /**
  * translations.js
- * Comprehensive bilingual (English & Arabic) tactical intelligence dictionary for Undercover.
+ * Comprehensive bilingual (English & Arabic) tactical intelligence dictionary for SpyRole.
  * 100% parity across all views, game phases, modals, store, comms, and alerts.
  */
 
@@ -19,8 +19,8 @@ export const TRANSLATIONS = {
 
     home: {
       protocol: 'TACTICAL DECEPTION PROTOCOL',
-      title: 'UNDERCOVER',
-      tagline: 'Classified Intelligence & Deception',
+      title: 'SpyRole',
+      tagline: 'Undercover Word Game',
       subtitle: '3–10 operatives · Encrypted Network or Offline · Top Secret',
       systemReady: 'System Ready · v2.4',
       localPassPlay: 'Local Pass & Play',
@@ -35,7 +35,7 @@ export const TRANSLATIONS = {
       wordPacks: 'Word Cipher Packs',
       statusOperational: 'Status: Operational',
       privateSession: 'Private Session',
-      footer: 'Created by Soula · Tactical Deception Protocol',
+      footer: 'SpyRole: Undercover Word Game · Tactical Deception Protocol',
     },
 
     roles: {
@@ -428,8 +428,8 @@ export const TRANSLATIONS = {
 
     home: {
       protocol: 'بروتوكول الخداع التكتيكي',
-      title: 'المخادع',
-      tagline: 'لعبة الخداع والذكاء الاستخباراتية',
+      title: 'SpyRole',
+      tagline: 'لعبة الكلمات الخفية',
       subtitle: '٣–١٠ عملاء · شبكة مشفرة أو محلي · سري للغاية',
       systemReady: 'النظام جاهز · الإصدار 2.4',
       localPassPlay: 'محلي (مرر والعب)',
@@ -444,7 +444,7 @@ export const TRANSLATIONS = {
       wordPacks: 'حزم الشفرات السرية',
       statusOperational: 'الحالة: قيد التشغيل',
       privateSession: 'جلسة مشفرة خاصة',
-      footer: 'صُنعت بواسطة Soula · بروتوكول الخداع التكتيكي',
+      footer: 'SpyRole: لعبة الكلمات الخفية · بروتوكول الخداع التكتيكي',
     },
 
     roles: {

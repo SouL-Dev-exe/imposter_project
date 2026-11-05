@@ -6,10 +6,13 @@ import { useLanguageStore } from '../store/languageStore';
 import { DiscordIcon } from './DiscordIcon';
 
 export default function Footer({ className = '' }) {
-  const { t } = useLanguageStore();
+  const { t, isRTL } = useLanguageStore();
   const strings = t();
   const attributionText =
-    strings?.home?.footer || 'Created by Soula · Tactical Deception Protocol';
+    strings?.home?.footer ||
+    (isRTL
+      ? 'SpyRole: لعبة الكلمات الخفية · بروتوكول الخداع التكتيكي'
+      : 'SpyRole: Undercover Word Game · Tactical Deception Protocol');
 
   return (
     <footer

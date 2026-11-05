@@ -1,5 +1,5 @@
 /**
- * App.jsx — Root component for Undercover.
+ * App.jsx — Root component for SpyRole: Undercover Word Game.
  * Clean, tactical dark aesthetics. No emoji, no AI glow, Lucide icons.
  * Hash routing required for GitHub Pages static hosting.
  */
