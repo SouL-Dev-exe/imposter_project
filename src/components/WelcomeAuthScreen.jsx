@@ -7,7 +7,7 @@ import { Play, LogIn, UserPlus } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useLanguageStore } from '../store/languageStore';
 import AuthModal from './ui/AuthModal';
-import spyRoleLogo from './assets/SpyRole_ favicon.png';
+import spyRoleLogo from './assets/faviconlogo.png';
 
 export default function WelcomeAuthScreen() {
   const { t, isRTL } = useLanguageStore();

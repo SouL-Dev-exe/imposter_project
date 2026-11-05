@@ -7,7 +7,7 @@ import { Globe } from 'lucide-react';
 import UserAvatar from './ui/UserAvatar';
 import { useLanguageStore } from '../store/languageStore';
 import i18n from '../i18n';
-import spyRoleLogo from './assets/SpyRole_ favicon.png';
+import spyRoleLogo from './assets/faviconlogo.png';
 
 export default function TopBar({ profile, onOpenStore, toggleLanguage, currentLang }) {
   const { language, setLanguage } = useLanguageStore();

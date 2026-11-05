@@ -23,7 +23,7 @@ import { useLanguageStore } from '../store/languageStore';
 import { AuthModal } from '../components/ui/AuthModal';
 import Navbar from '../components/Navbar';
 import Button from '../components/ui/Button';
-import spyRoleLogo from '../components/assets/SpyRole_ favicon.png';
+import spyRoleLogo from '../components/assets/faviconlogo.png';
 
 const spring = { type: 'spring', stiffness: 400, damping: 28 };
 

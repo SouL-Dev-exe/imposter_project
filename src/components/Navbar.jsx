@@ -8,7 +8,7 @@ import { Package, MoreVertical, User, LogIn, Coins } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useEconomyStore } from '../store/economyStore';
 import { useLanguageStore } from '../store/languageStore';
-import spyRoleLogo from './assets/SpyRole_ favicon.png';
+import spyRoleLogo from './assets/faviconlogo.png';
 import AuthModal from './ui/AuthModal';
 import { UserAvatar } from './ui/UserAvatar';
 import LanguageToggle from './ui/LanguageToggle';
