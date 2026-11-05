@@ -23,6 +23,7 @@ import { useLanguageStore } from '../store/languageStore';
 import { AuthModal } from '../components/ui/AuthModal';
 import Navbar from '../components/Navbar';
 import Button from '../components/ui/Button';
+import spyRoleLogo from '../components/assets/SpyRole_ favicon.png';
 
 const spring = { type: 'spring', stiffness: 400, damping: 28 };
 
@@ -61,7 +62,20 @@ export default function Home() {
       <main className="flex-1 flex flex-col w-full max-w-md mx-auto relative z-10 pb-16 px-4 pt-6 space-y-6">
 
         {/* Zone 1: Intelligence Header */}
-        <div className="flex flex-col items-center justify-center text-center space-y-2 pt-2">
+        <div className="flex flex-col items-center justify-center text-center space-y-3 pt-2">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.85 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={spring}
+            className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-zinc-950 border border-zinc-800 p-2 flex items-center justify-center shadow-[0_0_25px_rgba(220,38,38,0.3)] relative"
+          >
+            <img
+              src={spyRoleLogo}
+              alt="SpyRole"
+              className="w-full h-full object-contain filter drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]"
+            />
+          </motion.div>
+
           <motion.div 
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
@@ -72,11 +86,14 @@ export default function Home() {
               {t('home.protocol')}
             </span>
             <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-white mt-1">
-              {t('home.title')}
+              SPY<span className="text-red-600 drop-shadow-[0_0_12px_rgba(220,38,38,0.5)]">ROLE</span>
             </h1>
+            <p className="text-xs text-zinc-400 font-mono mt-1">
+              {t('home.tagline')}
+            </p>
           </motion.div>
           
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-zinc-900 border border-zinc-800 rounded-full mt-1">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-zinc-900 border border-zinc-800 rounded-full">
             <span className="w-2 h-2 rounded-full bg-emerald-500" />
             <p className="text-[11px] text-zinc-400 font-mono tracking-wider uppercase">
               {t('home.systemReady')}

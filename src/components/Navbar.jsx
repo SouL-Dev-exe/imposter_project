@@ -71,13 +71,13 @@ export default function Navbar() {
         </button>
 
         {/* Center: Brand */}
-        <div className="hidden sm:flex absolute left-1/2 -translate-x-1/2 items-center gap-2 select-none pointer-events-none">
+        <div className="flex absolute left-1/2 -translate-x-1/2 items-center gap-2 select-none pointer-events-none">
           <img
             src={spyRoleLogo}
             alt="SpyRole"
-            className="h-7 w-7 rounded-md object-contain border border-zinc-800 shadow-[0_0_12px_rgba(220,38,38,0.35)]"
+            className="h-7 w-7 rounded-md object-contain border border-zinc-800 shadow-[0_0_12px_rgba(220,38,38,0.35)] shrink-0"
           />
-          <div className="flex items-center gap-1 font-mono tracking-wider">
+          <div className="hidden sm:flex items-center gap-1 font-mono tracking-wider">
             <span className="text-sm font-black text-white tracking-widest drop-shadow-[0_0_8px_rgba(220,38,38,0.4)]">
               SPY<span className="text-red-600">ROLE</span>
             </span>
