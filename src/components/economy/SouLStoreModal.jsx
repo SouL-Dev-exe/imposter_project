@@ -2,7 +2,7 @@
  * SouLStoreModal.jsx — Agency Armory & Black Market Store
  * Clean AAA game styling: no emoji, no glow, Lucide icons, spring animations.
  */
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   User, 
@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useEconomyStore } from '../../store/economyStore';
 import { useAuthStore } from '../../store/authStore';
+import { useLanguageStore } from '../../store/languageStore';
 import { STORE_ITEMS } from '../../data/economyCatalog';
 import { AVATAR_STYLES } from '../../data/avatarStyles';
 import { toast } from '../../store/toastStore';
@@ -26,7 +27,7 @@ import SpyItemCard from './SpyItemCard';
 
 const spring = { type: 'spring', stiffness: 500, damping: 28 };
 
-function OperativeCoverCard({ style, avatarSeed, isEquipped, isOwned, isLocked, onAction }) {
+function OperativeCoverCard({ style, avatarSeed, isEquipped, isOwned, isLocked, onAction, isRTL }) {
   const previewUrl = `https://api.dicebear.com/9.x/${style.value}/svg?seed=${encodeURIComponent(avatarSeed)}`;
 
   return (
@@ -43,7 +44,7 @@ function OperativeCoverCard({ style, avatarSeed, isEquipped, isOwned, isLocked, 
       {/* Top Status Bar */}
       <div className="flex items-center justify-between text-[10px] text-zinc-500 border-b border-zinc-900 pb-1.5 mb-2 font-mono">
         <span className="px-1.5 py-0.5 bg-zinc-900 border border-zinc-800 rounded font-bold uppercase text-zinc-300">
-          {isLocked ? `LVL ${style.minLevel}` : isOwned ? 'UNLOCKED' : 'AVAILABLE'}
+          {isLocked ? (isRTL ? `مستوى ${style.minLevel}` : `LVL ${style.minLevel}`) : isOwned ? (isRTL ? 'مملوك' : 'UNLOCKED') : (isRTL ? 'متاح' : 'AVAILABLE')}
         </span>
         <span className="text-zinc-600 font-bold truncate max-w-[80px]">
           #{style.value}
@@ -100,35 +101,36 @@ function OperativeCoverCard({ style, avatarSeed, isEquipped, isOwned, isLocked, 
         {isLocked ? (
           <>
             <Lock size={11} />
-            <span>Clearance Lvl {style.minLevel}</span>
+            <span>{isRTL ? `مستوى ${style.minLevel}` : `Clearance Lvl ${style.minLevel}`}</span>
           </>
         ) : isEquipped ? (
           <>
             <Check size={11} strokeWidth={3} />
-            <span>Active</span>
+            <span>{isRTL ? 'نشط' : 'Active'}</span>
           </>
         ) : isOwned ? (
-          'Deploy Cover'
+          isRTL ? 'نشر الهوية' : 'Deploy Cover'
         ) : (
-          `Acquire · ${style.price.toLocaleString()} SC`
+          isRTL ? `شراء · ${style.price.toLocaleString()} رصيد` : `Acquire · ${style.price.toLocaleString()} SC`
         )}
       </button>
     </div>
   );
 }
 
-const CATEGORY_TABS = [
-  { id: 'avatarStyles', label: 'Operative Covers', icon: User },
-  { id: 'accessories', label: 'Tactical Gear', icon: Sparkles },
-  { id: 'outfits', label: 'Field Attire', icon: Shirt },
-  { id: 'titles', label: 'Covert Dossiers', icon: Tag },
-  { id: 'screenFX', label: 'Surveillance FX', icon: Shield },
-  { id: 'emotes', label: 'Cipher Comms', icon: Smile },
-];
-
 export default function SouLStoreModal({ isOpen, onClose, initialTab = 'avatarStyles' }) {
+  const { isRTL, t } = useLanguageStore();
   const [activeTab, setActiveTab] = useState(initialTab);
   const [feedback, setFeedback] = useState(null);
+
+  const categoryTabs = useMemo(() => [
+    { id: 'avatarStyles', label: isRTL ? 'أقنعة العملاء' : 'Operative Covers', icon: User },
+    { id: 'accessories', label: isRTL ? 'العتاد التكتيكي' : 'Tactical Gear', icon: Sparkles },
+    { id: 'outfits', label: isRTL ? 'الأزياء الميدانية' : 'Field Attire', icon: Shirt },
+    { id: 'titles', label: isRTL ? 'ملفات الألقاب' : 'Covert Dossiers', icon: Tag },
+    { id: 'screenFX', label: isRTL ? 'مؤثرات المراقبة' : 'Surveillance FX', icon: Shield },
+    { id: 'emotes', label: isRTL ? 'تشفير الاتصالات' : 'Cipher Comms', icon: Smile },
+  ], [isRTL]);
 
   const {
     soulCoins,
@@ -236,16 +238,16 @@ export default function SouLStoreModal({ isOpen, onClose, initialTab = 'avatarSt
               <div className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 px-3 py-1 rounded-lg text-xs font-mono">
                 <Coins size={14} className="text-amber-400" />
                 <span className="font-bold text-amber-400 tabular-nums">{soulCoins.toLocaleString()}</span>
-                <span className="text-[10px] text-zinc-500 font-semibold">SC</span>
+                <span className="text-[10px] text-zinc-500 font-semibold">{isRTL ? 'رصيد' : 'SC'}</span>
               </div>
             </div>
 
-            <div className="text-right hidden sm:block">
+            <div className="text-end hidden sm:block">
               <h2 className="text-xs font-bold tracking-wider text-white uppercase">
-                Agency Armory &amp; Store
+                {t('shop.title') || (isRTL ? 'ترسانة الوكالة / السوق السوداء' : 'Agency Armory & Store')}
               </h2>
               <p className="text-[10px] text-zinc-500 font-mono">
-                Field Cosmetics &amp; Identity Covers
+                {isRTL ? 'مظاهر تجميلية وهوية سرية' : 'Field Cosmetics & Identity Covers'}
               </p>
             </div>
           </div>
@@ -272,7 +274,7 @@ export default function SouLStoreModal({ isOpen, onClose, initialTab = 'avatarSt
 
           {/* Horizontal scrollable category tabs */}
           <div className="flex items-center gap-1.5 px-3 py-2 border-b border-zinc-850 bg-zinc-950 overflow-x-auto no-scrollbar">
-            {CATEGORY_TABS.map((tab) => {
+            {categoryTabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
               return (
@@ -310,6 +312,7 @@ export default function SouLStoreModal({ isOpen, onClose, initialTab = 'avatarSt
                     isOwned={isOwnedStyle}
                     isLocked={isLocked}
                     onAction={() => handleStyleAction(style, isOwnedStyle, isLocked)}
+                    isRTL={isRTL}
                   />
                 );
               })}
@@ -340,10 +343,10 @@ export default function SouLStoreModal({ isOpen, onClose, initialTab = 'avatarSt
           {/* Footer */}
           <div className="px-4 py-2 border-t border-zinc-850 bg-zinc-900/60 flex items-center justify-between text-[11px] text-zinc-500 font-mono">
             <span>
-              Category: <strong className="text-zinc-300">{CATEGORY_TABS.find((t) => t.id === activeTab)?.label}</strong>
+              {isRTL ? 'الفئة:' : 'Category:'} <strong className="text-zinc-300">{categoryTabs.find((t) => t.id === activeTab)?.label}</strong>
             </span>
             <span>
-              {activeTab === 'avatarStyles' ? AVATAR_STYLES.length : currentItems.length} items available
+              {activeTab === 'avatarStyles' ? AVATAR_STYLES.length : currentItems.length} {isRTL ? 'عنصر متاح' : 'items available'}
             </span>
           </div>
         </motion.div>

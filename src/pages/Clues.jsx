@@ -183,16 +183,16 @@ export default function Clues() {
             type="button"
             onClick={() => navigate('/lobby')}
             className="text-zinc-400 hover:text-white transition-colors p-1 rounded-lg hover:bg-zinc-900 cursor-pointer"
-            title={strings.nav?.back || 'Back'}
+            title={t('nav.back')}
           >
             <ArrowLeft size={18} className="rtl:rotate-180" />
           </button>
-          <div>
+          <div className="text-start">
             <h1 className="text-xl font-bold text-white tracking-tight">
-              {strings.clues?.title || 'Tactical Debrief'}
+              {t('clues.title')}
             </h1>
             <p className="text-zinc-500 text-xs font-mono">
-              {strings.clues?.roundLabel?.replace('{n}', currentRound || 1) || `Round ${currentRound || 1}`}
+              {t('clues.roundLabel', { n: currentRound || 1 })}
             </p>
           </div>
         </div>
@@ -206,7 +206,7 @@ export default function Clues() {
         animate={{ opacity: 1, y: 0 }}
       >
         <p className="text-xs text-zinc-300 font-medium">
-          {strings.clues?.instructions || 'Take turns giving a one-word clue related to your secret word. Expose the impostor.'}
+          {t('clues.instructions')}
         </p>
       </motion.div>
 
@@ -219,7 +219,7 @@ export default function Clues() {
             onExpire={handleExpire}
           />
           <p className="text-zinc-500 text-xs font-mono tracking-wider uppercase">
-            {strings.clues?.discussionInProgress || 'Discussion in progress'}
+            {t('clues.discussionInProgress')}
           </p>
         </div>
 
@@ -233,9 +233,9 @@ export default function Clues() {
           <div className="flex items-center justify-between text-xs font-mono text-zinc-400 px-1">
             <span className="flex items-center gap-1.5">
               <Users size={13} className="text-red-500" />
-              <span>{isArabic ? 'اللاعبون' : 'Active Operatives'}</span>
+              <span>{t('lobby.players')}</span>
             </span>
-            <span className="text-zinc-500">{activePlayers.length} in play</span>
+            <span className="text-zinc-500">{activePlayers.length} {isArabic ? 'في الميدان' : 'active'}</span>
           </div>
 
           <div className="flex flex-wrap gap-2 justify-center">
@@ -282,7 +282,7 @@ export default function Clues() {
             >
               <AlertCircle size={16} className="text-red-400" />
               <p className="text-red-400 font-semibold text-xs font-mono">
-                {strings.clues?.timerExpired || "Time's up! Proceed to voting."}
+                {t('clues.timerExpired')}
               </p>
             </motion.div>
           )}
@@ -303,7 +303,7 @@ export default function Clues() {
           onClick={handleGoVote}
           icon={Vote}
         >
-          {strings.clues?.finishAndVote || 'Commence Voting'}
+          {t('clues.finishAndVote')}
         </Button>
 
         <Button
@@ -313,7 +313,7 @@ export default function Clues() {
           onClick={handleNewRound}
           icon={RotateCcw}
         >
-          {strings.clues?.startNewRound || 'Start New Round'}
+          {t('clues.startNewRound')}
         </Button>
       </motion.div>
     </div>

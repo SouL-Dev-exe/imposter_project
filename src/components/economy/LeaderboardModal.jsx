@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy, Coins, X, Award, Crown, AlertCircle, Loader2, Sparkles } from 'lucide-react';
 import { useEconomyStore } from '../../store/economyStore';
+import { useLanguageStore } from '../../store/languageStore';
 import { getEconomicRank, STORE_ITEMS } from '../../data/economyCatalog';
 import UserAvatar from '../ui/UserAvatar';
 
@@ -30,6 +31,7 @@ function TitleDisplay({ titleId }) {
 export default function LeaderboardModal({ isOpen, onClose }) {
   const fetchLeaderboard = useEconomyStore((s) => s.fetchLeaderboard);
   const { soulCoins } = useEconomyStore();
+  const { t } = useLanguageStore();
 
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -54,7 +56,7 @@ export default function LeaderboardModal({ isOpen, onClose }) {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md font-sans">
         <motion.div
           initial={{ opacity: 0, scale: 0.96, y: 14 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -67,15 +69,15 @@ export default function LeaderboardModal({ isOpen, onClose }) {
 
           {/* Header */}
           <div className="px-5 py-4 border-b border-zinc-800/80 bg-zinc-900/40 flex items-center justify-between">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 text-start">
               <div className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-700/60 flex items-center justify-center text-red-500">
                 <Trophy className="w-5 h-5" />
               </div>
               <div>
                 <h2 className="text-base font-semibold text-zinc-100 flex items-center gap-2">
-                  Global Operative Standings
+                  {t('leaderboard.title')}
                 </h2>
-                <p className="text-xs text-zinc-400 font-mono">TOP 100 CLASSIFIED ROSTER</p>
+                <p className="text-xs text-zinc-400 font-mono">{t('leaderboard.subtitle')}</p>
               </div>
             </div>
             <button
@@ -91,11 +93,11 @@ export default function LeaderboardModal({ isOpen, onClose }) {
           <div className="px-5 py-2.5 bg-zinc-900/20 border-b border-zinc-800/60 flex items-center justify-between text-xs text-zinc-400 font-mono">
             <span className="flex items-center gap-1.5">
               <Coins className="w-3.5 h-3.5 text-zinc-400" />
-              Your Assets: <strong className="text-zinc-100 font-semibold">{soulCoins.toLocaleString()} SC</strong>
+              {t('leaderboard.yourAssets')} <strong className="text-zinc-100 font-semibold">{soulCoins.toLocaleString()} SC</strong>
             </span>
             <span>
               {entries.length > 0 && (
-                <span>Roster: <strong className="text-zinc-100">{entries.length}</strong> Agents</span>
+                <span>{t('leaderboard.roster')} <strong className="text-zinc-100">{entries.length}</strong></span>
               )}
             </span>
           </div>
@@ -105,7 +107,7 @@ export default function LeaderboardModal({ isOpen, onClose }) {
             {loading && (
               <div className="flex flex-col items-center justify-center py-20 text-zinc-500 space-y-3">
                 <Loader2 className="w-7 h-7 text-red-500 animate-spin" />
-                <p className="text-xs font-mono tracking-wider">RETRIEVING INTEL...</p>
+                <p className="text-xs font-mono tracking-wider">{t('leaderboard.loading')}</p>
               </div>
             )}
 
@@ -119,8 +121,7 @@ export default function LeaderboardModal({ isOpen, onClose }) {
             {!loading && !error && entries.length === 0 && (
               <div className="text-center py-14 text-zinc-500 space-y-2">
                 <Trophy className="w-8 h-8 mx-auto text-zinc-700" />
-                <p className="font-medium text-xs text-zinc-400">NO CLASSIFIED RECORDS YET</p>
-                <p className="text-[11px] text-zinc-600">Deploy into combat missions to log field data.</p>
+                <p className="font-medium text-xs text-zinc-400">{t('leaderboard.empty')}</p>
               </div>
             )}
 
@@ -191,7 +192,7 @@ export default function LeaderboardModal({ isOpen, onClose }) {
 
           {/* Footer note */}
           <div className="p-3 border-t border-zinc-800/80 bg-zinc-900/20 text-center text-[10px] text-zinc-500 font-mono">
-            ENCRYPTED SECURE REGISTRY · LIVE SYNCHRONIZATION
+            {t('leaderboard.footer')}
           </div>
         </motion.div>
       </div>

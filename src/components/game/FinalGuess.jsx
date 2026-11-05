@@ -60,7 +60,7 @@ export function FinalGuess({ eliminatedPlayer, secretWord, wordPair, onResult })
             <div className="space-y-2">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-950/40 border border-red-900/60 rounded-full text-xs text-red-400 font-mono uppercase">
                 <AlertTriangle size={13} />
-                Last Chance Protocol
+                {t('finalGuess.title')}
               </span>
 
               <div className="w-16 h-16 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto text-red-500 mt-2">

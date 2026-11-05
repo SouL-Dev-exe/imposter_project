@@ -38,6 +38,7 @@ const spring = { type: 'spring', stiffness: 500, damping: 30 };
 
 // ─── Tactical Toggle Switch ───────────────────────────────────────────────────────────
 function Toggle({ checked, onChange, label, description, disabled = false }) {
+  const isRTL = useLanguageStore((s) => s.isRTL);
   return (
     <button
       type="button"
@@ -53,11 +54,11 @@ function Toggle({ checked, onChange, label, description, disabled = false }) {
       `}>
         <motion.div
           className="absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-sm"
-          animate={{ [document.documentElement.dir === 'rtl' ? 'right' : 'left']: checked ? '22px' : '2px' }}
+          animate={{ [isRTL ? 'right' : 'left']: checked ? '22px' : '2px' }}
           transition={spring}
         />
       </div>
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0 flex-1 text-start">
         <p className="text-zinc-100 font-semibold text-sm">{label}</p>
         {description && <p className="text-zinc-500 text-xs mt-0.5">{description}</p>}
       </div>
@@ -351,18 +352,18 @@ export default function Lobby() {
           <div className="space-y-2 pt-1">
             <div className="flex items-center gap-2 p-2.5 bg-zinc-900/60 border border-zinc-800 rounded-lg">
               <Timer size={16} className="text-red-500" />
-              <div className="flex-1">
+              <div className="flex-1 text-start">
                 <p className="text-zinc-200 font-semibold text-xs">
-                  {isArabic ? 'مؤقت النقاش' : 'Discussion Countdown'}
+                  {t('lobby.discussionTimerLabel')}
                 </p>
                 <p className="text-zinc-500 text-[11px]">
-                  {isArabic ? 'وقت المناقشة الجماعية' : 'Shared group debate timer'}
+                  {t('lobby.discussionTimerDesc')}
                 </p>
               </div>
             </div>
             <div className="flex flex-wrap gap-1.5">
               {[
-                { label: isArabic ? 'بلا حد' : 'None', value: 0 },
+                { label: t('clues.unlimited'), value: 0 },
                 { label: '1m',  value: 60 },
                 { label: '2m',  value: 120 },
                 { label: '3m',  value: 180 },

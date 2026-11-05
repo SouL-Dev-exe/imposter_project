@@ -7,8 +7,10 @@ import { motion } from 'framer-motion';
 import { Package, MoreVertical, User, LogIn, Coins } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useEconomyStore } from '../store/economyStore';
+import { useLanguageStore } from '../store/languageStore';
 import AuthModal from './ui/AuthModal';
 import { UserAvatar } from './ui/UserAvatar';
+import LanguageToggle from './ui/LanguageToggle';
 
 const OperativeMenuModal = lazy(() => import('./OperativeMenuModal'));
 const SouLStoreModal = lazy(() => import('./economy/SouLStoreModal'));
@@ -19,6 +21,7 @@ const spring = { type: 'spring', stiffness: 500, damping: 30 };
 export default function Navbar() {
   const { profile } = useAuthStore();
   const { soulCoins, equippedAvatarStyle, equipped } = useEconomyStore();
+  const { t, isRTL } = useLanguageStore();
 
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -35,13 +38,13 @@ export default function Navbar() {
 
   return (
     <>
-      <header className="w-full bg-zinc-950 border-b border-zinc-900 px-4 py-2.5 flex items-center justify-between gap-3 shrink-0 z-40 relative">
+      <header className="w-full bg-zinc-950 border-b border-zinc-900 px-4 py-2.5 flex items-center justify-between gap-3 shrink-0 z-40 relative font-sans">
 
         {/* Left: Avatar + user info */}
         <button
           onClick={() => openProfile('loadout')}
           className="flex items-center gap-2.5 shrink-0 group outline-none focus-visible:ring-2 focus-visible:ring-red-600 rounded-lg p-1 -m-1"
-          title="Open Profile"
+          title={t('header.profile')}
         >
           <div className="relative w-8 h-8 rounded-lg overflow-hidden border border-zinc-800 group-hover:border-zinc-700 transition-colors bg-zinc-900 flex items-center justify-center shrink-0">
             {profile ? (
@@ -56,12 +59,12 @@ export default function Navbar() {
             )}
           </div>
 
-          <div className="flex flex-col items-start">
+          <div className="flex flex-col items-start text-start">
             <span className="text-xs font-semibold text-zinc-100 group-hover:text-white transition-colors leading-tight">
-              {profile?.username || 'Guest'}
+              {profile?.username || t('header.guest')}
             </span>
             <span className="text-[10px] text-zinc-500 leading-tight font-mono">
-              Lvl {profile?.stats?.level || 1}
+              {t('profile.level')} {profile?.stats?.level || 1}
             </span>
           </div>
         </button>
@@ -73,6 +76,9 @@ export default function Navbar() {
 
         {/* Right: Controls */}
         <div className="flex items-center gap-1.5 shrink-0">
+          {/* Universal Language Switcher */}
+          <LanguageToggle variant="chip" />
+
           {profile ? (
             <>
               {/* Coin balance */}
@@ -82,7 +88,7 @@ export default function Navbar() {
                 transition={spring}
                 onClick={() => setIsShopOpen(true)}
                 className="flex items-center gap-1.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 rounded-lg px-2.5 py-1.5 transition-colors cursor-pointer"
-                title={`${coinsBalance.toLocaleString()} Black Funds`}
+                title={`${coinsBalance.toLocaleString()} ${t('header.coins')}`}
               >
                 <div className="w-2 h-2 rounded-full bg-red-600 shrink-0" />
                 <span className="font-mono font-semibold text-amber-400 text-xs tabular-nums">
@@ -97,7 +103,7 @@ export default function Navbar() {
                 transition={spring}
                 onClick={() => setIsShopOpen(true)}
                 className="w-8 h-8 flex items-center justify-center rounded-lg border border-zinc-800 hover:border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer"
-                title="Store"
+                title={t('header.shop')}
               >
                 <Package size={15} />
               </motion.button>
@@ -109,7 +115,7 @@ export default function Navbar() {
                 transition={spring}
                 onClick={() => setIsMenuOpen(true)}
                 className="w-8 h-8 flex items-center justify-center rounded-lg border border-zinc-800 hover:border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer"
-                title="Menu"
+                title={t('header.menu')}
               >
                 <MoreVertical size={15} />
               </motion.button>
@@ -120,10 +126,10 @@ export default function Navbar() {
               whileTap={{ scale: 0.98 }}
               transition={spring}
               onClick={() => setIsAuthOpen(true)}
-              className="flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors cursor-pointer"
+              className="flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer"
             >
-              <LogIn size={15} />
-              Sign In
+              <LogIn size={14} />
+              {t('auth.login')}
             </motion.button>
           )}
         </div>

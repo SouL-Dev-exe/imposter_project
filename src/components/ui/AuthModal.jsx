@@ -4,9 +4,9 @@
  */
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useTranslation } from 'react-i18next';
 import { LogIn, UserPlus, User, AlertCircle, X, Shield } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
+import { useLanguageStore } from '../../store/languageStore';
 import { playClickSound } from '../../utils/sfx';
 
 const spring = { type: 'spring', stiffness: 500, damping: 28 };
@@ -26,7 +26,7 @@ function Field({ label, id, ...props }) {
 }
 
 export function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
-  const { t } = useTranslation();
+  const { t, isRTL } = useLanguageStore();
 
   const [isSignIn, setIsSignIn] = useState(initialTab !== 'signup');
   const [email, setEmail] = useState('');
@@ -122,7 +122,7 @@ export function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               transition={spring}
-              className="absolute top-4 right-4 w-7 h-7 bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-white flex items-center justify-center rounded-lg cursor-pointer transition-colors"
+              className="absolute top-4 end-4 w-7 h-7 bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-white flex items-center justify-center rounded-lg cursor-pointer transition-colors"
               aria-label={t('common.close') || 'Close'}
             >
               <X size={15} />
@@ -131,7 +131,7 @@ export function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
             <div className="flex items-center gap-1.5 mb-3">
               <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
               <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-400 font-semibold">
-                Operative Clearance
+                {t('auth.title') || (isRTL ? 'تصريح العميل' : 'Operative Clearance')}
               </span>
             </div>
 
@@ -166,7 +166,7 @@ export function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
               <motion.div
                 layout
                 className="absolute top-1 bottom-1 w-[calc(50%-4px)] bg-zinc-800 border border-zinc-700/60 rounded-lg shadow-sm"
-                animate={{ left: isSignIn ? '4px' : 'calc(50% + 2px)' }}
+                animate={{ [isRTL ? 'right' : 'left']: isSignIn ? '4px' : 'calc(50% + 2px)' }}
                 transition={spring}
               />
             </div>
@@ -176,8 +176,8 @@ export function AuthModal({ isOpen, onClose, initialTab = 'login' }) {
             </h2>
             <p dir="auto" className="text-xs text-zinc-500 mb-4 leading-relaxed">
               {isSignIn
-                ? 'Sign in to sync your rank, credits, and unlocked loadout.'
-                : 'Create an operative account to track stats and play online.'}
+                ? (t('auth.signInDesc') || 'Sign in to sync your rank, credits, and unlocked loadout.')
+                : (t('auth.signUpDesc') || 'Create an operative account to track stats and play online.')}
             </p>
 
             <AnimatePresence>

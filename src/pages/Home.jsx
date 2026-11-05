@@ -30,7 +30,7 @@ export default function Home() {
   const navigate = useNavigate();
   const { currentPhase } = useGameStore();
   const { profile } = useAuthStore();
-  const { t } = useLanguageStore();
+  const { t, isRTL } = useLanguageStore();
 
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [isOnlineMode, setIsOnlineMode] = useState(false);
@@ -69,17 +69,17 @@ export default function Home() {
             className="flex flex-col items-center"
           >
             <span className="text-[11px] font-mono tracking-widest text-red-500 uppercase font-semibold">
-              TACTICAL DECEPTION PROTOCOL
+              {t('home.protocol')}
             </span>
             <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-white mt-1">
-              UNDERCOVER
+              {t('home.title')}
             </h1>
           </motion.div>
           
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-zinc-900 border border-zinc-800 rounded-full mt-1">
             <span className="w-2 h-2 rounded-full bg-emerald-500" />
             <p className="text-[11px] text-zinc-400 font-mono tracking-wider uppercase">
-              System Ready · v2.4
+              {t('home.systemReady')}
             </p>
           </div>
         </div>
@@ -94,7 +94,7 @@ export default function Home() {
             }`}
           >
             <Users size={15} className={!isOnlineMode ? 'text-red-500' : 'text-zinc-500'} />
-            Local Pass &amp; Play
+            {t('home.localPassPlay')}
           </button>
           
           <button
@@ -105,14 +105,14 @@ export default function Home() {
             }`}
           >
             <Wifi size={15} className={isOnlineMode ? 'text-red-500' : 'text-zinc-500'} />
-            Online Room
+            {t('home.onlineRoom')}
           </button>
 
-          {/* Active indicator pill with spring animation */}
+          {/* Active indicator pill with spring animation (RTL-aware) */}
           <motion.div
             layout
             className="absolute top-1 bottom-1 w-[calc(50%-4px)] bg-zinc-900 border border-zinc-700/70 rounded-lg shadow-sm"
-            animate={{ left: !isOnlineMode ? '4px' : 'calc(50% + 2px)' }}
+            animate={{ [isRTL ? 'right' : 'left']: !isOnlineMode ? '4px' : 'calc(50% + 2px)' }}
             transition={spring}
           />
         </div>
@@ -133,14 +133,14 @@ export default function Home() {
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-1.5">
                 <Eye size={14} className={selectedMode === 'conscious' ? 'text-red-500' : 'text-zinc-500'} />
-                Standard
+                {t('home.standardMode')}
               </span>
               {selectedMode === 'conscious' && (
                 <CheckCircle2 size={13} className="text-red-500" />
               )}
             </div>
             <p className="text-[11px] text-zinc-400 leading-relaxed">
-              Impostor knows they are rogue. Bluff and blend in.
+              {t('home.standardDesc')}
             </p>
           </motion.div>
 
@@ -158,14 +158,14 @@ export default function Home() {
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-1.5">
                 <EyeOff size={14} className={selectedMode === 'blind' ? 'text-red-500' : 'text-zinc-500'} />
-                Blind Ops
+                {t('home.blindMode')}
               </span>
               {selectedMode === 'blind' && (
                 <CheckCircle2 size={13} className="text-red-500" />
               )}
             </div>
             <p className="text-[11px] text-zinc-400 leading-relaxed">
-              Impostor receives a close synonym. Nobody knows their role.
+              {t('home.blindDesc')}
             </p>
           </motion.div>
         </div>
@@ -180,7 +180,7 @@ export default function Home() {
               onClick={handleResume}
               icon={AlertTriangle}
             >
-              Resume Active Match
+              {t('home.resumeMatch')}
             </Button>
           )}
 
@@ -191,7 +191,7 @@ export default function Home() {
             onClick={handleStartOperation}
             icon={Zap}
           >
-            {isOnlineMode ? 'Create / Join Online Room' : 'Start Local Match'}
+            {isOnlineMode ? t('home.startOnline') : t('home.startLocal')}
           </Button>
 
           <Button
@@ -201,7 +201,7 @@ export default function Home() {
             onClick={() => navigate('/packs')}
             icon={FolderLock}
           >
-            Word Cipher Packs
+            {t('home.wordPacks')}
           </Button>
         </div>
 
@@ -209,11 +209,11 @@ export default function Home() {
         <div className="pt-4 border-t border-zinc-900 flex items-center justify-between text-[11px] text-zinc-500 font-mono">
           <span className="flex items-center gap-1.5">
             <Radio size={12} className="text-zinc-400" />
-            Status: Operational
+            {t('home.statusOperational')}
           </span>
           <span className="flex items-center gap-1.5">
             <ShieldCheck size={12} className="text-zinc-400" />
-            Private Session
+            {t('home.privateSession')}
           </span>
         </div>
       </main>

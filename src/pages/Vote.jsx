@@ -109,13 +109,13 @@ export default function Vote() {
             type="button"
             onClick={() => navigate('/clues')}
             className="text-zinc-400 hover:text-white transition-colors p-1 rounded-lg hover:bg-zinc-900 cursor-pointer"
-            title={strings.nav?.back || 'Back'}
+            title={t('nav.back')}
           >
             <ArrowLeft size={18} className="rtl:rotate-180" />
           </button>
-          <div>
-            <h1 className="text-xl font-bold text-white tracking-tight">{strings.vote?.title || 'Ballot Voting'}</h1>
-            <p className="text-zinc-500 text-xs font-mono">{strings.vote?.passTheDevice || 'Cast secret ballots one by one'}</p>
+          <div className="text-start">
+            <h1 className="text-xl font-bold text-white tracking-tight">{t('vote.title')}</h1>
+            <p className="text-zinc-500 text-xs font-mono">{t('vote.passTheDevice')}</p>
           </div>
         </div>
         <LanguageToggle variant="chip" />
@@ -143,10 +143,8 @@ export default function Vote() {
             </div>
             <p className="text-zinc-500 text-xs text-center font-mono">
               {allVoted
-                ? (strings.vote?.allVotesCast || 'All Ballots Sealed')
-                : (strings.vote?.playersVotingCount
-                    ?.replace('{current}', voteIndex + 1)
-                    ?.replace('{total}', activePlayers.length) || `Ballot ${voteIndex + 1} of ${activePlayers.length}`)}
+                ? t('vote.allVotesCast')
+                : t('vote.playersVotingCount', { current: voteIndex + 1, total: activePlayers.length })}
             </p>
 
             {!allVoted && currentVoter ? (
@@ -176,8 +174,8 @@ export default function Vote() {
                   <BarChart3 size={32} />
                 </div>
                 <div className="text-center">
-                  <h2 className="text-2xl font-bold text-white tracking-tight">{strings.vote?.allVotesIn || 'All Votes Cast'}</h2>
-                  <p className="text-zinc-400 text-xs mt-1 font-mono">{strings.vote?.readyToReveal || 'Ready to tally and expose suspects'}</p>
+                  <h2 className="text-2xl font-bold text-white tracking-tight">{t('vote.allVotesIn')}</h2>
+                  <p className="text-zinc-400 text-xs mt-1 font-mono">{t('vote.readyToReveal')}</p>
                 </div>
                 <Button
                   variant="danger"
@@ -186,7 +184,7 @@ export default function Vote() {
                   onClick={handleRevealResults}
                   icon={Search}
                 >
-                  {strings.vote?.revealResults || 'Tally & Reveal Results'}
+                  {t('vote.revealResults')}
                 </Button>
               </motion.div>
             ) : null}
@@ -200,7 +198,7 @@ export default function Vote() {
             animate={{ opacity: 1 }}
           >
             <div className="text-center space-y-1">
-              <h2 className="text-2xl font-bold text-white tracking-tight">{strings.vote?.voteResults || 'Ballot Outcome'}</h2>
+              <h2 className="text-2xl font-bold text-white tracking-tight">{t('vote.voteResults')}</h2>
             </div>
 
             {/* Tally bars */}
@@ -225,7 +223,7 @@ export default function Vote() {
                           <span>{name}</span>
                         </span>
                         <span className="text-zinc-500 font-mono">
-                          {count} {count === 1 ? (strings.vote?.voteSingle || 'vote') : (strings.vote?.votesPlural || 'votes')}
+                          {count} {count === 1 ? t('vote.voteSingle') : t('vote.votesPlural')}
                         </span>
                       </div>
                       <div className="h-2 bg-zinc-900 rounded-full overflow-hidden">
@@ -256,16 +254,16 @@ export default function Vote() {
               {isTie ? (
                 <div className="space-y-1">
                   <Scale size={32} className="mx-auto mb-2 text-amber-400" />
-                  <p className="text-amber-400 font-bold text-lg">{strings.vote?.tieTitle || 'Tie Vote — Deadlock'}</p>
-                  <p className="text-zinc-400 text-xs mt-0.5">{strings.vote?.tieSubtitle || 'No operative eliminated. Returning to clues.'}</p>
+                  <p className="text-amber-400 font-bold text-lg">{t('vote.tieTitle')}</p>
+                  <p className="text-zinc-400 text-xs mt-0.5">{t('vote.tieSubtitle')}</p>
                 </div>
               ) : (
                 <div className="space-y-1">
                   <UserX size={32} className="mx-auto mb-2 text-red-500" />
                   <p className="text-red-400 font-bold text-lg">
-                    {strings.vote?.eliminatedTitle?.replace('{name}', eliminated) || `${eliminated} Eliminated`}
+                    {t('vote.eliminatedTitle', { name: eliminated })}
                   </p>
-                  <p className="text-zinc-400 text-xs mt-0.5">{strings.vote?.eliminatedSubtitle || 'Target neutralized by majority consensus'}</p>
+                  <p className="text-zinc-400 text-xs mt-0.5">{t('vote.eliminatedSubtitle')}</p>
                 </div>
               )}
             </motion.div>
@@ -275,9 +273,9 @@ export default function Vote() {
               fullWidth
               size="xl"
               onClick={handleProceed}
-              icon={ArrowRight}
+              icon={isRTL ? ArrowLeft : ArrowRight}
             >
-              {isTie ? (strings.vote?.continueToClues || 'Resume Discussion') : (strings.vote?.seeWhatHappens || 'Proceed to Outcome')}
+              {isTie ? t('vote.continueToClues') : t('vote.seeWhatHappens')}
             </Button>
           </motion.div>
         )}

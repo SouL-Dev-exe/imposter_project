@@ -9,6 +9,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Package, X, Shield, Sparkles, Coins, Check } from 'lucide-react';
 import { useEconomyStore } from '../../store/economyStore';
+import { useLanguageStore } from '../../store/languageStore';
 import { RARITIES } from '../../data/economyCatalog';
 import { playCrateOpenSound } from '../../utils/sfx';
 import { toast } from '../../store/toastStore';
@@ -16,6 +17,7 @@ import { toast } from '../../store/toastStore';
 const spring = { type: 'spring', stiffness: 500, damping: 28 };
 
 export default function CrateOpeningModal({ isOpen, onClose }) {
+  const { isRTL, t } = useLanguageStore();
   const [opening, setOpening] = useState(false);
   const [unboxedResult, setUnboxedResult] = useState(null);
 
@@ -69,7 +71,7 @@ export default function CrateOpeningModal({ isOpen, onClose }) {
               }
             }}
             disabled={opening}
-            className="absolute top-3.5 right-3.5 w-7 h-7 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer disabled:opacity-30"
+            className="absolute top-3.5 end-3.5 w-7 h-7 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer disabled:opacity-30"
           >
             <X size={15} />
           </button>
@@ -77,11 +79,13 @@ export default function CrateOpeningModal({ isOpen, onClose }) {
           {/* Title */}
           <div>
             <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-amber-400 bg-amber-950/30 border border-amber-900/50 px-2.5 py-0.5 rounded-full">
-              Field Asset Supply
+              {isRTL ? 'إمدادات الأصول الميدانية' : 'Field Asset Supply'}
             </span>
-            <h2 className="text-xl font-bold text-white mt-1.5 tracking-tight">Tactical Supply Crate</h2>
+            <h2 className="text-xl font-bold text-white mt-1.5 tracking-tight">
+              {t('crate.title') || (isRTL ? 'صندوق إمدادات الوكالة' : 'Tactical Supply Crate')}
+            </h2>
             <p className="text-zinc-500 text-xs font-mono mt-0.5">
-              Unlock exclusive outfits, badges, and surveillance FX
+              {t('crate.subtitle') || (isRTL ? 'فك تشفير المظاهر والشارات والمؤثرات التكتيكية' : 'Unlock exclusive outfits, badges, and surveillance FX')}
             </p>
           </div>
 
@@ -116,7 +120,7 @@ export default function CrateOpeningModal({ isOpen, onClose }) {
                     animate={{ opacity: 1 }}
                     className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs font-mono font-bold text-amber-400"
                   >
-                    Deciphering Vault...
+                    {isRTL ? 'جارٍ فك تشفير الخزينة...' : 'Deciphering Vault...'}
                   </motion.div>
                 )}
               </motion.div>
@@ -140,7 +144,7 @@ export default function CrateOpeningModal({ isOpen, onClose }) {
                       className="mb-2.5 p-1.5 bg-amber-950/30 border border-amber-800/40 rounded-lg text-amber-300 text-xs font-medium flex items-center justify-center gap-1.5 font-mono"
                     >
                       <Shield size={12} />
-                      <span>Duplicate Owned! 50% Refund: +500 SC</span>
+                      <span>{t('crate.duplicate') || (isRTL ? 'أصل مكرر: تم استرداد +500 رصيد' : 'Duplicate Owned! 50% Refund: +500 SC')}</span>
                     </motion.div>
                   )}
 
@@ -168,19 +172,19 @@ export default function CrateOpeningModal({ isOpen, onClose }) {
             <div className="grid grid-cols-4 gap-1 p-2 bg-zinc-900/50 border border-zinc-850 rounded-xl text-[10px] font-mono">
               <div>
                 <span className="text-zinc-300 font-bold block">50%</span>
-                <span className="text-zinc-500 text-[9px]">Common</span>
+                <span className="text-zinc-500 text-[9px]">{isRTL ? 'شائع' : 'Common'}</span>
               </div>
               <div>
                 <span className="text-blue-400 font-bold block">30%</span>
-                <span className="text-zinc-500 text-[9px]">Rare</span>
+                <span className="text-zinc-500 text-[9px]">{isRTL ? 'نادر' : 'Rare'}</span>
               </div>
               <div>
                 <span className="text-red-400 font-bold block">15%</span>
-                <span className="text-zinc-500 text-[9px]">Epic</span>
+                <span className="text-zinc-500 text-[9px]">{isRTL ? 'ملحمي' : 'Epic'}</span>
               </div>
               <div>
                 <span className="text-amber-400 font-bold block">5%</span>
-                <span className="text-zinc-500 text-[9px]">Legendary</span>
+                <span className="text-zinc-500 text-[9px]">{isRTL ? 'أسطوري' : 'Legendary'}</span>
               </div>
             </div>
           )}
@@ -196,7 +200,9 @@ export default function CrateOpeningModal({ isOpen, onClose }) {
               >
                 <Package size={14} />
                 <span>
-                  {cratesCount > 0 ? `Open Crate (${cratesCount} available)` : `Unlock · 1,000 SC`}
+                  {cratesCount > 0
+                    ? (isRTL ? `فتح صندوق (${cratesCount} متاح)` : `Open Crate (${cratesCount} available)`)
+                    : (isRTL ? `فتح · 1,000 رصيد` : `Unlock · 1,000 SC`)}
                 </span>
               </button>
             ) : (
@@ -205,7 +211,7 @@ export default function CrateOpeningModal({ isOpen, onClose }) {
                 onClick={handleReset}
                 className="w-full py-2.5 bg-red-600 hover:bg-red-500 text-white font-semibold text-xs rounded-lg transition-colors cursor-pointer"
               >
-                Open Another Crate
+                {isRTL ? 'فتح صندوق آخر' : 'Open Another Crate'}
               </button>
             )}
           </div>

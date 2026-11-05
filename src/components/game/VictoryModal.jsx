@@ -9,6 +9,7 @@ import { UserAvatar } from '../ui/UserAvatar';
 import { ScreenFXOverlay } from '../ui/ScreenFXOverlay';
 import { useAuthStore } from '../../store/authStore';
 import { useEconomyStore } from '../../store/economyStore';
+import { useLanguageStore } from '../../store/languageStore';
 import { getStoreItem } from '../../data/economyCatalog';
 import { playVictorySound, vibrate } from '../../utils/sfx';
 
@@ -17,6 +18,7 @@ const spring = { type: 'spring', stiffness: 450, damping: 28 };
 export function VictoryModal({ isOpen, winner, wordPair, winnerPlayer, onClose }) {
   const { profile } = useAuthStore();
   const { equipped, equippedAvatarStyle } = useEconomyStore();
+  const { t } = useLanguageStore();
 
   useEffect(() => {
     if (!isOpen) return undefined;
@@ -64,7 +66,7 @@ export function VictoryModal({ isOpen, winner, wordPair, winnerPlayer, onClose }
             <button
               type="button"
               onClick={onClose}
-              className="absolute top-3.5 right-3.5 w-7 h-7 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+              className="absolute top-3.5 end-3.5 w-7 h-7 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
             >
               <X size={15} />
             </button>
@@ -74,10 +76,10 @@ export function VictoryModal({ isOpen, winner, wordPair, winnerPlayer, onClose }
                 <Crown size={28} />
               </div>
               <span className="text-[10px] font-mono tracking-widest uppercase text-red-500 font-semibold">
-                Match Champion Spotlight
+                {t('victory.title')}
               </span>
               <h2 className="text-2xl font-black text-white tracking-tight">
-                Victory Achieved
+                {winner === 'civilians' ? t('result.civiliansWin') : t('result.impostorWins')}
               </h2>
             </div>
 
@@ -111,13 +113,13 @@ export function VictoryModal({ isOpen, winner, wordPair, winnerPlayer, onClose }
             {wordPair && (
               <div className="bg-zinc-900/40 border border-zinc-800/80 rounded-xl p-3 text-xs grid grid-cols-[1fr_auto_1fr] items-center gap-2 font-mono">
                 <div className="min-w-0">
-                  <p className="text-[10px] text-zinc-500 uppercase">Civilian</p>
+                  <p className="text-[10px] text-zinc-500 uppercase">{t('result.civilians')}</p>
                   <p className="font-bold text-white truncate">{wordPair.wordA}</p>
                 </div>
                 <div className="text-zinc-600 font-bold">/</div>
                 <div className="min-w-0">
-                  <p className="text-[10px] text-zinc-500 uppercase">Impostor</p>
-                  <p className="font-bold text-red-400 truncate">{wordPair.wordB || 'Bluff'}</p>
+                  <p className="text-[10px] text-zinc-500 uppercase">{t('result.impostor')}</p>
+                  <p className="font-bold text-red-400 truncate">{wordPair.wordB || (t('result.none'))}</p>
                 </div>
               </div>
             )}
@@ -127,7 +129,7 @@ export function VictoryModal({ isOpen, winner, wordPair, winnerPlayer, onClose }
               onClick={onClose}
               className="w-full py-2.5 bg-red-600 hover:bg-red-500 active:bg-red-700 text-white font-semibold text-xs rounded-lg transition-colors cursor-pointer"
             >
-              Continue to Debrief
+              {t('victory.close')}
             </button>
           </motion.div>
         </motion.div>

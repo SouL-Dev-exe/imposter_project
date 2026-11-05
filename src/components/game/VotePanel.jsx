@@ -38,10 +38,10 @@ export function VotePanel({ players, voterName, onVote, hasVoted }) {
         </div>
         <div>
           <p className="text-white font-bold text-lg tracking-tight">
-            Ballot Encrypted &amp; Logged
+            {t('vote.allVotesCast')}
           </p>
           <p className="text-zinc-500 text-xs mt-1 font-mono">
-            {strings.reveal?.gotItPass || 'Pass device to the next operative'}
+            {t('reveal.gotItPass')}
           </p>
         </div>
       </motion.div>
@@ -109,12 +109,12 @@ export function VotePanel({ players, voterName, onVote, hasVoted }) {
 
               {isTargeted ? (
                 <span className="flex items-center gap-1 text-red-400 font-mono text-xs px-2.5 py-1 bg-red-950/40 border border-red-600/50 rounded-lg">
-                  <Crosshair size={13} className="text-red-500 animate-pulse" />
-                  Target Locked
+                  <Crosshair size={13} className="text-red-500" />
+                  {t('vote.lockTarget')}
                 </span>
               ) : (
                 <span className="text-zinc-600 text-xs font-mono">
-                  Designate
+                  {t('dir') === 'rtl' ? 'تحديد' : 'Designate'}
                 </span>
               )}
             </motion.button>

@@ -1,12 +1,14 @@
 /**
  * languageStore.js
  * Zustand store for language selection (en/ar) and direction (ltr/rtl).
- * Automatically updates document.documentElement.dir and lang attributes.
+ * Automatically updates document.documentElement.dir and lang attributes,
+ * and maintains bidirectional sync with react-i18next.
  */
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { TRANSLATIONS } from '../utils/translations';
+import i18n from '../i18n';
 
 // Initial sync on load
 const savedLang = (() => {
@@ -30,14 +32,26 @@ export const useLanguageStore = create(
     (set, get) => ({
       language: savedLang,
       isRTL: savedLang === 'ar',
+      dir: savedLang === 'ar' ? 'rtl' : 'ltr',
 
       setLanguage: (lang) => {
         const nextLang = lang === 'ar' ? 'ar' : 'en';
+        const isRTL = nextLang === 'ar';
+        const dir = isRTL ? 'rtl' : 'ltr';
+
         if (typeof document !== 'undefined') {
-          document.documentElement.dir = nextLang === 'ar' ? 'rtl' : 'ltr';
+          document.documentElement.dir = dir;
           document.documentElement.lang = nextLang;
         }
-        set({ language: nextLang, isRTL: nextLang === 'ar' });
+
+        // Keep react-i18next in sync
+        try {
+          if (i18n && i18n.language !== nextLang) {
+            i18n.changeLanguage(nextLang);
+          }
+        } catch (_) {}
+
+        set({ language: nextLang, isRTL, dir });
       },
 
       toggleLanguage: () => {
@@ -75,7 +89,10 @@ export const useLanguageStore = create(
           return typeof val === 'number' ? String(val) : (val ?? keyPath);
         }
 
-        return val.replace(/\{(\w+)\}/g, (_, k) => (params[k] !== undefined ? params[k] : `{${k}}`));
+        // Support both {param} and {{param}} interpolation
+        return val
+          .replace(/\{\{(\w+)\}\}/g, (_, k) => (params[k] !== undefined ? params[k] : `{{${k}}}`))
+          .replace(/\{(\w+)\}/g, (_, k) => (params[k] !== undefined ? params[k] : `{${k}}`));
       },
     }),
     {
@@ -83,3 +100,13 @@ export const useLanguageStore = create(
     }
   )
 );
+
+/**
+ * Convenient hook providing t, language, isRTL, dir, and toggleLanguage
+ */
+export function useAppTranslation() {
+  const { t, language, isRTL, dir, setLanguage, toggleLanguage } = useLanguageStore();
+  return { t, language, isRTL, dir, setLanguage, toggleLanguage };
+}
+
+export default useLanguageStore;

@@ -6,10 +6,13 @@
  */
 import { motion, AnimatePresence } from 'framer-motion';
 import { Coins, Trophy, Flame, Award, X } from 'lucide-react';
+import { useLanguageStore } from '../../store/languageStore';
 
 const spring = { type: 'spring', stiffness: 500, damping: 28 };
 
 export default function MatchRewardsModal({ isOpen, breakdown, onClose }) {
+  const { t, isRTL } = useLanguageStore();
+
   if (!isOpen || !breakdown) return null;
 
   return (
@@ -25,7 +28,7 @@ export default function MatchRewardsModal({ isOpen, breakdown, onClose }) {
           <button
             type="button"
             onClick={onClose}
-            className="absolute top-3.5 right-3.5 w-7 h-7 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+            className="absolute top-3.5 end-3.5 w-7 h-7 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
           >
             <X size={15} />
           </button>
@@ -36,9 +39,9 @@ export default function MatchRewardsModal({ isOpen, breakdown, onClose }) {
           </div>
 
           <div>
-            <h2 className="text-xl font-bold text-white tracking-tight">Match Rewards</h2>
+            <h2 className="text-xl font-bold text-white tracking-tight">{t('rewards.title')}</h2>
             <p className="text-zinc-500 text-xs font-mono mt-0.5">
-              {breakdown.isVictory ? 'Victory Bonus Cleared' : 'Participation Logged'}
+              {breakdown.isVictory ? t('rewards.subtitle') : t('rewards.baseXp')}
             </p>
           </div>
 
@@ -50,7 +53,7 @@ export default function MatchRewardsModal({ isOpen, breakdown, onClose }) {
               className="py-2 px-3 bg-red-950/30 border border-red-900/50 rounded-xl text-red-300 text-xs font-semibold flex items-center justify-center gap-1.5"
             >
               <Award size={14} className="text-red-400" />
-              <span>Level Up! Reached Tier {breakdown.newLevel}!</span>
+              <span>{t('rewards.levelUp')} (LVL {breakdown.newLevel})</span>
             </motion.div>
           )}
 
@@ -58,7 +61,7 @@ export default function MatchRewardsModal({ isOpen, breakdown, onClose }) {
           <div className="space-y-2 text-xs text-start bg-zinc-900/60 border border-zinc-850 rounded-xl p-3.5 font-mono">
             {/* Base Participation */}
             <div className="flex items-center justify-between">
-              <span className="text-zinc-400">Base Participation</span>
+              <span className="text-zinc-400">{t('rewards.baseXp')}</span>
               <span className="text-zinc-200 font-bold">+{breakdown.baseSC} SC</span>
             </div>
 
@@ -67,7 +70,7 @@ export default function MatchRewardsModal({ isOpen, breakdown, onClose }) {
               <div className="flex items-center justify-between text-emerald-400">
                 <span className="flex items-center gap-1">
                   <Trophy size={12} />
-                  <span>Victory Bonus</span>
+                  <span>{t('rewards.victoryBonus')}</span>
                 </span>
                 <span className="font-bold">+{breakdown.victorySC} SC</span>
               </div>
@@ -76,7 +79,7 @@ export default function MatchRewardsModal({ isOpen, breakdown, onClose }) {
             {/* MVP / Correct Vote */}
             {breakdown.isCorrectVote && (
               <div className="flex items-center justify-between text-blue-400">
-                <span>MVP Correct Vote</span>
+                <span>{t('victory.mvp')}</span>
                 <span className="font-bold">+{breakdown.mvpSC} SC</span>
               </div>
             )}
@@ -86,7 +89,7 @@ export default function MatchRewardsModal({ isOpen, breakdown, onClose }) {
               <div className="flex items-center justify-between text-amber-400">
                 <span className="flex items-center gap-1">
                   <Flame size={12} />
-                  <span>Streak Bonus (+{breakdown.multiplierPercent}%)</span>
+                  <span>{t('rewards.streakBonus')} (+{breakdown.multiplierPercent}%)</span>
                 </span>
                 <span className="font-bold">+{breakdown.streakBonusSC} SC</span>
               </div>
@@ -94,13 +97,13 @@ export default function MatchRewardsModal({ isOpen, breakdown, onClose }) {
 
             {/* XP Gained */}
             <div className="flex items-center justify-between text-zinc-300 pt-2 border-t border-zinc-800">
-              <span className="font-sans font-medium text-zinc-400">Season XP Gained</span>
+              <span className="font-sans font-medium text-zinc-400">{t('profile.stats')}</span>
               <span className="font-bold text-amber-400">+{breakdown.xpGained} XP</span>
             </div>
 
             {/* Total SC */}
             <div className="flex items-center justify-between text-white font-bold pt-1.5 border-t border-zinc-800 text-sm">
-              <span className="font-sans font-semibold">Total Credits</span>
+              <span className="font-sans font-semibold">{t('rewards.totalEarned')}</span>
               <span className="text-amber-400 font-black">+{breakdown.totalSC} SC</span>
             </div>
           </div>
@@ -110,7 +113,7 @@ export default function MatchRewardsModal({ isOpen, breakdown, onClose }) {
             onClick={onClose}
             className="w-full py-2.5 bg-red-600 hover:bg-red-500 active:bg-red-700 text-white font-semibold text-xs rounded-lg transition-colors cursor-pointer"
           >
-            Claim Rewards
+            {t('rewards.claim')}
           </button>
         </motion.div>
       </div>

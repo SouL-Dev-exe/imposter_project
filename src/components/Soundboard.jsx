@@ -7,8 +7,10 @@ import { Volume2, Star, X, Search } from 'lucide-react';
 import { motion } from 'framer-motion';
 import soundsData from './sounds.json';
 import { supabase } from '../lib/supabase';
+import { useLanguageStore } from '../store/languageStore';
 
 export default function Soundboard({ roomId = null, onClose = null }) {
+  const { isRTL, t } = useLanguageStore();
   const [search, setSearch] = useState('');
   const [favorites, setFavorites] = useState([]);
   const [activeTab, setActiveTab] = useState('all'); // 'all' | 'favs'
@@ -105,7 +107,7 @@ export default function Soundboard({ roomId = null, onClose = null }) {
           </div>
           <div>
             <h2 className="text-xs font-semibold tracking-wider uppercase text-zinc-100 font-mono">
-              Comms Soundboard
+              {t('soundboard.title') || (isRTL ? 'لوحة المؤثرات الصوتية' : 'Comms Soundboard')}
             </h2>
           </div>
           <span className="text-[10px] font-mono text-zinc-500 bg-zinc-900 px-1.5 py-0.5 rounded border border-zinc-800">
@@ -124,7 +126,7 @@ export default function Soundboard({ roomId = null, onClose = null }) {
                   : 'text-zinc-400 hover:text-zinc-100'
               }`}
             >
-              All
+              {t('soundboard.all') || (isRTL ? 'الكل' : 'All')}
             </button>
             <button
               type="button"
@@ -145,7 +147,7 @@ export default function Soundboard({ roomId = null, onClose = null }) {
               type="button"
               onClick={onClose}
               className="w-7 h-7 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-zinc-100 flex items-center justify-center transition text-xs cursor-pointer"
-              title="Close"
+              title={isRTL ? 'إغلاق' : 'Close'}
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -159,7 +161,7 @@ export default function Soundboard({ roomId = null, onClose = null }) {
         <input
           type="text"
           dir="auto"
-          placeholder="Filter audio cues..."
+          placeholder={t('soundboard.search') || (isRTL ? 'تصفية المؤثرات الصوتية...' : 'Filter audio cues...')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full bg-zinc-900/80 text-xs text-zinc-100 placeholder-zinc-500 rounded-lg ps-8 pe-8 py-2 border border-zinc-800 focus:outline-none focus:border-red-600/80 transition"
@@ -179,7 +181,9 @@ export default function Soundboard({ roomId = null, onClose = null }) {
       <div className="flex-1 overflow-y-auto pe-1 grid grid-cols-2 sm:grid-cols-3 gap-1.5 align-content-start scrollbar-thin scrollbar-thumb-zinc-800 max-h-[60vh]">
         {filteredSounds.length === 0 ? (
           <div className="col-span-full text-center py-8 text-zinc-500 text-xs font-mono">
-            {activeTab === 'favs' ? 'No favorite sounds saved' : 'No transmission matches'}
+            {activeTab === 'favs'
+              ? (t('soundboard.emptyFavs') || (isRTL ? 'لا توجد أصوات مفضلة محفوظة' : 'No favorite sounds saved'))
+              : (t('soundboard.empty') || (isRTL ? 'لا توجد تطابقات صوتية' : 'No transmission matches'))}
           </div>
         ) : (
           filteredSounds.map((sound) => {

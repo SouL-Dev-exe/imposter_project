@@ -23,83 +23,35 @@ import {
   X, 
   Lock, 
   Package, 
-  Target,
-  Zap,
-  Shield,
-  Eye,
-  Flame,
-  Dices,
-  Globe,
-  Puzzle,
-  Sparkles,
-  Cpu,
-  Crosshair,
   Loader2 
 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Modal } from '../components/ui/Modal';
 import { usePackStore } from '../store/packStore';
+import { useLanguageStore } from '../store/languageStore';
+import { LanguageToggle } from '../components/ui/LanguageToggle';
 import { DEFAULT_PACKS } from '../data/defaultPacks';
 import Footer from '../components/Footer';
 
 // ─── Pack icon picker ─────────────────────────────────────────────────────────
-const PACK_ICONS = [
-  { id: 'package', icon: Package },
-  { id: 'target', icon: Target },
-  { id: 'zap', icon: Zap },
-  { id: 'shield', icon: Shield },
-  { id: 'eye', icon: Eye },
-  { id: 'flame', icon: Flame },
-  { id: 'dices', icon: Dices },
-  { id: 'globe', icon: Globe },
-  { id: 'puzzle', icon: Puzzle },
-  { id: 'sparkles', icon: Sparkles },
-  { id: 'cpu', icon: Cpu },
-  { id: 'crosshair', icon: Crosshair },
-];
-
-function PackInsignia({ icon, className = 'w-5 h-5 text-red-500' }) {
-  const emojiMap = {
-    '\uD83D\uDCE6': Package,
-    '\uD83C\uDFAF': Target,
-    '\u26A1': Zap,
-    '\uD83D\uDEE1\uFE0F': Shield,
-    '\uD83D\uDC41\uFE0F': Eye,
-    '\uD83D\uDD25': Flame,
-    '\uD83C\uDFB2': Dices,
-    '\uD83C\uDF10': Globe,
-    '\uD83E\uDDE9': Puzzle,
-    '\uD83D\uDE80': Sparkles,
-    '\uD83D\uDC8E': Sparkles,
-    '\uD83C\uDFAD': Eye,
-  };
-
-  const matched = PACK_ICONS.find((item) => item.id === icon);
-  const IconComp = matched?.icon || emojiMap[icon] || Package;
-
-  return (
-    <div className="w-9 h-9 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center shrink-0">
-      <IconComp className={className} />
-    </div>
-  );
-}
+const ICONS = ['📦', '🎯', '⚡', '🛡️', '👁️', '🎭', '🔥', '🎲', '🌐', '🧩', '🚀', '💎'];
 
 function IconPicker({ value, onChange }) {
   return (
     <div className="flex flex-wrap gap-2">
-      {PACK_ICONS.map(({ id, icon: Icon }) => (
+      {ICONS.map((icon) => (
         <button
-          key={id}
+          key={icon}
           type="button"
-          onClick={() => onChange(id)}
-          className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors cursor-pointer border ${
-            value === id
+          onClick={() => onChange(icon)}
+          className={`w-10 h-10 rounded-xl text-lg flex items-center justify-center transition-colors cursor-pointer border ${
+            value === icon
               ? 'bg-red-600 border-red-500 text-white'
-              : 'bg-zinc-900 border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-zinc-100'
+              : 'bg-zinc-900 border-zinc-800 hover:border-zinc-700 text-zinc-300'
           }`}
         >
-          <Icon className="w-4 h-4" />
+          {icon}
         </button>
       ))}
     </div>
@@ -136,6 +88,7 @@ function WordTag({ word, onDelete }) {
 
 // ─── New single-word form ─────────────────────────────────────────────────────
 function AddWordForm({ onAdd }) {
+  const { isRTL } = useLanguageStore();
   const [word, setWord] = useState('');
   const [open, setOpen] = useState(false);
   const inputRef = useRef(null);
@@ -165,7 +118,7 @@ function AddWordForm({ onAdd }) {
         className="w-full py-2.5 rounded-xl border border-dashed border-zinc-800
                    text-zinc-400 text-xs font-semibold hover:border-zinc-700 hover:text-white transition-colors flex items-center justify-center gap-1.5 cursor-pointer font-sans"
       >
-        <Plus size={14} /> Add Word
+        <Plus size={14} /> <span>{isRTL ? 'إضافة كلمة' : 'Add Word'}</span>
       </button>
     );
   }
@@ -177,13 +130,13 @@ function AddWordForm({ onAdd }) {
       animate={{ opacity: 1, height: 'auto' }}
     >
       <div className="flex items-center justify-between">
-        <p className="text-white text-xs font-bold">New Word Entry</p>
+        <p className="text-white text-xs font-bold">{isRTL ? 'إدخال كلمة جديدة' : 'New Word Entry'}</p>
         <button
           type="button"
           onClick={() => setOpen(false)}
           className="text-zinc-500 hover:text-white text-xs cursor-pointer"
         >
-          Close
+          {isRTL ? 'إغلاق' : 'Close'}
         </button>
       </div>
       <div>
@@ -192,7 +145,7 @@ function AddWordForm({ onAdd }) {
           value={word}
           onChange={(e) => setWord(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="e.g. قهوة / Coffee"
+          placeholder={isRTL ? 'مثال: قهوة / قبعة' : 'e.g. قهوة / Coffee'}
           autoFocus
           className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-white
                      text-xs focus:outline-none focus:border-red-600 placeholder-zinc-600 transition-colors"
@@ -200,10 +153,10 @@ function AddWordForm({ onAdd }) {
       </div>
       <div className="flex gap-2">
         <Button variant="primary" onClick={handleAdd} disabled={!word.trim()} size="sm">
-          Add Word
+          {isRTL ? 'إضافة' : 'Add Word'}
         </Button>
         <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>
-          Cancel
+          {isRTL ? 'إلغاء' : 'Cancel'}
         </Button>
       </div>
     </motion.div>
@@ -229,6 +182,7 @@ function CloudStatusBadge({ status }) {
 // ─── Main page ────────────────────────────────────────────────────────────────
 export default function PackEditor() {
   const navigate = useNavigate();
+  const { t, isRTL } = useLanguageStore();
   const {
     customPacks, cloudPacks, cloudStatus,
     addPack, deletePack, addWord, deleteWord,
@@ -322,19 +276,21 @@ export default function PackEditor() {
           type="button"
           onClick={() => navigate('/')}
           className="text-zinc-400 hover:text-white transition-colors p-1 rounded-lg hover:bg-zinc-900 cursor-pointer"
+          title={t('nav.back')}
         >
           <ArrowLeft size={18} className="rtl:rotate-180" />
         </button>
-        <div className="flex-1">
+        <div className="flex-1 text-start">
           <h1 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
             <FolderOpen size={18} className="text-red-500" />
-            <span>Word Cipher Packs</span>
+            <span>{t('packs.editorTitle')}</span>
           </h1>
-          <p className="text-zinc-500 text-xs font-mono">Create &amp; manage custom word sets</p>
+          <p className="text-zinc-500 text-xs font-mono">{t('packs.editorSubtitle')}</p>
         </div>
+        <LanguageToggle variant="chip" />
         <CloudStatusBadge status={cloudStatus} />
         <Button variant="secondary" size="sm" onClick={() => fileInputRef.current?.click()} icon={Upload}>
-          Import
+          {t('packs.import')}
         </Button>
         <input ref={fileInputRef} type="file" accept=".json" onChange={handleImport} className="hidden" />
       </div>
@@ -366,11 +322,11 @@ export default function PackEditor() {
       </AnimatePresence>
 
       {/* Tabs */}
-      <div className="flex rounded-xl bg-zinc-900 p-1 border border-zinc-800 gap-1">
+      <div className="flex rounded-xl bg-zinc-900 p-1 border border-zinc-800 gap-1 font-mono">
         {[
-          { id: 'custom', label: `Custom (${customPacks.length})` },
-          { id: 'cloud', label: `Cloud (${cloudPacks.length})` },
-          { id: 'builtin', label: `Built-in (${DEFAULT_PACKS.length})` },
+          { id: 'custom', label: `${t('packs.customTab')} (${customPacks.length})` },
+          { id: 'cloud', label: `${t('packs.cloudTab')} (${cloudPacks.length})` },
+          { id: 'builtin', label: `${t('packs.builtinTab')} (${DEFAULT_PACKS.length})` },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -393,8 +349,12 @@ export default function PackEditor() {
           {customPacks.length === 0 ? (
             <div className="text-center py-10 text-zinc-500 space-y-1.5 bg-zinc-950 border border-zinc-900 rounded-xl">
               <FolderOpen size={32} className="mx-auto text-zinc-600" />
-              <p className="font-semibold text-xs text-zinc-400">No custom packs yet</p>
-              <p className="text-[11px] font-mono">Create your first pack or import one from JSON.</p>
+              <p className="font-semibold text-xs text-zinc-400">
+                {isRTL ? 'لا توجد حزم مخصصة بعد' : 'No custom packs yet'}
+              </p>
+              <p className="text-[11px] font-mono">
+                {isRTL ? 'أنشئ أول حزمة أو استورد واحدة بصيغة JSON.' : 'Create your first pack or import one from JSON.'}
+              </p>
             </div>
           ) : (
             customPacks.map((pack) => {
@@ -411,17 +371,19 @@ export default function PackEditor() {
                   onClick={() => setSelectedPackId(isSelected ? null : pack.id)}
                 >
                   <div className="flex items-center gap-3">
-                    <PackInsignia icon={pack.icon} />
+                    <span className="text-2xl">{pack.icon}</span>
                     <div className="flex-1 min-w-0">
                       <p className="text-white font-bold text-sm truncate">{pack.name}</p>
-                      <p className="text-zinc-500 font-mono text-[10px]">{getPackWords(pack).length} words</p>
+                      <p className="text-zinc-500 font-mono text-[10px]">
+                        {getPackWords(pack).length} {isRTL ? 'كلمة' : 'words'}
+                      </p>
                     </div>
                     <div className="flex gap-1.5 items-center">
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); handlePublish(pack.id); }}
                         disabled={ps?.state === 'loading'}
-                        title="Publish to Cloud"
+                        title={isRTL ? 'نشر للسحابة' : 'Publish to Cloud'}
                         className={`text-xs px-2 py-1 rounded-lg border transition-colors flex items-center gap-1 cursor-pointer ${
                           ps?.state === 'success'
                             ? 'text-emerald-400 border-emerald-800 bg-emerald-950/30'
@@ -436,7 +398,7 @@ export default function PackEditor() {
                         type="button"
                         onClick={(e) => { e.stopPropagation(); exportPack(pack.id); }}
                         className="text-zinc-400 hover:text-white p-1 rounded hover:bg-zinc-900 transition-colors"
-                        title="Export"
+                        title={isRTL ? 'تصدير' : 'Export'}
                       >
                         <Download size={14} />
                       </button>
@@ -444,13 +406,13 @@ export default function PackEditor() {
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (window.confirm(`Delete "${pack.name}"?`)) {
+                          if (window.confirm(isRTL ? `هل تريد حذف "${pack.name}"؟` : `Delete "${pack.name}"?`)) {
                             deletePack(pack.id);
                             if (selectedPackId === pack.id) setSelectedPackId(null);
                           }
                         }}
                         className="text-zinc-500 hover:text-red-400 p-1 rounded hover:bg-zinc-900 transition-colors"
-                        title="Delete"
+                        title={isRTL ? 'حذف' : 'Delete'}
                       >
                         <Trash2 size={14} />
                       </button>
@@ -473,7 +435,7 @@ export default function PackEditor() {
             onClick={() => setShowNewPackModal(true)}
             icon={Plus}
           >
-            Create New Cipher Pack
+            {t('packs.newPack') || (isRTL ? 'إنشاء حزمة كلمات جديدة' : 'Create New Cipher Pack')}
           </Button>
         </div>
       )}
@@ -516,7 +478,7 @@ export default function PackEditor() {
                 onClick={() => setSelectedPackId(selectedPackId === pack.id ? null : pack.id)}
               >
                 <div className="flex items-center gap-3">
-                  <PackInsignia icon={pack.icon} />
+                  <span className="text-2xl">{pack.icon}</span>
                   <div className="flex-1 min-w-0">
                     <p className="text-white font-bold text-sm truncate">{pack.name}</p>
                     <p className="text-zinc-500 font-mono text-[10px]">{getPackWords(pack).length} words · Cloud</p>
@@ -558,7 +520,7 @@ export default function PackEditor() {
               onClick={() => setSelectedPackId(selectedPackId === pack.id ? null : pack.id)}
             >
               <div className="flex items-center gap-3">
-                <PackInsignia icon={pack.icon} />
+                <span className="text-2xl">{pack.icon}</span>
                 <div className="flex-1 min-w-0">
                   <p className="text-white font-bold text-sm truncate">{pack.name}</p>
                   <p className="text-zinc-500 font-mono text-[10px]">
@@ -584,16 +546,14 @@ export default function PackEditor() {
             exit={{ opacity: 0, y: 15 }}
           >
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <PackInsignia icon={selectedPack.icon} />
-                <div>
-                  <h3 className="text-white font-bold text-sm">
-                    {selectedPack.name}
-                  </h3>
-                  <p className="text-zinc-500 text-[10px] font-mono">
-                    {getPackWords(selectedPack).length} words in this set
-                  </p>
-                </div>
+              <div>
+                <h3 className="text-white font-bold text-sm flex items-center gap-2">
+                  <span>{selectedPack.icon}</span>
+                  <span>{selectedPack.name}</span>
+                </h3>
+                <p className="text-zinc-500 text-[10px] font-mono">
+                  {getPackWords(selectedPack).length} words in this set
+                </p>
               </div>
               <div className="flex gap-1.5">
                 <Button variant="secondary" size="sm" onClick={() => exportPack(selectedPack.id)} icon={Download}>
@@ -636,29 +596,29 @@ export default function PackEditor() {
       </AnimatePresence>
 
       {/* New Pack Modal */}
-      <Modal isOpen={showNewPackModal} onClose={() => setShowNewPackModal(false)} title="Create Cipher Pack">
+      <Modal isOpen={showNewPackModal} onClose={() => setShowNewPackModal(false)} title={isRTL ? 'إنشاء حزمة كلمات' : 'Create Cipher Pack'}>
         <div className="space-y-4">
           <div>
-            <label className="text-zinc-400 text-xs uppercase font-mono block mb-1.5">Pack Name</label>
+            <label className="text-zinc-400 text-xs uppercase font-mono block mb-1.5">{isRTL ? 'اسم الحزمة' : 'Pack Name'}</label>
             <input
               value={newPackName}
               onChange={(e) => setNewPackName(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleCreatePack()}
-              placeholder="e.g. Office Edition"
+              placeholder={isRTL ? 'مثال: نسخة المكتب' : 'e.g. Office Edition'}
               className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3.5 py-2.5 text-white text-xs
                          placeholder-zinc-600 focus:outline-none focus:border-red-600 transition-colors"
               autoFocus
             />
           </div>
           <div>
-            <label className="text-zinc-400 text-xs uppercase font-mono block mb-1.5">Icon</label>
+            <label className="text-zinc-400 text-xs uppercase font-mono block mb-1.5">{isRTL ? 'الأيقونة' : 'Icon'}</label>
             <IconPicker value={newPackIcon} onChange={setNewPackIcon} />
           </div>
           <div className="flex gap-2 pt-2">
             <Button variant="primary" onClick={handleCreatePack} disabled={!newPackName.trim()} fullWidth>
-              Create Pack
+              {isRTL ? 'إنشاء الحزمة' : 'Create Pack'}
             </Button>
-            <Button variant="ghost" onClick={() => setShowNewPackModal(false)}>Cancel</Button>
+            <Button variant="ghost" onClick={() => setShowNewPackModal(false)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
           </div>
         </div>
       </Modal>

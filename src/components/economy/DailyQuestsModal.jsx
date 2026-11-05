@@ -6,12 +6,14 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { Flame, Calendar, Target, Trophy, X, Gift, Check, Coins } from 'lucide-react';
 import { useEconomyStore } from '../../store/economyStore';
+import { useLanguageStore } from '../../store/languageStore';
 import { STREAK_LADDER } from '../../data/economyCatalog';
 import { toast } from '../../store/toastStore';
 
 const spring = { type: 'spring', stiffness: 500, damping: 28 };
 
 export default function DailyQuestsModal({ isOpen, onClose }) {
+  const { isRTL, t } = useLanguageStore();
   const {
     streakDays,
     dailyQuests,
@@ -51,10 +53,10 @@ export default function DailyQuestsModal({ isOpen, onClose }) {
               </div>
               <div>
                 <h2 className="text-base font-bold text-white flex items-center gap-2">
-                  Daily Streak &amp; Missions
+                  {t('quests.title') || 'Daily Streak & Missions'}
                 </h2>
                 <p className="text-zinc-400 text-xs font-mono">
-                  {streakDays} Day Active Streak · Daily Credits &amp; Crates
+                  {t('quests.subtitle', { days: streakDays }) || `${streakDays} Day Active Streak · Daily Credits & Crates`}
                 </p>
               </div>
             </div>
@@ -74,9 +76,11 @@ export default function DailyQuestsModal({ isOpen, onClose }) {
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold text-zinc-300 flex items-center gap-1.5 uppercase font-mono">
                   <Calendar size={13} className="text-amber-400" />
-                  7-Day Streak Ladder
+                  {t('quests.streakLadder') || '7-Day Streak Ladder'}
                 </span>
-                <span className="text-xs font-mono text-zinc-500">Day {streakDays}</span>
+                <span className="text-xs font-mono text-zinc-500">
+                  {t('quests.day', { n: streakDays }) || `Day ${streakDays}`}
+                </span>
               </div>
 
               <div className="grid grid-cols-7 gap-1.5">
@@ -94,7 +98,9 @@ export default function DailyQuestsModal({ isOpen, onClose }) {
                           : 'bg-zinc-900/40 border-zinc-850 text-zinc-500'
                       }`}
                     >
-                      <span className="text-[10px] font-mono font-bold">D{step.day}</span>
+                      <span className="text-[10px] font-mono font-bold">
+                        {isRTL ? `ي${step.day}` : `D${step.day}`}
+                      </span>
                       <div className="my-1">
                         {step.crate ? (
                           <Gift size={16} className="text-amber-400" />
@@ -117,7 +123,7 @@ export default function DailyQuestsModal({ isOpen, onClose }) {
             <div className="space-y-2.5">
               <span className="text-xs font-semibold text-zinc-300 flex items-center gap-1.5 uppercase font-mono">
                 <Target size={13} className="text-red-500" />
-                Daily Operations
+                {t('quests.daily') || 'Daily Operations'}
               </span>
 
               <div className="space-y-2">
@@ -132,7 +138,7 @@ export default function DailyQuestsModal({ isOpen, onClose }) {
                         <div className="flex items-center justify-between mb-1.5">
                           <p className="text-xs font-semibold text-zinc-200 truncate">{q.desc}</p>
                           <span className="text-[11px] font-mono font-bold text-amber-400">
-                            +{q.reward} SC
+                            +{q.reward} {isRTL ? 'رصيد' : 'SC'}
                           </span>
                         </div>
                         {/* Progress Bar */}
@@ -145,7 +151,7 @@ export default function DailyQuestsModal({ isOpen, onClose }) {
                           />
                         </div>
                         <div className="flex justify-between items-center mt-1 text-[10px] text-zinc-500 font-mono">
-                          <span>Progress</span>
+                          <span>{t('quests.progress') || 'Progress'}</span>
                           <span>
                             {q.progress} / {q.target}
                           </span>
@@ -164,7 +170,7 @@ export default function DailyQuestsModal({ isOpen, onClose }) {
                             : 'bg-zinc-850 text-zinc-500 cursor-not-allowed'
                         }`}
                       >
-                        {q.claimed ? 'Claimed' : isDone ? 'Claim' : 'Active'}
+                        {q.claimed ? (t('quests.claimed') || 'Claimed') : isDone ? (t('quests.claim') || 'Claim') : (t('quests.active') || 'Active')}
                       </button>
                     </div>
                   );
@@ -176,7 +182,7 @@ export default function DailyQuestsModal({ isOpen, onClose }) {
             <div className="space-y-2.5">
               <span className="text-xs font-semibold text-zinc-300 flex items-center gap-1.5 uppercase font-mono">
                 <Trophy size={13} className="text-amber-400" />
-                Weekly Directives
+                {t('quests.weekly') || 'Weekly Directives'}
               </span>
 
               <div className="space-y-2">
@@ -191,7 +197,7 @@ export default function DailyQuestsModal({ isOpen, onClose }) {
                         <div className="flex items-center justify-between mb-1.5">
                           <p className="text-xs font-semibold text-zinc-200 truncate">{q.desc}</p>
                           <span className="text-[11px] font-mono font-bold text-amber-400 flex items-center gap-1">
-                            +{q.reward} SC {q.rewardCrate && '· 1 Crate'}
+                            +{q.reward} {isRTL ? 'رصيد' : 'SC'} {q.rewardCrate && (t('quests.crateBonus') || '· 1 Crate')}
                           </span>
                         </div>
                         {/* Progress Bar */}
@@ -204,7 +210,7 @@ export default function DailyQuestsModal({ isOpen, onClose }) {
                           />
                         </div>
                         <div className="flex justify-between items-center mt-1 text-[10px] text-zinc-500 font-mono">
-                          <span>Progress</span>
+                          <span>{t('quests.progress') || 'Progress'}</span>
                           <span>
                             {q.progress} / {q.target}
                           </span>
@@ -223,7 +229,7 @@ export default function DailyQuestsModal({ isOpen, onClose }) {
                             : 'bg-zinc-850 text-zinc-500 cursor-not-allowed'
                         }`}
                       >
-                        {q.claimed ? 'Claimed' : isDone ? 'Claim' : 'Active'}
+                        {q.claimed ? (t('quests.claimed') || 'Claimed') : isDone ? (t('quests.claim') || 'Claim') : (t('quests.active') || 'Active')}
                       </button>
                     </div>
                   );

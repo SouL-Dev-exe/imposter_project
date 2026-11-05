@@ -4,7 +4,6 @@
  */
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { 
   ArrowLeft, 
@@ -21,13 +20,15 @@ import {
 import { Button } from '../components/ui/Button';
 import { useAuthStore } from '../store/authStore';
 import { useMultiplayerStore } from '../store/multiplayerStore';
+import { useLanguageStore } from '../store/languageStore';
 import { LiveChat } from '../components/game/LiveChat';
 import SouLStoreModal from '../components/economy/SouLStoreModal';
 import UserAvatar from '../components/ui/UserAvatar';
 import VoiceChat from '../components/VoiceChat';
+import { LanguageToggle } from '../components/ui/LanguageToggle';
 
 export default function OnlineLobby() {
-  const { t, i18n } = useTranslation();
+  const { t, isRTL } = useLanguageStore();
   const navigate = useNavigate();
   const { profile, user, isGuest, fetchProfile } = useAuthStore();
   const {
@@ -41,7 +42,7 @@ export default function OnlineLobby() {
   const [showStore, setShowStore] = useState(false);
   const [voicePeers, setVoicePeers] = useState(new Set());
 
-  const isArabic = i18n?.language?.startsWith('ar');
+  const isArabic = isRTL;
 
   useEffect(() => {
     if (!profile) {
@@ -96,10 +97,11 @@ export default function OnlineLobby() {
   // 1. Not in a room yet
   if (!roomCode) {
     return (
-      <div className="min-h-[100dvh] flex flex-col items-center justify-center p-4 font-sans selection:bg-red-600 selection:text-white">
+      <div className="min-h-[100dvh] flex flex-col items-center justify-center p-4 font-sans selection:bg-red-600 selection:text-white relative">
         <Button variant="ghost" onClick={() => navigate('/')} className="absolute top-4 start-4" icon={ArrowLeft}>
           {t('online.back') || 'Back'}
         </Button>
+        <LanguageToggle variant="chip" className="absolute top-4 end-4" />
 
         <motion.div
           className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6 sm:p-8 w-full max-w-sm space-y-6 shadow-xl"
@@ -169,7 +171,7 @@ export default function OnlineLobby() {
           <button
             type="button"
             onClick={() => setShowStore(true)}
-            title={isArabic ? 'متجر الأفاتار والملابس' : 'Armory & Store'}
+            title={isArabic ? 'متجر الوكالة' : 'Armory & Store'}
             className="bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 rounded-lg p-1 transition-colors cursor-pointer flex items-center gap-1.5"
           >
             <UserAvatar
@@ -179,7 +181,7 @@ export default function OnlineLobby() {
               showBadge={false}
             />
             <span className="text-xs font-semibold text-zinc-300 hidden sm:inline px-1">
-              Armory
+              {t('header.shop') || (isArabic ? 'المتجر' : 'Armory')}
             </span>
           </button>
 
@@ -193,6 +195,7 @@ export default function OnlineLobby() {
 
         {/* Right */}
         <div className="flex items-center gap-2 shrink-0">
+          <LanguageToggle variant="chip" />
           <span className="text-xs font-mono font-semibold text-zinc-400">
             {t('online.players_count', { count: players.length }) || `${players.length} Players`}
           </span>
@@ -276,17 +279,19 @@ export default function OnlineLobby() {
                           {p.is_host && (
                             <span className="text-[9px] font-mono font-bold text-amber-400 bg-amber-950/30 border border-amber-800/40 px-1.5 py-0.2 rounded flex items-center gap-0.5">
                               <Crown size={9} />
-                              Host
+                              {isArabic ? 'المضيف' : 'Host'}
                             </span>
                           )}
                           {p.userId === user?.id && (
-                            <span className="text-[9px] text-zinc-400 font-mono">You</span>
+                            <span className="text-[9px] text-zinc-400 font-mono">{isArabic ? 'أنت' : 'You'}</span>
                           )}
                         </>
                       ) : (
                         <>
                           <div className="w-8 h-8 rounded-full bg-zinc-900" />
-                          <span className="text-[10px] text-zinc-600 font-mono">Slot {index + 1}</span>
+                          <span className="text-[10px] text-zinc-600 font-mono">
+                            {isArabic ? `خانة ${index + 1}` : `Slot ${index + 1}`}
+                          </span>
                         </>
                       )}
                     </div>

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Mic, MicOff, Sliders, PhoneOff, Volume2, Minus, Plus, X } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
+import { useLanguageStore } from '../store/languageStore';
 import UserAvatar from './ui/UserAvatar';
 
 export default function VoiceChat({
@@ -9,6 +10,7 @@ export default function VoiceChat({
   players = [],
   onVoicePeersChange,
 }) {
+  const { isRTL, t } = useLanguageStore();
   const [isInVoice, setIsInVoice] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -405,10 +407,10 @@ export default function VoiceChat({
         <button
           onClick={joinVoice}
           className="bg-zinc-900 hover:bg-zinc-800 text-zinc-100 border border-zinc-800 hover:border-zinc-700 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-mono font-medium flex items-center gap-1.5 transition active:scale-95 cursor-pointer"
-          title="Connect Voice Comms"
+          title={t('voice.online') || 'Connect Voice Comms'}
         >
           <Mic className="w-3.5 h-3.5 text-red-500" />
-          <span className="hidden sm:inline">Comms Online</span>
+          <span className="hidden sm:inline">{t('voice.online') || (isRTL ? 'الاتصال متصل' : 'Comms Online')}</span>
         </button>
       ) : (
         <div className="flex items-center gap-1 sm:gap-1.5 bg-zinc-950 border border-zinc-800 px-1.5 sm:px-2 py-1 rounded-lg">
@@ -420,14 +422,14 @@ export default function VoiceChat({
                 ? 'bg-red-950/60 text-red-400 border border-red-900/60'
                 : 'bg-zinc-900 text-zinc-100 hover:bg-zinc-800 border border-zinc-800'
             }`}
-            title={isMuted ? 'Unmute microphone' : 'Mute microphone'}
+            title={isMuted ? (isRTL ? 'إلغاء كتم الميكروفون' : 'Unmute microphone') : (isRTL ? 'كتم الميكروفون' : 'Mute microphone')}
           >
             {isMuted ? (
               <MicOff className="w-3.5 h-3.5 text-red-400" />
             ) : (
               <Mic className="w-3.5 h-3.5 text-emerald-400" />
             )}
-            <span className="hidden sm:inline text-[11px]">{isMuted ? 'Muted' : 'Live'}</span>
+            <span className="hidden sm:inline text-[11px]">{isMuted ? (t('voice.muted') || 'Muted') : (t('voice.live') || 'Live')}</span>
           </button>
 
           {/* Volume Settings Toggle Button */}
@@ -441,14 +443,14 @@ export default function VoiceChat({
             title="Audio Levels"
           >
             <Sliders className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline text-[11px]">Mixer</span>
+            <span className="hidden sm:inline text-[11px]">{t('voice.mixer') || (isRTL ? 'المازج' : 'Mixer')}</span>
           </button>
 
           {/* Leave Button */}
           <button
             onClick={leaveVoice}
             className="bg-zinc-900 hover:bg-zinc-850 text-red-400 hover:text-red-300 border border-zinc-800 hover:border-red-900/60 px-2 py-1 rounded-md text-xs transition cursor-pointer"
-            title="Disconnect Comms"
+            title={t('voice.disconnect') || 'Disconnect Comms'}
           >
             <PhoneOff className="w-3.5 h-3.5" />
           </button>
@@ -457,11 +459,11 @@ export default function VoiceChat({
 
       {/* Volume Controls Popover */}
       {isInVoice && showSettings && (
-        <div className="fixed sm:absolute top-16 sm:top-full start-2 sm:start-0 sm:mt-2 z-50 w-[calc(100vw-1rem)] sm:w-80 max-w-sm bg-zinc-950 border border-zinc-800 rounded-xl shadow-2xl p-3.5 space-y-3 select-none text-left">
+        <div className="fixed sm:absolute top-16 sm:top-full start-2 sm:start-0 sm:mt-2 z-50 w-[calc(100vw-1rem)] sm:w-80 max-w-sm bg-zinc-950 border border-zinc-800 rounded-xl shadow-2xl p-3.5 space-y-3 select-none text-start">
           <div className="flex items-center justify-between pb-2 border-b border-zinc-800/80">
             <h3 className="text-xs font-mono font-semibold text-zinc-100 flex items-center gap-1.5 uppercase tracking-wider">
               <Sliders className="w-3.5 h-3.5 text-red-500" />
-              <span>Voice Comms Mixer</span>
+              <span>{t('voice.mixerTitle') || (isRTL ? 'مازج الاتصالات الصوتية' : 'Voice Comms Mixer')}</span>
             </h3>
             <button
               onClick={() => setShowSettings(false)}
@@ -476,7 +478,7 @@ export default function VoiceChat({
             <div className="flex items-center justify-between">
               <span className="text-xs text-zinc-300 flex items-center gap-1.5">
                 <Mic className="w-3.5 h-3.5 text-red-500" />
-                <span>My Transceiver:</span>
+                <span>{t('voice.myMic') || (isRTL ? 'جهاز الإرسال:' : 'My Transceiver:')}</span>
               </span>
               <div className="flex items-center gap-1.5">
                 <button
@@ -505,16 +507,16 @@ export default function VoiceChat({
             <div className="flex items-center justify-between">
               <span className="text-[11px] text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
                 <Volume2 className="w-3 h-3 text-zinc-500" />
-                <span>Operative Channels:</span>
+                <span>{t('voice.channels') || (isRTL ? 'قنوات العملاء:' : 'Operative Channels:')}</span>
               </span>
               <span className="text-[10px] text-zinc-500 bg-zinc-900 px-1.5 py-0.5 rounded border border-zinc-800">
-                {otherPlayers.length} online
+                {otherPlayers.length} {isRTL ? 'متصل' : 'online'}
               </span>
             </div>
 
             {otherPlayers.length === 0 ? (
               <div className="text-center py-3 bg-zinc-900/40 rounded-lg border border-zinc-800/60 text-xs text-zinc-500">
-                No active operative frequencies in sector.
+                {t('voice.noPlayers') || (isRTL ? 'لا توجد ترددات عملاء نشطة في القطاع.' : 'No active operative frequencies in sector.')}
               </div>
             ) : (
               <div className="flex flex-col gap-1.5 max-h-44 overflow-y-auto pr-0.5 scrollbar-thin scrollbar-thumb-zinc-800">

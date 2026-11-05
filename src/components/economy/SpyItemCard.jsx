@@ -4,9 +4,12 @@
  */
 import { motion } from 'framer-motion';
 import { Check, Package } from 'lucide-react';
+import { useLanguageStore } from '../../store/languageStore';
 import { playClickSound, vibrate } from '../../utils/sfx';
 
 export default function SpyItemCard({ item, isEquipped, isOwned, onAction }) {
+  const { isRTL } = useLanguageStore();
+
   const handleClick = (e) => {
     e.stopPropagation();
     playClickSound();
@@ -31,7 +34,7 @@ export default function SpyItemCard({ item, isEquipped, isOwned, onAction }) {
           {item.category?.toUpperCase() || 'EQUIPMENT'}
         </span>
         <span className="uppercase font-semibold text-zinc-500">
-          {isEquipped ? 'Active' : isOwned ? 'Owned' : 'Locked'}
+          {isEquipped ? (isRTL ? 'نشط' : 'Active') : isOwned ? (isRTL ? 'مملوك' : 'Owned') : (isRTL ? 'مقفل' : 'Locked')}
         </span>
       </div>
 
@@ -69,12 +72,12 @@ export default function SpyItemCard({ item, isEquipped, isOwned, onAction }) {
         {isEquipped ? (
           <>
             <Check size={12} strokeWidth={3} />
-            <span>Active</span>
+            <span>{isRTL ? 'نشط' : 'Active'}</span>
           </>
         ) : isOwned ? (
-          'Equip'
+          isRTL ? 'تجهيز' : 'Equip'
         ) : (
-          `Acquire · ${(item.price || 0).toLocaleString()} SC`
+          isRTL ? `شراء · ${(item.price || 0).toLocaleString()} رصيد` : `Acquire · ${(item.price || 0).toLocaleString()} SC`
         )}
       </button>
     </div>

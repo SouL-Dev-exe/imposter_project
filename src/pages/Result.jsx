@@ -282,7 +282,7 @@ export default function Result() {
         >
           <span className="flex items-center gap-2">
             <Eye size={15} className="text-red-500" />
-            <span>{revealRoles ? (t('result.hideRoles') || 'Hide Operative Clearances') : (t('result.revealAllRoles') || 'Reveal All Operative Clearances')}</span>
+            <span>{revealRoles ? t('result.hideRoles') : t('result.revealRoles')}</span>
           </span>
           {revealRoles ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </button>
@@ -366,11 +366,13 @@ export default function Result() {
           >
             <div className="flex items-center gap-2">
               <Coins size={16} className="text-amber-400" />
-              <span>Match Rewards: +{rewardBreakdown.totalSC} SC</span>
+              <span>{t('rewards.title')}: +{rewardBreakdown.totalSC} SC</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-[11px] text-zinc-400 font-mono">+{rewardBreakdown.xpGained} XP</span>
-              <span className="text-[10px] bg-amber-400 text-black px-2 py-0.5 rounded font-bold font-mono">View</span>
+              <span className="text-[10px] bg-amber-400 text-black px-2 py-0.5 rounded font-bold font-mono">
+                {t('victory.close') === 'Dismiss Intel' ? 'View' : 'عرض'}
+              </span>
             </div>
           </button>
         )}
@@ -382,15 +384,15 @@ export default function Result() {
           className="w-full py-3 px-4 rounded-xl bg-zinc-950 hover:bg-zinc-900 border border-zinc-800 text-zinc-200 font-semibold text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer"
         >
           <Share2 size={15} className="text-red-500" />
-          <span>Share Match Recap</span>
+          <span>{t('share.shareStory')}</span>
         </button>
 
         <Button variant="primary" fullWidth size="xl" onClick={handlePlayAgain} icon={RotateCcw}>
-          {t('result.playAgain') || 'Play Again'}
+          {t('result.playAgain')}
         </Button>
 
         <Button variant="ghost" fullWidth size="md" onClick={handleHome} icon={Home}>
-          {t('result.home') || 'Return to Main Menu'}
+          {t('result.home')}
         </Button>
       </motion.div>
 

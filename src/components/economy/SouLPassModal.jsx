@@ -7,12 +7,14 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { Award, X, Gift, Check, Lock, Coins, Shield } from 'lucide-react';
 import { useEconomyStore } from '../../store/economyStore';
+import { useLanguageStore } from '../../store/languageStore';
 import { PASS_TIERS } from '../../data/economyCatalog';
 import { toast } from '../../store/toastStore';
 
 const spring = { type: 'spring', stiffness: 500, damping: 28 };
 
 export default function SouLPassModal({ isOpen, onClose }) {
+  const { isRTL, t } = useLanguageStore();
   const {
     seasonLevel,
     seasonXP,
@@ -66,13 +68,13 @@ export default function SouLPassModal({ isOpen, onClose }) {
                 </div>
                 <div>
                   <h2 className="text-lg font-bold text-white flex items-center gap-2 tracking-tight">
-                    Season Battle Pass
+                    {t('pass.title') || 'Season Battle Pass'}
                     <span className="text-[10px] bg-red-950/60 text-red-400 border border-red-900/60 px-2 py-0.5 rounded font-mono font-bold">
-                      Season 1
+                      {t('pass.season') || 'Season 1'}
                     </span>
                   </h2>
                   <p className="text-zinc-400 text-xs font-mono">
-                    50 Tiers of Tactical Rewards · Progress with Match XP
+                    {t('pass.subtitle') || '50 Tiers of Tactical Rewards · Progress with Match XP'}
                   </p>
                 </div>
               </div>
@@ -92,9 +94,11 @@ export default function SouLPassModal({ isOpen, onClose }) {
                   {seasonLevel}
                 </div>
                 <div>
-                  <p className="text-white text-xs font-bold">Tier {seasonLevel} of 50</p>
+                  <p className="text-white text-xs font-bold">
+                    {t('pass.tierProgress', { level: seasonLevel }) || `Tier ${seasonLevel} of 50`}
+                  </p>
                   <p className="text-zinc-400 text-[11px] font-mono">
-                    {seasonXP} / {currentLevelRequiredXP} XP to Next Tier
+                    {t('pass.xpRemaining', { xp: seasonXP, total: currentLevelRequiredXP }) || `${seasonXP} / ${currentLevelRequiredXP} XP to Next Tier`}
                   </p>
                 </div>
               </div>
@@ -108,7 +112,7 @@ export default function SouLPassModal({ isOpen, onClose }) {
                   />
                 </div>
                 <div className="flex justify-between text-[10px] text-zinc-500 font-mono mt-1">
-                  <span>Progress</span>
+                  <span>{isRTL ? 'التقدم' : 'Progress'}</span>
                   <span>{progressPercent}%</span>
                 </div>
               </div>
@@ -125,7 +129,7 @@ export default function SouLPassModal({ isOpen, onClose }) {
                 }`}
               >
                 <Gift size={13} />
-                <span>Claim All ({claimableCount})</span>
+                <span>{t('pass.claimAll', { count: claimableCount }) || `Claim All (${claimableCount})`}</span>
               </button>
             </div>
           </div>
@@ -172,12 +176,12 @@ export default function SouLPassModal({ isOpen, onClose }) {
                             {tier.reward?.name}
                             {isMilestone && (
                               <span className="text-[9px] bg-amber-400/20 text-amber-300 border border-amber-400/40 px-1 py-0.2 rounded font-mono font-bold uppercase">
-                                Milestone
+                                {t('pass.milestone') || 'Milestone'}
                               </span>
                             )}
                           </p>
                           <p className="text-[10px] text-zinc-500 font-mono">
-                            Requires {tier.xpRequired} XP
+                            {t('pass.requires', { xp: tier.xpRequired }) || `Requires ${tier.xpRequired} XP`}
                           </p>
                         </div>
                       </div>
@@ -188,7 +192,7 @@ export default function SouLPassModal({ isOpen, onClose }) {
                     {isClaimed ? (
                       <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-950/30 border border-emerald-800/40 text-emerald-400 text-xs font-semibold">
                         <Check size={11} strokeWidth={3} />
-                        <span>Claimed</span>
+                        <span>{t('pass.claimed') || 'Claimed'}</span>
                       </span>
                     ) : isUnlocked ? (
                       <button
@@ -196,12 +200,12 @@ export default function SouLPassModal({ isOpen, onClose }) {
                         onClick={() => handleClaimTier(tier)}
                         className="px-3 py-1 rounded-lg bg-red-600 hover:bg-red-500 text-white text-xs font-semibold transition-colors cursor-pointer"
                       >
-                        Claim
+                        {t('pass.claim') || 'Claim'}
                       </button>
                     ) : (
                       <span className="inline-flex items-center gap-1 text-zinc-500 text-xs font-mono">
                         <Lock size={12} />
-                        <span>Locked</span>
+                        <span>{t('pass.locked') || 'Locked'}</span>
                       </span>
                     )}
                   </div>
@@ -214,12 +218,17 @@ export default function SouLPassModal({ isOpen, onClose }) {
           <div className="p-3 border-t border-zinc-850 bg-zinc-900/60 flex items-center justify-between text-xs text-zinc-400 font-mono">
             <span className="flex items-center gap-1.5">
               <Coins size={13} className="text-amber-400" />
-              <span>Balance: <strong className="text-white font-bold">{soulCoins} SC</strong></span>
+              <span>{t('pass.balance') || 'Balance:'} <strong className="text-white font-bold">{soulCoins} {isRTL ? 'رصيد' : 'SC'}</strong></span>
             </span>
             <span className="text-zinc-500 text-[11px]">
-              Earn +100 XP per match (+50 XP bonus on win)
+              {t('pass.earnInfo') || 'Earn +100 XP per match (+50 XP bonus on win)'}
             </span>
           </div>
+        </motion.div>
+      </div>
+    </AnimatePresence>
+  );
+}
         </motion.div>
       </div>
     </AnimatePresence>

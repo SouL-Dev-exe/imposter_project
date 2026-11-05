@@ -168,16 +168,16 @@ export function RoleReveal({ player, gameMode, onDone }) {
 
               <div>
                 <span className="text-xs font-mono uppercase font-semibold tracking-wider text-zinc-300">
-                  CLASSIFIED ROLE CARD
+                  {t('reveal.covertClearance')}
                 </span>
                 <p className="text-zinc-500 text-xs mt-1">
-                  {strings.reveal?.tapInstruction || strings.reveal?.holdInstruction || 'Tap button below to reveal role'}
+                  {t('reveal.tapInstruction')}
                 </p>
               </div>
 
               <div className="px-3 py-1.5 bg-red-950/20 border border-red-900/30 rounded-lg">
                 <p className="text-[11px] text-red-400 font-mono">
-                  {strings.reveal?.privacyWarning || 'Ensure other players cannot see screen'}
+                  {t('reveal.privacyWarning')}
                 </p>
               </div>
             </motion.div>
@@ -209,7 +209,7 @@ export function RoleReveal({ player, gameMode, onDone }) {
                   </p>
                 ) : (
                   <p className="text-xl font-bold text-red-400 mt-1 uppercase font-mono">
-                    NO WORD // BLUFF
+                    {t('reveal.noWord')}
                   </p>
                 )}
               </div>

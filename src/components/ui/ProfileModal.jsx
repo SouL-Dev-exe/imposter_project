@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useEconomyStore } from '../../store/economyStore';
+import { useLanguageStore } from '../../store/languageStore';
 import { getStoreItem, RARITIES } from '../../data/economyCatalog';
 import { getPlayerMilestone } from '../../utils/milestones';
 import { toast } from '../../store/toastStore';
@@ -92,6 +93,7 @@ function LoadoutSlot({ icon, label, name, desc, onClear, clearLabel = 'Remove', 
 export function ProfileModal({ isOpen, onClose, defaultTab = 'loadout' }) {
   const { profile, updateProfile, signOut } = useAuthStore();
   const { inventory, equipped, equipItem, unequipItem, isEquipped, soulCoins, seasonLevel, equippedAvatarStyle } = useEconomyStore();
+  const { t, isRTL } = useLanguageStore();
 
   const [activeTab, setActiveTab] = useState(defaultTab);
   const [invFilter, setInvFilter] = useState('all');
@@ -102,6 +104,21 @@ export function ProfileModal({ isOpen, onClose, defaultTab = 'loadout' }) {
   const [error, setError] = useState('');
   const [, forceSfx] = useState(0);
   const successTimer = useRef(null);
+
+  const tabs = useMemo(() => [
+    { id: 'loadout', label: isRTL ? 'العتاد الميداني' : 'Loadout', icon: UserCheck },
+    { id: 'inventory', label: t('profile.inventory') || (isRTL ? 'الخزينة' : 'Locker'), icon: Package },
+    { id: 'settings', label: t('profile.settings') || (isRTL ? 'بروتوكولات الوكالة' : 'Settings'), icon: Settings },
+  ], [isRTL, t]);
+
+  const filters = useMemo(() => [
+    { id: 'all', label: isRTL ? 'الكل' : 'All' },
+    { id: 'outfits', label: isRTL ? 'الأزياء' : 'Outfits' },
+    { id: 'accessories', label: isRTL ? 'الأوسمة' : 'Accessories' },
+    { id: 'emotes', label: isRTL ? 'التعبيرات' : 'Emotes' },
+    { id: 'screenFX', label: isRTL ? 'المؤثرات' : 'Screen FX' },
+    { id: 'titles', label: isRTL ? 'الألقاب' : 'Titles' },
+  ], [isRTL]);
 
   const level = profile?.level ?? 1;
   const milestone = getPlayerMilestone(level);
@@ -211,13 +228,13 @@ export function ProfileModal({ isOpen, onClose, defaultTab = 'loadout' }) {
               className="relative w-full max-w-2xl bg-zinc-950 border border-zinc-800 rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[92dvh]"
             >
               {/* Header */}
-              <div className="relative p-4 sm:p-5 border-b border-zinc-850 bg-zinc-900/40 shrink-0">
+              <div className="relative p-4 sm:p-5 border-b border-zinc-855 bg-zinc-900/40 shrink-0">
                 <motion.button
                   onClick={onClose}
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   transition={spring}
-                  className="absolute top-4 right-4 w-7 h-7 bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-white flex items-center justify-center rounded-lg cursor-pointer transition-colors"
+                  className="absolute top-4 end-4 w-7 h-7 bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-white flex items-center justify-center rounded-lg cursor-pointer transition-colors"
                 >
                   <X size={15} />
                 </motion.button>
@@ -228,14 +245,14 @@ export function ProfileModal({ isOpen, onClose, defaultTab = 'loadout' }) {
                   </div>
                   <div>
                     <h2 className="text-lg font-bold text-white tracking-tight leading-tight">
-                      {profile?.username || 'Guest'}
+                      {profile?.username || (isRTL ? 'ضيف' : 'Guest')}
                     </h2>
                     <div className="flex items-center gap-2 mt-1">
                       <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold uppercase ${milestone.bg} ${milestone.color}`}>
                         {milestone.title}
                       </span>
                       <span className="text-[10px] font-mono text-zinc-500">
-                        Level {level}
+                        {isRTL ? `المستوى ${level}` : `Level ${level}`}
                       </span>
                     </div>
                   </div>
@@ -244,7 +261,7 @@ export function ProfileModal({ isOpen, onClose, defaultTab = 'loadout' }) {
 
               {/* Tabs */}
               <div className="flex items-center border-b border-zinc-850 bg-zinc-950 px-4 shrink-0">
-                {TABS.map((tab) => {
+                {tabs.map((tab) => {
                   const Icon = tab.icon;
                   const isActive = activeTab === tab.id;
                   return (
@@ -277,35 +294,39 @@ export function ProfileModal({ isOpen, onClose, defaultTab = 'loadout' }) {
                       exit={{ opacity: 0, y: -8 }}
                       className="space-y-4"
                     >
-                      <Panel title="Active Loadout Slots">
+                      <Panel title={isRTL ? 'خانات العتاد النشط' : 'Active Loadout Slots'}>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                           <LoadoutSlot
                             icon={<Shirt size={18} />}
-                            label="Field Attire"
-                            name={outfit?.name || 'Standard Covert'}
-                            desc={outfit?.description || 'Default field outfit'}
+                            label={isRTL ? 'الزي الميداني' : 'Field Attire'}
+                            name={outfit?.name || (isRTL ? 'زي سري قياسي' : 'Standard Covert')}
+                            desc={outfit?.description || (isRTL ? 'الزي الميداني الافتراضي' : 'Default field outfit')}
                             onClear={outfit ? () => handleUnequip('outfit', outfit) : null}
+                            clearLabel={isRTL ? 'إزالة' : 'Remove'}
                           />
                           <LoadoutSlot
                             icon={<Sparkles size={18} />}
-                            label="Tactical Accessory"
-                            name={accessory?.name || 'None'}
-                            desc={accessory?.description || 'No accessory active'}
+                            label={isRTL ? 'شارة تكتيكية' : 'Tactical Accessory'}
+                            name={accessory?.name || (isRTL ? 'لا شيء' : 'None')}
+                            desc={accessory?.description || (isRTL ? 'لا توجد شارة نشطة' : 'No accessory active')}
                             onClear={accessory ? () => handleUnequip('accessory', accessory) : null}
+                            clearLabel={isRTL ? 'إزالة' : 'Remove'}
                           />
                           <LoadoutSlot
                             icon={<Tag size={18} />}
-                            label="Operative Title"
+                            label={isRTL ? 'لقب العميل' : 'Operative Title'}
                             name={equippedTitleItem.name}
                             desc={equippedTitleItem.desc}
                             onClear={!isDefaultTitle ? () => handleUnequip('title', equippedTitleItem) : null}
+                            clearLabel={isRTL ? 'إزالة' : 'Remove'}
                           />
                           <LoadoutSlot
                             icon={<Smile size={18} />}
-                            label="Quick Emote"
-                            name={emote?.name || 'None'}
-                            desc={emote?.description || 'No emote equipped'}
+                            label={isRTL ? 'تعبير سريع' : 'Quick Emote'}
+                            name={emote?.name || (isRTL ? 'لا شيء' : 'None')}
+                            desc={emote?.description || (isRTL ? 'لا يوجد تعبير مجهز' : 'No emote equipped')}
                             onClear={emote ? () => handleUnequip('emote', emote) : null}
+                            clearLabel={isRTL ? 'إزالة' : 'Remove'}
                           />
                         </div>
                       </Panel>
@@ -323,7 +344,7 @@ export function ProfileModal({ isOpen, onClose, defaultTab = 'loadout' }) {
                     >
                       {/* Filter pills */}
                       <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-                        {FILTERS.map((f) => (
+                        {filters.map((f) => (
                           <button
                             key={f.id}
                             type="button"
@@ -342,14 +363,14 @@ export function ProfileModal({ isOpen, onClose, defaultTab = 'loadout' }) {
                       {filtered.length === 0 ? (
                         <div className="text-center py-10 bg-zinc-900/30 border border-zinc-850 rounded-xl">
                           <Package size={32} className="mx-auto text-zinc-600 mb-2" />
-                          <p className="text-sm font-semibold text-zinc-400">Locker Empty</p>
-                          <p className="text-xs text-zinc-500 mt-1">Acquire cosmetic gear in the store.</p>
+                          <p className="text-sm font-semibold text-zinc-400">{isRTL ? 'الخزينة فارغة' : 'Locker Empty'}</p>
+                          <p className="text-xs text-zinc-500 mt-1">{isRTL ? 'احصل على عتاد تجميلي من متجر الوكالة.' : 'Acquire cosmetic gear in the store.'}</p>
                           <button
                             type="button"
                             onClick={() => setStoreOpen(true)}
                             className="mt-3 px-3.5 py-1.5 bg-red-600 hover:bg-red-500 text-white text-xs font-semibold rounded-lg cursor-pointer transition-colors"
                           >
-                            Browse Store
+                            {isRTL ? 'تصفح المتجر' : 'Browse Store'}
                           </button>
                         </div>
                       ) : (
@@ -374,7 +395,7 @@ export function ProfileModal({ isOpen, onClose, defaultTab = 'loadout' }) {
                                       : 'bg-red-600 hover:bg-red-500 text-white'
                                   }`}
                                 >
-                                  {active ? 'Unequip' : 'Equip'}
+                                  {active ? (isRTL ? 'إلغاء التجهيز' : 'Unequip') : (isRTL ? 'تجهيز' : 'Equip')}
                                 </button>
                               </div>
                             );
@@ -393,14 +414,14 @@ export function ProfileModal({ isOpen, onClose, defaultTab = 'loadout' }) {
                       exit={{ opacity: 0, y: -8 }}
                       className="space-y-4"
                     >
-                      <Panel title="Operative Codename">
+                      <Panel title={t('auth.username') || (isRTL ? 'الاسم الرمزي للعميل' : 'Operative Codename')}>
                         <div className="space-y-2">
                           <input
                             type="text"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
                             maxLength={20}
-                            placeholder="Enter call-sign..."
+                            placeholder={isRTL ? 'أدخل الاسم الرمزي...' : 'Enter call-sign...'}
                             className="w-full px-3.5 h-10 bg-zinc-900 border border-zinc-800 rounded-lg text-white text-sm focus:outline-none focus:border-red-600 transition-colors"
                           />
                           {error && (
@@ -412,17 +433,17 @@ export function ProfileModal({ isOpen, onClose, defaultTab = 'loadout' }) {
                           {success && (
                             <p className="text-xs text-emerald-400 font-medium flex items-center gap-1">
                               <CheckCircle2 size={13} />
-                              <span>Profile updated successfully!</span>
+                              <span>{isRTL ? 'تم تحديث الملف بنجاح!' : 'Profile updated successfully!'}</span>
                             </p>
                           )}
                         </div>
                       </Panel>
 
-                      <Panel title="Audio Settings">
+                      <Panel title={isRTL ? 'إعدادات الصوت' : 'Audio Settings'}>
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-xs font-semibold text-white">Sound Effects</p>
-                            <p className="text-[11px] text-zinc-500">In-game sound fx cues and haptics</p>
+                            <p className="text-xs font-semibold text-white">{t('settings.soundEffects') || (isRTL ? 'المؤثرات الصوتية' : 'Sound Effects')}</p>
+                            <p className="text-[11px] text-zinc-500">{isRTL ? 'إشارات صوتية واستجابة لمسية داخل اللعبة' : 'In-game sound fx cues and haptics'}</p>
                           </div>
                           <button
                             type="button"
@@ -434,7 +455,7 @@ export function ProfileModal({ isOpen, onClose, defaultTab = 'loadout' }) {
                             }`}
                           >
                             {!sfxState.muted ? <Volume2 size={13} /> : <VolumeX size={13} />}
-                            <span>{!sfxState.muted ? 'Enabled' : 'Muted'}</span>
+                            <span>{!sfxState.muted ? (isRTL ? 'مفعل' : 'Enabled') : (isRTL ? 'مكتوم' : 'Muted')}</span>
                           </button>
                         </div>
                       </Panel>
@@ -447,7 +468,7 @@ export function ProfileModal({ isOpen, onClose, defaultTab = 'loadout' }) {
                           className="flex-1 py-2.5 bg-red-600 hover:bg-red-500 text-white font-semibold text-xs rounded-lg flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors"
                         >
                           <Save size={14} />
-                          <span>{loading ? 'Saving...' : 'Save Profile'}</span>
+                          <span>{loading ? (isRTL ? 'جارٍ الحفظ...' : 'Saving...') : (isRTL ? 'حفظ الملف' : 'Save Profile')}</span>
                         </button>
                         <button
                           type="button"
@@ -455,7 +476,7 @@ export function ProfileModal({ isOpen, onClose, defaultTab = 'loadout' }) {
                           className="px-4 py-2.5 bg-zinc-900 hover:bg-zinc-850 text-zinc-400 hover:text-red-400 font-semibold text-xs rounded-lg border border-zinc-800 cursor-pointer transition-colors flex items-center gap-1.5"
                         >
                           <LogOut size={14} />
-                          <span>Sign Out</span>
+                          <span>{t('profile.logout') || (isRTL ? 'إنهاء الجلسة' : 'Sign Out')}</span>
                         </button>
                       </div>
                     </motion.div>

@@ -8,6 +8,7 @@ import { Volume2, Send, MessageSquare } from 'lucide-react';
 import { useMultiplayerStore } from '../../store/multiplayerStore';
 import { useAuthStore } from '../../store/authStore';
 import { useEconomyStore } from '../../store/economyStore';
+import { useLanguageStore } from '../../store/languageStore';
 import { UserAvatar } from '../ui/UserAvatar';
 import { getStoreItem } from '../../data/economyCatalog';
 import { listenToSoundEmotes } from './ChatSoundboard';
@@ -17,6 +18,7 @@ import { playClickSound } from '../../utils/sfx';
 const spring = { type: 'spring', stiffness: 500, damping: 28 };
 
 export function LiveChat() {
+  const { isRTL, t } = useLanguageStore();
   const { messages, sendMessage, roomId } = useMultiplayerStore();
   const { profile } = useAuthStore();
   const globalEquipped = useEconomyStore((s) => s.equipped);
@@ -59,9 +61,11 @@ export function LiveChat() {
       <div className="bg-zinc-900/80 border-b border-zinc-800/80 px-3 py-2 flex items-center justify-between gap-2 shrink-0">
         <div className="flex items-center gap-2 min-w-0">
           <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
-          <span className="text-white font-bold text-xs uppercase tracking-wider truncate">Transmission</span>
+          <span className="text-white font-bold text-xs uppercase tracking-wider truncate">
+            {t('chat.title') || (isRTL ? 'قناة الاتصالات' : 'Transmission')}
+          </span>
           <span className="text-zinc-500 font-mono text-[10px] border border-zinc-800 bg-zinc-950 px-1.5 py-0.5 rounded shrink-0 tabular-nums">
-            {messages.length} MSG
+            {messages.length} {isRTL ? 'رسالة' : 'MSG'}
           </span>
         </div>
         <motion.button
@@ -87,7 +91,9 @@ export function LiveChat() {
       <div ref={chatRef} className="flex-1 min-h-0 p-3 space-y-3 overflow-y-auto overscroll-contain" role="log" aria-live="polite">
         {messages.length === 0 ? (
           <div className="h-full flex items-center justify-center">
-            <p className="text-zinc-600 text-xs font-mono uppercase tracking-widest">// No active transmissions</p>
+            <p className="text-zinc-600 text-xs font-mono uppercase tracking-widest">
+              // {isRTL ? 'لا توجد اتصالات نشطة' : 'No active transmissions'}
+            </p>
           </div>
         ) : (
           <AnimatePresence initial={false}>
@@ -175,7 +181,7 @@ export function LiveChat() {
           type="text"
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Transmit message..."
+          placeholder={t('chat.placeholder') || (isRTL ? 'أرسل بثاً مشفراً...' : 'Transmit message...')}
           aria-label="Message"
           className="flex-1 bg-zinc-950 border border-zinc-800 rounded-lg px-3 h-8 text-white text-xs placeholder-zinc-500 focus:outline-none focus:border-red-600 transition-colors min-w-0"
           maxLength={100}
@@ -187,9 +193,9 @@ export function LiveChat() {
           whileTap={text.trim() ? { scale: 0.95 } : undefined}
           transition={spring}
           className="h-8 w-8 bg-red-600 hover:bg-red-500 text-white rounded-lg flex items-center justify-center shrink-0 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-          title="Send"
+          title={t('chat.send') || (isRTL ? 'إرسال' : 'Send')}
         >
-          <Send size={13} />
+          <Send size={13} className={isRTL ? 'rotate-180' : ''} />
         </motion.button>
       </form>
     </div>

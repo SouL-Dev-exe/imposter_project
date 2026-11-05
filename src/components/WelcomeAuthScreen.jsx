@@ -3,13 +3,13 @@
  * Clean AAA game styling: no emoji, no glow, Lucide icons, spring animations.
  */
 import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { Shield, Play, LogIn, UserPlus } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
+import { useLanguageStore } from '../store/languageStore';
 import AuthModal from './ui/AuthModal';
 
 export default function WelcomeAuthScreen() {
-  const { t } = useTranslation();
+  const { t, isRTL } = useLanguageStore();
   const [guestName, setGuestName] = useState('');
   const [authModalConfig, setAuthModalConfig] = useState({ isOpen: false, initialTab: 'login' });
   const { loginAsGuest } = useAuthStore();
@@ -33,18 +33,18 @@ export default function WelcomeAuthScreen() {
           </div>
           <h1 className="text-3xl font-black text-white tracking-tight">UNDERCOVER</h1>
           <p className="text-zinc-400 text-xs font-mono">
-            Tactical Deception &amp; Intelligence Protocol
+            {isRTL ? 'بروتوكول الخداع الاستخباري والتكتيكي' : 'Tactical Deception & Intelligence Protocol'}
           </p>
         </div>
 
         {/* OPTION 1: Play as Guest */}
         <form onSubmit={handleGuestSubmit} className="space-y-3 bg-zinc-900/60 p-4 rounded-xl border border-zinc-800 text-start">
           <label className="block text-xs font-semibold text-zinc-300">
-            1. {t('auth.play_as_guest') || 'Quick Pass & Play (Guest)'}
+            1. {t('auth.play_as_guest') || (isRTL ? 'دخول ضيف سريع' : 'Quick Pass & Play (Guest)')}
           </label>
           <input
             type="text"
-            placeholder={t('auth.guest_name_placeholder') || 'Enter temporary call-sign...'}
+            placeholder={t('auth.guest_name_placeholder') || (isRTL ? 'أدخل اسماً مؤقتاً...' : 'Enter temporary call-sign...')}
             value={guestName}
             onChange={(e) => setGuestName(e.target.value)}
             className="w-full p-2.5 bg-zinc-950 text-white rounded-lg border border-zinc-800 text-center focus:outline-none focus:border-red-600 text-xs placeholder:text-zinc-500 font-mono"
@@ -55,7 +55,7 @@ export default function WelcomeAuthScreen() {
             className="w-full py-2.5 bg-red-600 hover:bg-red-500 active:bg-red-700 font-bold text-white rounded-lg transition-colors text-xs flex items-center justify-center gap-1.5 cursor-pointer uppercase tracking-wider"
           >
             <Play size={13} />
-            <span>{t('auth.play_as_guest') || 'Start Playing as Guest'}</span>
+            <span>{t('auth.play_as_guest') || (isRTL ? 'بدء اللعب كضيف' : 'Start Playing as Guest')}</span>
           </button>
         </form>
 
@@ -64,7 +64,9 @@ export default function WelcomeAuthScreen() {
             <div className="w-full border-t border-zinc-850"></div>
           </div>
           <div className="relative flex justify-center text-xs uppercase font-mono">
-            <span className="bg-zinc-950 px-3 text-zinc-500 text-[10px]">Or connect operative ID</span>
+            <span className="bg-zinc-950 px-3 text-zinc-500 text-[10px]">
+              {isRTL ? 'أو ربط هوية العميل' : 'Or connect operative ID'}
+            </span>
           </div>
         </div>
 

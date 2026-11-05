@@ -6,8 +6,10 @@ import React, { useState, useEffect } from 'react';
 import { Eye, Flame, AlertCircle, Crosshair } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '../../lib/supabaseClient';
+import { useLanguageStore } from '../../store/languageStore';
 
 export const SpectatorAndSus = ({ roomId, isEliminated, players = [], currentUserId }) => {
+  const { isRTL, t } = useLanguageStore();
   const [susScores, setSusScores] = useState({});
 
   useEffect(() => {
@@ -47,10 +49,10 @@ export const SpectatorAndSus = ({ roomId, isEliminated, players = [], currentUse
         <div className="bg-zinc-950 border border-red-900/60 rounded-xl p-3 text-center">
           <div className="flex items-center justify-center gap-1.5 text-xs text-red-400 font-mono uppercase tracking-wider mb-1">
             <Eye className="w-3.5 h-3.5 text-red-500" />
-            <span>Spectator Surveillance Mode</span>
+            <span>{t('spectator.mode') || (isRTL ? 'وضع مراقبة المشاهدين' : 'Spectator Surveillance Mode')}</span>
           </div>
           <p className="text-[11px] text-zinc-400">
-            Eliminated operative. You have live observation clearance over clues and sus indicators.
+            {t('spectator.desc') || (isRTL ? 'عميل تم إقصاؤه. لديك تصريح مراقبة حية للتلميحات ومؤشرات الشك.' : 'Eliminated operative. You have live observation clearance over clues and sus indicators.')}
           </p>
         </div>
       )}
@@ -72,7 +74,7 @@ export const SpectatorAndSus = ({ roomId, isEliminated, players = [], currentUse
                 {susCount > 0 && (
                   <span className="bg-red-950/60 text-red-400 text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded border border-red-900/60 shrink-0 flex items-center gap-1">
                     <Flame className="w-3 h-3 text-red-500" />
-                    <span>{susCount} SUS</span>
+                    <span>{susCount} {isRTL ? 'شك' : 'SUS'}</span>
                   </span>
                 )}
               </div>
@@ -80,8 +82,8 @@ export const SpectatorAndSus = ({ roomId, isEliminated, players = [], currentUse
               {/* Reveal secret words for Spectators */}
               {isEliminated && (
                 <div className="text-[10px] text-zinc-300 bg-zinc-900/60 border border-zinc-800/80 rounded-lg p-2 mb-2 font-mono space-y-0.5">
-                  <div>ROLE: <span className="text-red-400 font-semibold">{player.role || '—'}</span></div>
-                  <div>WORD: <span className="text-zinc-100 font-semibold">{player.word || 'CLASSIFIED'}</span></div>
+                  <div>{t('spectator.role') || 'ROLE:'} <span className="text-red-400 font-semibold">{player.role || '—'}</span></div>
+                  <div>{t('spectator.word') || 'WORD:'} <span className="text-zinc-100 font-semibold">{player.word || (isRTL ? 'سري' : 'CLASSIFIED')}</span></div>
                 </div>
               )}
 
@@ -95,7 +97,7 @@ export const SpectatorAndSus = ({ roomId, isEliminated, players = [], currentUse
                   className="w-full py-1.5 bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 hover:border-red-900/60 text-zinc-300 hover:text-red-400 text-xs font-mono rounded-lg transition-colors cursor-pointer flex items-center justify-center gap-1.5"
                 >
                   <Crosshair className="w-3.5 h-3.5 text-red-500" />
-                  <span>Flag Sus</span>
+                  <span>{t('spectator.flagSus') || (isRTL ? 'إشارة شك' : 'Flag Sus')}</span>
                 </motion.button>
               )}
             </div>
