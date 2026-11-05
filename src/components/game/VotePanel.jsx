@@ -1,13 +1,16 @@
 /**
- * VotePanel.jsx — Digital Voting & Tactical Suspect Targeting
- * Black obsidian list, red crosshairs, monospace dossier styling.
+ * VotePanel.jsx — Digital Voting & Target Selection
+ * Clean, tactical UI: no emoji, no glow, Lucide icons, spring animations.
  */
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { Vote, CheckCircle2, Crosshair, UserCheck, Shield } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { UserAvatar } from '../ui/UserAvatar';
 import { getStoreItem } from '../../data/economyCatalog';
 import { useLanguageStore } from '../../store/languageStore';
+
+const spring = { type: 'spring', stiffness: 500, damping: 30 };
 
 export function VotePanel({ players, voterName, onVote, hasVoted }) {
   const [selected, setSelected] = useState(null);
@@ -26,68 +29,63 @@ export function VotePanel({ players, voterName, onVote, hasVoted }) {
   if (confirmed || hasVoted) {
     return (
       <motion.div
-        className="text-center space-y-3 py-8 font-mono bg-zinc-950 border border-zinc-800 p-6 rounded-sm relative"
-        initial={{ opacity: 0, scale: 0.95 }}
+        className="text-center space-y-3 py-6 bg-zinc-950 border border-zinc-800 p-6 rounded-xl relative font-sans"
+        initial={{ opacity: 0, scale: 0.96 }}
         animate={{ opacity: 1, scale: 1 }}
       >
-        <div className="absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 border-red-600" />
-        <div className="absolute top-0 right-0 w-2 h-2 border-t-2 border-r-2 border-red-600" />
-        <div className="w-12 h-12 border border-emerald-500/40 bg-emerald-950/20 text-emerald-400 flex items-center justify-center text-2xl mx-auto rounded-sm">
-          ✓
+        <div className="w-12 h-12 border border-emerald-500/40 bg-emerald-950/20 text-emerald-400 flex items-center justify-center rounded-xl mx-auto">
+          <CheckCircle2 size={24} />
         </div>
-        <p className="text-white font-black text-xl tracking-wider uppercase">
-          BALLOT ENCRYPTED &amp; LOGGED
-        </p>
-        <p className="text-zinc-500 text-xs tracking-widest uppercase">
-          {strings.reveal.gotItPass}
-        </p>
+        <div>
+          <p className="text-white font-bold text-lg tracking-tight">
+            Ballot Encrypted &amp; Logged
+          </p>
+          <p className="text-zinc-500 text-xs mt-1 font-mono">
+            {strings.reveal?.gotItPass || 'Pass device to the next operative'}
+          </p>
+        </div>
       </motion.div>
     );
   }
 
   return (
-    <div className="space-y-5 w-full font-mono">
+    <div className="space-y-4 w-full font-sans">
       {/* Voter Prompt Header */}
       <div className="text-center space-y-1">
-        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-red-950/40 border border-red-900/60 text-[10px] text-red-400 font-bold uppercase tracking-widest">
-          <span className="w-1.5 h-1.5 bg-red-600 rounded-full animate-pulse" />
-          {strings.vote.passToVoter.replace('{name}', voterName)}
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-zinc-900 border border-zinc-800 rounded-full text-xs text-zinc-400 font-mono">
+          <span className="w-1.5 h-1.5 bg-red-500 rounded-full" />
+          {strings.vote?.passToVoter?.replace('{name}', voterName) || `Voter: ${voterName}`}
         </div>
-        <p className="text-2xl font-black text-white uppercase tracking-wider">{voterName}</p>
-        <p className="text-zinc-500 text-xs tracking-wider uppercase">{strings.vote.selectSuspicious}</p>
+        <p className="text-2xl font-black text-white tracking-tight">{voterName}</p>
+        <p className="text-zinc-500 text-xs font-mono">{strings.vote?.selectSuspicious || 'Select the suspected infiltrator'}</p>
       </div>
 
-      {/* Target Operatives Grid / List */}
+      {/* Target Operatives Grid */}
       <div className="space-y-2">
         {eligibleTargets.map((player) => {
           const titleId = player.equipped?.title || 'title_novice';
-          const titleItem = getStoreItem(titleId) || { name: 'Novice', icon: '🌱', accent: '#3b82f6' };
+          const titleItem = getStoreItem(titleId) || { name: 'Novice', accent: '#dc2626' };
           const playerName = player.username || player.name;
           const isTargeted = selected === playerName;
 
           return (
             <motion.button
               key={player.id || playerName}
+              type="button"
               onClick={() => setSelected(playerName)}
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
+              transition={spring}
               className={`
-                w-full p-3 rounded-sm border text-start transition-all duration-150 cursor-pointer flex items-center justify-between gap-3 relative
+                w-full p-3 rounded-xl border text-start transition-colors duration-150 cursor-pointer flex items-center justify-between gap-3
                 ${isTargeted
-                  ? 'bg-red-950/30 border-red-600 text-white shadow-[0_0_20px_rgba(220,38,38,0.35)]'
-                  : 'bg-zinc-950 border-zinc-800 hover:border-zinc-700 text-zinc-300'
+                  ? 'bg-red-950/20 border-red-600/80 text-white'
+                  : 'bg-zinc-900/60 border-zinc-800 text-zinc-300 hover:border-zinc-700'
                 }
               `}
             >
-              {isTargeted && (
-                <>
-                  <div className="absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 border-red-500" />
-                  <div className="absolute bottom-0 right-0 w-2 h-2 border-b-2 border-r-2 border-red-500" />
-                </>
-              )}
-
               <div className="flex items-center gap-3 min-w-0 flex-1">
-                <div className={`p-0.5 border ${isTargeted ? 'border-red-500' : 'border-zinc-800'} bg-black`}>
+                <div className="rounded-lg overflow-hidden bg-zinc-950 p-0.5 border border-zinc-800">
                   <UserAvatar
                     username={playerName}
                     avatarUrl={player.avatar_url}
@@ -96,27 +94,27 @@ export function VotePanel({ players, voterName, onVote, hasVoted }) {
                   />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="font-bold text-sm text-white truncate tracking-wide">{playerName}</p>
+                  <p className="font-semibold text-sm text-white truncate">{playerName}</p>
                   <span
-                    className="text-[9px] font-bold px-1.5 py-0.5 rounded-none border shadow-sm inline-block truncate uppercase tracking-widest mt-0.5"
+                    className="text-[9px] font-mono px-1.5 py-0.5 rounded font-bold uppercase tracking-wider inline-block mt-0.5"
                     style={{
-                      color: isTargeted ? '#f87171' : titleItem.accent || '#3b82f6',
-                      borderColor: isTargeted ? '#dc2626' : `${titleItem.accent || '#3b82f6'}50`,
-                      backgroundColor: isTargeted ? 'rgba(220,38,38,0.1)' : `${titleItem.accent || '#3b82f6'}15`,
+                      color: isTargeted ? '#f87171' : titleItem.accent || '#dc2626',
+                      backgroundColor: isTargeted ? 'rgba(220,38,38,0.15)' : `${titleItem.accent || '#dc2626'}12`,
                     }}
                   >
-                    {titleItem.icon} [{titleItem.name}]
+                    [{titleItem.name}]
                   </span>
                 </div>
               </div>
 
               {isTargeted ? (
-                <span className="text-red-500 font-black text-xs px-2 py-1 bg-red-950/80 border border-red-600 animate-pulse tracking-widest">
-                  [ TARGET LOCKED ]
+                <span className="flex items-center gap-1 text-red-400 font-mono text-xs px-2.5 py-1 bg-red-950/40 border border-red-600/50 rounded-lg">
+                  <Crosshair size={13} className="text-red-500 animate-pulse" />
+                  Target Locked
                 </span>
               ) : (
-                <span className="text-zinc-600 text-[10px] tracking-widest font-mono group-hover:text-zinc-400">
-                  DESIGNATE
+                <span className="text-zinc-600 text-xs font-mono">
+                  Designate
                 </span>
               )}
             </motion.button>
@@ -131,9 +129,9 @@ export function VotePanel({ players, voterName, onVote, hasVoted }) {
         disabled={!selected}
         onClick={handleConfirm}
         size="lg"
-        icon="🗳️"
+        icon={Vote}
       >
-        {strings.vote.confirmVote}
+        {strings.vote?.confirmVote || 'Lock In Vote'}
       </Button>
     </div>
   );

@@ -1,9 +1,26 @@
 /**
  * Lobby.jsx — Game setup: players, mode, options, word pack.
+ * Premium AAA game aesthetics: no emoji, no glow, Lucide icons, spring animations.
  */
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Users, 
+  Eye, 
+  EyeOff, 
+  Settings2, 
+  Timer, 
+  Dices, 
+  Package, 
+  Play, 
+  ArrowLeft, 
+  Check, 
+  ShieldAlert, 
+  Plus,
+  Trash2,
+  FolderOpen
+} from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { LanguageToggle } from '../components/ui/LanguageToggle';
@@ -17,30 +34,32 @@ import Footer from '../components/Footer';
 
 const MIN_PLAYERS = 3;
 const MAX_PLAYERS = 10;
+const spring = { type: 'spring', stiffness: 500, damping: 30 };
 
-// ─── Toggle Switch ────────────────────────────────────────────────────────────
+// ─── Tactical Toggle Switch ───────────────────────────────────────────────────────────
 function Toggle({ checked, onChange, label, description, disabled = false }) {
   return (
     <button
+      type="button"
       onClick={() => !disabled && onChange(!checked)}
       disabled={disabled}
-      className={`flex items-center gap-3 w-full text-start p-3 rounded-xl transition-colors
-        ${checked ? 'bg-violet-600/20 border border-violet-500/40' : 'bg-white/5 border border-white/10'}
-        ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white/10 cursor-pointer'}
+      className={`flex items-center gap-3 w-full text-start p-3 rounded-xl transition-colors cursor-pointer
+        ${checked ? 'bg-red-950/20 border border-red-600/40' : 'bg-zinc-900/60 border border-zinc-800'}
+        ${disabled ? 'opacity-40 cursor-not-allowed' : 'hover:border-zinc-700'}
       `}
     >
       <div className={`w-11 h-6 rounded-full relative transition-colors flex-shrink-0
-        ${checked ? 'bg-violet-600' : 'bg-white/20'}
+        ${checked ? 'bg-red-600' : 'bg-zinc-800'}
       `}>
         <motion.div
-          className="absolute top-0.5 w-5 h-5 bg-white rounded-full shadow"
+          className="absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-sm"
           animate={{ [document.documentElement.dir === 'rtl' ? 'right' : 'left']: checked ? '22px' : '2px' }}
-          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+          transition={spring}
         />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-white font-medium text-sm">{label}</p>
-        {description && <p className="text-white/40 text-xs">{description}</p>}
+        <p className="text-zinc-100 font-semibold text-sm">{label}</p>
+        {description && <p className="text-zinc-500 text-xs mt-0.5">{description}</p>}
       </div>
     </button>
   );
@@ -72,15 +91,15 @@ export default function Lobby() {
   const addPlayer = () => {
     const trimmed = nameInput.trim();
     if (!trimmed) {
-      setError(strings.lobby.emptyNameError);
+      setError(strings.lobby?.emptyNameError || 'Please enter a name');
       return;
     }
     if (playerNames.includes(trimmed)) {
-      setError(strings.lobby.duplicateError);
+      setError(strings.lobby?.duplicateError || 'Name already taken');
       return;
     }
     if (playerNames.length >= MAX_PLAYERS) {
-      setError(strings.lobby.maxPlayersError);
+      setError(strings.lobby?.maxPlayersError || 'Maximum players reached');
       return;
     }
     setPlayerNames([...playerNames, trimmed]);
@@ -112,19 +131,14 @@ export default function Lobby() {
 
     let next;
     if (isAllSelected) {
-      // Toggling a pack ON when 'all' is active adds it and deselects 'All Packs'
       next = [id];
     } else if (selectedCategories.includes(id)) {
-      // Toggling a pack OFF removes it
       next = selectedCategories.filter((catId) => catId !== id);
-      // If all individual packs are deselected, fall back to "All Packs"
       if (next.length === 0) {
         next = ['all'];
       }
     } else {
-      // Toggling a pack ON adds it
       next = [...selectedCategories, id];
-      // If all available category IDs are manually selected, automatically highlight "All Packs"
       if (
         allAvailableCategoryIds.length > 0 &&
         allAvailableCategoryIds.every((availableId) => next.includes(availableId))
@@ -138,7 +152,7 @@ export default function Lobby() {
 
   const handleStart = () => {
     if (playerNames.length < MIN_PLAYERS) {
-      setError(strings.lobby.minPlayersError);
+      setError(strings.lobby?.minPlayersError || `Need at least ${MIN_PLAYERS} players`);
       return;
     }
     const pair = pickRandomPair(selectedCategories, customPacks, cloudPacks);
@@ -150,35 +164,36 @@ export default function Lobby() {
   const canStart = playerNames.length >= MIN_PLAYERS;
 
   return (
-    <div className="min-h-screen flex flex-col px-4 py-6 max-w-lg mx-auto gap-6">
+    <div className="min-h-screen flex flex-col px-4 py-6 max-w-lg mx-auto gap-5 font-sans selection:bg-red-600 selection:text-white">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
+            type="button"
             onClick={() => navigate('/')}
-            className="text-white/40 hover:text-white transition-colors text-2xl p-1"
-            title={strings.nav.back}
+            className="text-zinc-400 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-zinc-900 cursor-pointer"
+            title={strings.nav?.back || 'Back'}
           >
-            <span className="inline-block rtl:rotate-180">←</span>
+            <ArrowLeft size={18} className="rtl:rotate-180" />
           </button>
           <div>
-            <h1 className="text-2xl font-black text-white">{strings.lobby.title}</h1>
-            <p className="text-white/40 text-xs">{strings.lobby.subtitle}</p>
+            <h1 className="text-xl font-bold text-white tracking-tight">{strings.lobby?.title || 'Game Lobby'}</h1>
+            <p className="text-zinc-500 text-xs font-mono">{strings.lobby?.subtitle || 'Setup match operatives & rules'}</p>
           </div>
         </div>
 
-        {/* Language Toggle in lobby */}
         <LanguageToggle variant="chip" />
       </div>
 
       {/* ── Players ──────────────────────────────────────────────────────────── */}
-      <Card className="p-4 space-y-3">
+      <Card className="p-4 space-y-3.5 bg-zinc-950 border border-zinc-900 rounded-xl">
         <div className="flex items-center justify-between">
-          <h2 className="text-white font-bold text-lg flex items-center gap-2">
-            👥 {strings.lobby.players}
+          <h2 className="text-white font-bold text-base flex items-center gap-2">
+            <Users size={16} className="text-red-500" />
+            <span>{strings.lobby?.players || 'Operatives'}</span>
           </h2>
-          <span className={`text-xs px-2 py-0.5 rounded-full font-bold
-            ${canStart ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}
+          <span className={`text-xs px-2.5 py-0.5 rounded-full font-mono font-bold
+            ${canStart ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'}
           `}>
             {playerNames.length}/{MAX_PLAYERS}
           </span>
@@ -191,21 +206,21 @@ export default function Lobby() {
             value={nameInput}
             onChange={(e) => { setNameInput(e.target.value); setError(''); }}
             onKeyDown={handleKeyDown}
-            placeholder={strings.lobby.enterName}
+            placeholder={strings.lobby?.enterName || 'Enter operative name...'}
             maxLength={20}
-            className="flex-1 bg-white/10 border border-white/20 rounded-xl px-4 py-2.5 text-white
-                       placeholder-white/30 focus:outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/30 text-start"
+            className="flex-1 bg-zinc-900 border border-zinc-800 rounded-lg px-3.5 py-2 text-white text-sm
+                       placeholder-zinc-500 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600/30 transition-colors"
           />
-          <Button variant="primary" onClick={addPlayer} disabled={!nameInput.trim()}>
-            {strings.lobby.add}
+          <Button variant="primary" onClick={addPlayer} disabled={!nameInput.trim()} icon={Plus} size="sm">
+            {strings.lobby?.add || 'Add'}
           </Button>
         </div>
 
-        {error && <p className="text-red-400 text-sm">{error}</p>}
+        {error && <p className="text-red-400 text-xs font-medium">{error}</p>}
 
         {/* Player Cards Grid */}
         <AnimatePresence>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {playerNames.map((name, i) => (
               <PlayerCard
                 key={name}
@@ -218,100 +233,111 @@ export default function Lobby() {
         </AnimatePresence>
 
         {playerNames.length < MIN_PLAYERS && (
-          <p className="text-white/30 text-xs text-center">
-            {strings.lobby.needMorePlayers.replace('{n}', MIN_PLAYERS - playerNames.length)}
+          <p className="text-zinc-500 text-xs text-center font-mono py-1">
+            {strings.lobby?.needMorePlayers?.replace('{n}', MIN_PLAYERS - playerNames.length) || `Need ${MIN_PLAYERS - playerNames.length} more players`}
           </p>
         )}
       </Card>
 
       {/* ── Game Mode ────────────────────────────────────────────────────────── */}
-      <Card className="p-4 space-y-3">
-        <h2 className="text-white font-bold text-lg">🎭 {strings.lobby.gameMode}</h2>
+      <Card className="p-4 space-y-3 bg-zinc-950 border border-zinc-900 rounded-xl">
+        <h2 className="text-white font-bold text-base flex items-center gap-2">
+          <ShieldAlert size={16} className="text-red-500" />
+          <span>{strings.lobby?.gameMode || 'Mission Mode'}</span>
+        </h2>
         <div className="grid grid-cols-1 gap-2">
           {[
             {
               id: GAME_MODES.CONSCIOUS,
-              label: strings.lobby.modes.conscious,
-              emoji: '🕵️',
-              desc: strings.lobby.modes.consciousDesc,
+              label: strings.lobby?.modes?.conscious || 'Standard Deception',
+              icon: Eye,
+              desc: strings.lobby?.modes?.consciousDesc || 'Impostor knows they are the impostor and must bluff their way through.',
             },
             {
               id: GAME_MODES.BLIND,
-              label: strings.lobby.modes.blind,
-              emoji: '🙈',
-              desc: strings.lobby.modes.blindDesc,
+              label: strings.lobby?.modes?.blind || 'Blind Ops',
+              icon: EyeOff,
+              desc: strings.lobby?.modes?.blindDesc || 'Impostor receives a similar decoy word and does not know they are rogue.',
             },
-          ].map((mode) => (
-            <button
-              key={mode.id}
-              onClick={() => setGameMode(mode.id)}
-              className={`p-4 rounded-xl border text-start transition-all
-                ${gameMode === mode.id
-                  ? 'bg-violet-600/30 border-violet-500 text-white'
-                  : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10'
-                }
-              `}
-            >
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-xl">{mode.emoji}</span>
-                <span className="font-bold">{mode.label}</span>
-                {gameMode === mode.id && (
-                  <span className="ms-auto text-xs bg-violet-500 text-white px-2 py-0.5 rounded-full">
-                    {strings.lobby.selected}
-                  </span>
-                )}
-              </div>
-              <p className="text-xs text-white/50 leading-relaxed">{mode.desc}</p>
-            </button>
-          ))}
+          ].map((mode) => {
+            const Icon = mode.icon;
+            const isSelected = gameMode === mode.id;
+            return (
+              <button
+                key={mode.id}
+                type="button"
+                onClick={() => setGameMode(mode.id)}
+                className={`p-3.5 rounded-xl border text-start transition-all cursor-pointer
+                  ${isSelected
+                    ? 'bg-red-950/20 border-red-600/70 text-white'
+                    : 'bg-zinc-900/60 border-zinc-800 text-zinc-300 hover:border-zinc-700'
+                  }
+                `}
+              >
+                <div className="flex items-center gap-2.5 mb-1">
+                  <Icon size={16} className={isSelected ? 'text-red-500' : 'text-zinc-500'} />
+                  <span className="font-semibold text-sm text-white">{mode.label}</span>
+                  {isSelected && (
+                    <span className="ms-auto text-[10px] font-mono uppercase bg-red-600/20 border border-red-500/40 text-red-300 px-2 py-0.5 rounded">
+                      Selected
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-zinc-400 leading-relaxed ps-6.5">{mode.desc}</p>
+              </button>
+            );
+          })}
         </div>
       </Card>
 
       {/* ── Options ──────────────────────────────────────────────────────────── */}
-      <Card className="p-4 space-y-3">
-        <h2 className="text-white font-bold text-lg">⚙️ {strings.lobby.options}</h2>
+      <Card className="p-4 space-y-3.5 bg-zinc-950 border border-zinc-900 rounded-xl">
+        <h2 className="text-white font-bold text-base flex items-center gap-2">
+          <Settings2 size={16} className="text-red-500" />
+          <span>{strings.lobby?.options || 'Match Parameters'}</span>
+        </h2>
         <div className="space-y-2">
-          {/* Language Row in Options Card */}
-          <LanguageToggle variant="settings-row" className="mb-3" />
+          <LanguageToggle variant="settings-row" className="mb-2" />
 
           <Toggle
             checked={options.mrWhite}
             onChange={(v) => setOptions({ mrWhite: v })}
-            label={strings.lobby.mrWhiteLabel}
-            description={strings.lobby.mrWhiteDesc}
+            label={strings.lobby?.mrWhiteLabel || 'Mr. White (Cipher)'}
+            description={strings.lobby?.mrWhiteDesc || 'Receives no word. Tries to deduce the secret word.'}
             disabled={playerNames.length < 4}
           />
           <Toggle
             checked={options.undercoverCouple}
             onChange={(v) => setOptions({ undercoverCouple: v })}
-            label={strings.lobby.coupleLabel}
-            description={strings.lobby.coupleDesc}
+            label={strings.lobby?.coupleLabel || 'Undercover Couple'}
+            description={strings.lobby?.coupleDesc || 'Two impostors who know each other.'}
             disabled={playerNames.length < 6}
           />
           <Toggle
             checked={Boolean(options.fakeImpostor && playerNames.length >= 6)}
             onChange={(v) => setOptions({ fakeImpostor: v })}
-            label={`🎭 ${t('lobby.rules.fakeImpostor') || strings.lobby.fakeImpostorLabel || 'Fake Impostor'}`}
-            description={t('lobby.rules.fakeImpostorDesc') || strings.lobby.fakeImpostorDesc || 'Tries to get voted out to win (Requires 6+ players)'}
+            label={t('lobby.rules.fakeImpostor') || strings.lobby?.fakeImpostorLabel || 'Decoy Operative'}
+            description={t('lobby.rules.fakeImpostorDesc') || strings.lobby?.fakeImpostorDesc || 'Wins immediately if voted out. (6+ players)'}
             disabled={playerNames.length < 6}
           />
           <Toggle
             checked={options.speedTimer}
             onChange={(v) => setOptions({ speedTimer: v })}
-            label={strings.lobby.speedTimerLabel}
-            description={strings.lobby.speedTimerDesc.replace('{s}', options.timerSeconds)}
+            label={strings.lobby?.speedTimerLabel || 'Clue Countdown'}
+            description={strings.lobby?.speedTimerDesc?.replace('{s}', options.timerSeconds) || `Limit clue turn to ${options.timerSeconds}s`}
           />
           {options.speedTimer && (
-            <div className="flex items-center gap-3 px-3 py-2 bg-white/5 rounded-xl">
-              <span className="text-white/60 text-sm">{strings.lobby.timerPrefix}</span>
+            <div className="flex items-center gap-2 p-2 bg-zinc-900 border border-zinc-800 rounded-lg">
+              <span className="text-zinc-400 text-xs font-mono ps-1">{strings.lobby?.timerPrefix || 'Seconds:'}</span>
               {[15, 20, 30, 45, 60].map((s) => (
                 <button
                   key={s}
+                  type="button"
                   onClick={() => setOptions({ timerSeconds: s })}
-                  className={`px-3 py-1 rounded-lg text-sm font-bold transition-colors
+                  className={`flex-1 py-1 rounded text-xs font-mono font-bold transition-colors cursor-pointer
                     ${options.timerSeconds === s
-                      ? 'bg-violet-600 text-white'
-                      : 'bg-white/10 text-white/60 hover:bg-white/20'
+                      ? 'bg-red-600 text-white'
+                      : 'bg-zinc-800 text-zinc-400 hover:text-white'
                     }
                   `}
                 >
@@ -321,22 +347,22 @@ export default function Lobby() {
             </div>
           )}
 
-          {/* ── Discussion Timer ── */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 p-3 bg-white/5 border border-white/10 rounded-xl">
-              <span className="text-xl">⏱️</span>
+          {/* Discussion Timer */}
+          <div className="space-y-2 pt-1">
+            <div className="flex items-center gap-2 p-2.5 bg-zinc-900/60 border border-zinc-800 rounded-lg">
+              <Timer size={16} className="text-red-500" />
               <div className="flex-1">
-                <p className="text-white font-medium text-sm">
-                  {isArabic ? 'مؤقت النقاش' : 'Discussion Timer'}
+                <p className="text-zinc-200 font-semibold text-xs">
+                  {isArabic ? 'مؤقت النقاش' : 'Discussion Countdown'}
                 </p>
-                <p className="text-white/40 text-xs">
-                  {isArabic ? 'وقت المناقشة الجماعية' : 'Shared group discussion countdown'}
+                <p className="text-zinc-500 text-[11px]">
+                  {isArabic ? 'وقت المناقشة الجماعية' : 'Shared group debate timer'}
                 </p>
               </div>
             </div>
-            <div className="flex flex-wrap gap-2 px-1">
+            <div className="flex flex-wrap gap-1.5">
               {[
-                { label: isArabic ? 'بلا حد' : 'Unlimited', value: 0 },
+                { label: isArabic ? 'بلا حد' : 'None', value: 0 },
                 { label: '1m',  value: 60 },
                 { label: '2m',  value: 120 },
                 { label: '3m',  value: 180 },
@@ -345,11 +371,12 @@ export default function Lobby() {
               ].map(({ label, value }) => (
                 <button
                   key={value}
+                  type="button"
                   onClick={() => setDiscussionTime(value)}
-                  className={`flex-1 min-w-[52px] py-2 rounded-xl text-sm font-bold transition-all border
+                  className={`flex-1 min-w-[48px] py-1.5 rounded-lg text-xs font-mono font-bold transition-all border cursor-pointer
                     ${ (discussionTime ?? 120) === value
-                      ? 'bg-emerald-600/30 border-emerald-500 text-emerald-300 shadow-sm shadow-emerald-500/10'
-                      : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
+                      ? 'bg-red-600 text-white border-red-500'
+                      : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:border-zinc-700 hover:text-white'
                     }
                   `}
                 >
@@ -361,46 +388,48 @@ export default function Lobby() {
         </div>
       </Card>
 
-      {/* ── Word Pack ────────────────────────────────────────────────────────── */}
-      <Card className="p-4 space-y-3">
+      {/* ── Word Packs ──────────────────────────────────────────────────────── */}
+      <Card className="p-4 space-y-3 bg-zinc-950 border border-zinc-900 rounded-xl">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <h2 className="text-white font-bold text-lg">📦 {strings.lobby.wordPack}</h2>
-            {!isAllSelected && (
-              <span className="text-xs bg-violet-500/20 text-violet-300 border border-violet-500/30 px-2 py-0.5 rounded-full font-medium">
-                {selectedCategories.length} {isArabic ? 'محدد' : 'selected'}
-              </span>
-            )}
+            <h2 className="text-white font-bold text-base flex items-center gap-2">
+              <FolderOpen size={16} className="text-red-500" />
+              <span>{strings.lobby?.packsTitle || 'Word Cipher Packs'}</span>
+            </h2>
+            <span className="text-[10px] font-mono bg-zinc-900 border border-zinc-800 text-zinc-400 px-2 py-0.5 rounded-full">
+              {isAllSelected ? strings.lobby?.allPacks || 'All Packs' : `${selectedCategories.length} Active`}
+            </span>
           </div>
           <button
             type="button"
             onClick={() => navigate('/packs')}
-            className="text-violet-400 text-xs hover:text-violet-300 transition-colors"
+            className="text-red-400 text-xs hover:text-red-300 transition-colors font-medium cursor-pointer"
           >
-            {strings.lobby.managePacks}
+            {strings.lobby?.managePacks || 'Edit Packs'}
           </button>
         </div>
-        <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto pr-1">
+
+        <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto pr-1">
           {/* All Packs Card */}
           <button
             type="button"
             onClick={() => handleToggleCategory('all')}
             className={`relative p-3 rounded-xl border text-center transition-all cursor-pointer select-none
               ${isAllSelected
-                ? 'bg-violet-600/30 border-violet-500 text-white shadow-lg shadow-violet-500/10 ring-1 ring-violet-500/50'
-                : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
+                ? 'bg-red-950/25 border-red-600/80 text-white'
+                : 'bg-zinc-900/50 border-zinc-800 text-zinc-400 hover:border-zinc-700'
               }
             `}
           >
             {isAllSelected && (
-              <span className="absolute top-2 end-2 w-4 h-4 bg-violet-500 rounded-full flex items-center justify-center text-[10px] text-white font-bold">
-                ✓
+              <span className="absolute top-2 end-2 w-4 h-4 bg-red-600 rounded-full flex items-center justify-center text-white">
+                <Check size={10} strokeWidth={3} />
               </span>
             )}
-            <div className="text-2xl mb-1">🎲</div>
-            <p className="text-xs font-bold">{strings.lobby.allPacks}</p>
-            <p className="text-xs text-white/30">
-              {CATEGORY_POOLS.length} {isArabic ? 'تصنيفات' : 'categories'}
+            <Dices size={22} className="mx-auto mb-1 text-red-500" />
+            <p className="text-xs font-bold text-white truncate">{strings.lobby?.allPacks || 'All Categories'}</p>
+            <p className="text-[10px] text-zinc-500 font-mono mt-0.5">
+              {CATEGORY_POOLS.length} {isArabic ? 'تصنيفات' : 'pools'}
             </p>
           </button>
 
@@ -414,19 +443,19 @@ export default function Lobby() {
                 onClick={() => handleToggleCategory(pool.id)}
                 className={`relative p-3 rounded-xl border text-center transition-all cursor-pointer select-none
                   ${isSelected
-                    ? 'bg-violet-600/30 border-violet-500 text-white shadow-lg shadow-violet-500/10 ring-1 ring-violet-500/50'
-                    : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
+                    ? 'bg-red-950/25 border-red-600/80 text-white'
+                    : 'bg-zinc-900/50 border-zinc-800 text-zinc-400 hover:border-zinc-700'
                   }
                 `}
               >
                 {isSelected && (
-                  <span className="absolute top-2 end-2 w-4 h-4 bg-violet-500 rounded-full flex items-center justify-center text-[10px] text-white font-bold">
-                    ✓
+                  <span className="absolute top-2 end-2 w-4 h-4 bg-red-600 rounded-full flex items-center justify-center text-white">
+                    <Check size={10} strokeWidth={3} />
                   </span>
                 )}
-                <div className="text-2xl mb-1">{pool.icon}</div>
-                <p className="text-xs font-bold truncate">{pool.category}</p>
-                <p className="text-xs text-white/30">
+                <Package size={20} className="mx-auto mb-1 text-zinc-400" />
+                <p className="text-xs font-bold text-white truncate">{pool.category}</p>
+                <p className="text-[10px] text-zinc-500 font-mono mt-0.5">
                   {pool.words.length} {isArabic ? 'كلمة' : 'words'}
                 </p>
               </button>
@@ -443,19 +472,19 @@ export default function Lobby() {
                 onClick={() => handleToggleCategory(pack.id)}
                 className={`relative p-3 rounded-xl border text-center transition-all cursor-pointer select-none
                   ${isSelected
-                    ? 'bg-violet-600/30 border-violet-500 text-white shadow-lg shadow-violet-500/10 ring-1 ring-violet-500/50'
-                    : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
+                    ? 'bg-red-950/25 border-red-600/80 text-white'
+                    : 'bg-zinc-900/50 border-zinc-800 text-zinc-400 hover:border-zinc-700'
                   }
                 `}
               >
                 {isSelected && (
-                  <span className="absolute top-2 end-2 w-4 h-4 bg-violet-500 rounded-full flex items-center justify-center text-[10px] text-white font-bold">
-                    ✓
+                  <span className="absolute top-2 end-2 w-4 h-4 bg-red-600 rounded-full flex items-center justify-center text-white">
+                    <Check size={10} strokeWidth={3} />
                   </span>
                 )}
-                <div className="text-2xl mb-1">{pack.icon || '📦'}</div>
-                <p className="text-xs font-bold truncate">{pack.name}</p>
-                <p className="text-xs text-white/30">
+                <Package size={20} className="mx-auto mb-1 text-zinc-400" />
+                <p className="text-xs font-bold text-white truncate">{pack.name}</p>
+                <p className="text-[10px] text-zinc-500 font-mono mt-0.5">
                   {pack.words
                     ? `${pack.words.length} ${isArabic ? 'كلمة' : 'words'}`
                     : `${(pack.pairs?.length || 0) * 2} ${isArabic ? 'كلمة' : 'words'}`}
@@ -473,16 +502,16 @@ export default function Lobby() {
         size="xl"
         onClick={handleStart}
         disabled={!canStart}
-        icon="🚀"
-        className="mt-2"
+        icon={Play}
+        className="mt-1"
       >
         {canStart
-          ? strings.lobby.startGame
-          : strings.lobby.needMorePlayers.replace('{n}', MIN_PLAYERS - playerNames.length)
+          ? (strings.lobby?.startGame || 'Commence Operation')
+          : (strings.lobby?.needMorePlayers?.replace('{n}', MIN_PLAYERS - playerNames.length) || `Need ${MIN_PLAYERS - playerNames.length} More Players`)
         }
       </Button>
 
-      <Footer className="mt-4" />
+      <Footer className="mt-2" />
     </div>
   );
 }

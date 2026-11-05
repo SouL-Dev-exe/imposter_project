@@ -1,30 +1,46 @@
 /**
- * Button.jsx — Tactical Intelligence Button Component
+ * Button.jsx — Premium game button with typeui.sh-inspired animations
+ * Supports both Lucide component references (icon={Zap}) and rendered elements (icon={<Zap />})
  */
+import { isValidElement } from 'react';
 import { motion } from 'framer-motion';
 import { playClickSound, vibrate } from '../../utils/sfx';
 
+const spring = { type: 'spring', stiffness: 500, damping: 30 };
+
 const variants = {
   primary:
-    'bg-red-600 hover:bg-red-500 text-white font-mono font-bold tracking-widest uppercase border border-red-500/80 shadow-[0_0_20px_rgba(220,38,38,0.4)] active:shadow-[0_0_8px_rgba(220,38,38,0.8)]',
+    'bg-red-600 hover:bg-red-500 active:bg-red-700 text-white border border-red-500/30 shadow-sm',
   secondary:
-    'bg-zinc-950 hover:bg-zinc-900 text-zinc-100 font-mono font-bold tracking-wider uppercase border border-zinc-800 hover:border-red-600/60 shadow-sm',
+    'bg-zinc-900 hover:bg-zinc-800 active:bg-zinc-950 text-zinc-100 border border-zinc-800 hover:border-zinc-700',
   danger:
-    'bg-gradient-to-r from-red-700 to-rose-900 hover:from-red-600 hover:to-rose-800 text-white font-mono font-black tracking-widest uppercase border border-red-500 shadow-[0_0_25px_rgba(220,38,38,0.5)]',
+    'bg-red-600 hover:bg-red-500 active:bg-red-700 text-white border border-red-500/30',
   ghost:
-    'bg-transparent hover:bg-red-950/20 text-zinc-400 hover:text-red-400 font-mono tracking-wider uppercase border border-transparent hover:border-red-950',
+    'bg-transparent hover:bg-zinc-900 active:bg-zinc-950 text-zinc-400 hover:text-zinc-100 border border-transparent',
   success:
-    'bg-zinc-950 hover:bg-zinc-900 text-emerald-400 font-mono font-bold tracking-wider uppercase border border-emerald-600/60 hover:border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.2)]',
+    'bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white border border-emerald-500/30',
   warning:
-    'bg-red-950/40 hover:bg-red-900/60 text-amber-400 font-mono font-bold tracking-wider uppercase border border-amber-600/50',
+    'bg-zinc-900 hover:bg-zinc-800 text-amber-400 border border-amber-600/40 hover:border-amber-500/60',
+  outline:
+    'bg-transparent hover:bg-zinc-900 text-zinc-100 border border-zinc-700 hover:border-zinc-600',
 };
 
 const sizes = {
-  sm: 'px-3 py-1.5 text-xs',
-  md: 'px-5 py-2.5 text-sm',
-  lg: 'px-6 py-3.5 text-base',
-  xl: 'px-8 py-4 text-lg tracking-widest',
+  sm: 'px-3 py-1.5 text-xs font-semibold gap-1.5',
+  md: 'px-4 py-2 text-sm font-semibold gap-2',
+  lg: 'px-5 py-2.5 text-sm font-bold gap-2',
+  xl: 'px-6 py-3 text-base font-bold gap-2.5',
 };
+
+function renderIcon(icon, iconSize) {
+  if (!icon) return null;
+  if (isValidElement(icon)) return icon;
+  if (typeof icon === 'function' || typeof icon === 'object') {
+    const IconComponent = icon;
+    return <IconComponent size={iconSize} className="shrink-0" />;
+  }
+  return <span className="shrink-0">{icon}</span>;
+}
 
 export function Button({
   children,
@@ -36,14 +52,17 @@ export function Button({
   type = 'button',
   fullWidth = false,
   icon,
+  iconRight,
   ...props
 }) {
   const handleClick = (e) => {
     if (disabled) return;
     playClickSound();
-    vibrate(50);
+    vibrate(30);
     onClick?.(e);
   };
+
+  const iconSize = size === 'sm' ? 14 : size === 'xl' ? 18 : 16;
 
   return (
     <motion.button
@@ -51,20 +70,22 @@ export function Button({
       onClick={handleClick}
       disabled={disabled}
       whileHover={disabled ? {} : { scale: 1.015, y: -1 }}
-      whileTap={disabled ? {} : { scale: 0.98, y: 1 }}
-      transition={{ type: 'spring', stiffness: 450, damping: 25 }}
-      className={`
-        relative inline-flex items-center justify-center gap-2 rounded-sm
-        transition-all duration-150 select-none cursor-pointer
-        disabled:opacity-35 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none
-        ${variants[variant]} ${sizes[size]}
-        ${fullWidth ? 'w-full' : ''}
-        ${className}
-      `}
+      whileTap={disabled ? {} : { scale: 0.985, y: 0 }}
+      transition={spring}
+      className={[
+        'relative inline-flex items-center justify-center rounded-lg',
+        'transition-colors duration-150 select-none cursor-pointer tracking-wide',
+        'disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none',
+        variants[variant],
+        sizes[size],
+        fullWidth ? 'w-full' : '',
+        className,
+      ].join(' ')}
       {...props}
     >
-      {icon && <span className="text-base shrink-0">{icon}</span>}
-      <span className="truncate">{children}</span>
+      {renderIcon(icon, iconSize)}
+      <span className={fullWidth ? 'flex-1 text-center' : ''}>{children}</span>
+      {renderIcon(iconRight, iconSize)}
     </motion.button>
   );
 }

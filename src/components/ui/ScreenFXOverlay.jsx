@@ -177,7 +177,7 @@ export const ScreenFXOverlay = memo(function ScreenFXOverlay({ fxId: customFxId,
   if (activeFxId === 'sfx_matrix_rain' || activeFxId === 'fx_matrix_rain' || activeFxId === 'fx_overclock_rain') {
     return (
       <div className={`pointer-events-none fixed inset-0 z-0 overflow-hidden ${className}`}>
-        <div className={`absolute inset-0 border-4 ${activeFxId === 'fx_overclock_rain' ? 'border-cyan-500/40 shadow-[inset_0_0_30px_rgba(6,182,212,0.3)]' : 'border-emerald-500/40 shadow-[inset_0_0_30px_rgba(34,197,94,0.3)]'} animate-pulse`} />
+        <div className={`absolute inset-0 border-2 ${activeFxId === 'fx_overclock_rain' ? 'border-cyan-500/40' : 'border-emerald-500/40'}`} />
         <canvas ref={canvasRef} className="w-full h-full opacity-40" />
       </div>
     );
@@ -187,7 +187,7 @@ export const ScreenFXOverlay = memo(function ScreenFXOverlay({ fxId: customFxId,
   if (activeFxId === 'sfx_fire_aura' || activeFxId === 'fx_fire_aura' || activeFxId === 'fx_ember_glow') {
     return (
       <div className={`pointer-events-none fixed inset-0 z-0 overflow-hidden ${className}`}>
-        <div className="absolute inset-0 border-4 border-orange-500/50 shadow-[inset_0_0_50px_rgba(249,115,22,0.4)]" />
+        <div className="absolute inset-0 border-2 border-orange-500/40" />
         <canvas ref={canvasRef} className="w-full h-full opacity-60" />
       </div>
     );
@@ -197,7 +197,7 @@ export const ScreenFXOverlay = memo(function ScreenFXOverlay({ fxId: customFxId,
   if (activeFxId === 'sfx_gold_lux' || activeFxId === 'fx_gold_confetti' || activeFxId === 'fx_starlight_shimmer') {
     return (
       <div className={`pointer-events-none fixed inset-0 z-0 overflow-hidden ${className}`}>
-        <div className="absolute inset-0 border-4 border-amber-400/50 shadow-[inset_0_0_40px_rgba(251,191,36,0.35)]" />
+        <div className="absolute inset-0 border-2 border-amber-400/40" />
         <canvas ref={canvasRef} className="w-full h-full opacity-70" />
       </div>
     );
@@ -207,10 +207,10 @@ export const ScreenFXOverlay = memo(function ScreenFXOverlay({ fxId: customFxId,
   if (activeFxId === 'fx_cosmic_void') {
     return (
       <div className={`pointer-events-none fixed inset-0 z-0 overflow-hidden ${className}`}>
-        <div className="absolute inset-0 border-4 border-purple-500/40 shadow-[inset_0_0_60px_rgba(168,85,247,0.4)]" />
+        <div className="absolute inset-0 border-2 border-zinc-700/60" />
         <motion.div
-          className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(168,85,247,0.15)_0%,transparent_70%)]"
-          animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.6, 0.3] }}
+          className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(220,38,38,0.1)_0%,transparent_70%)]"
+          animate={{ scale: [1, 1.05, 1], opacity: [0.2, 0.4, 0.2] }}
           transition={{ duration: 4, repeat: Infinity }}
         />
       </div>
@@ -221,7 +221,7 @@ export const ScreenFXOverlay = memo(function ScreenFXOverlay({ fxId: customFxId,
   if (activeFxId === 'fx_blood_moon') {
     return (
       <div className={`pointer-events-none fixed inset-0 z-0 overflow-hidden ${className}`}>
-        <div className="absolute inset-0 border-4 border-red-600/50 shadow-[inset_0_0_60px_rgba(239,68,68,0.45)]" />
+        <div className="absolute inset-0 border-2 border-red-600/50" />
       </div>
     );
   }
@@ -230,7 +230,7 @@ export const ScreenFXOverlay = memo(function ScreenFXOverlay({ fxId: customFxId,
   if (activeFxId === 'fx_cyber_grid' || activeFxId === 'fx_cyber_glitch') {
     return (
       <div className={`pointer-events-none fixed inset-0 z-0 overflow-hidden ${className}`}>
-        <div className="absolute inset-0 border-4 border-cyan-400/40 shadow-[inset_0_0_40px_rgba(6,182,212,0.35)] animate-pulse" />
+        <div className="absolute inset-0 border-2 border-cyan-400/40" />
       </div>
     );
   }
@@ -248,7 +248,7 @@ export const ScreenFXOverlay = memo(function ScreenFXOverlay({ fxId: customFxId,
   if (activeFxId === 'fx_electric_storm') {
     return (
       <div className={`pointer-events-none fixed inset-0 z-0 overflow-hidden ${className}`}>
-        <div className="absolute inset-0 border-4 border-sky-400/50 shadow-[inset_0_0_40px_rgba(56,189,248,0.4)]" />
+        <div className="absolute inset-0 border-2 border-sky-400/40" />
       </div>
     );
   }
@@ -257,7 +257,7 @@ export const ScreenFXOverlay = memo(function ScreenFXOverlay({ fxId: customFxId,
   if (activeFxId === 'fx_vaporwave_grid') {
     return (
       <div className={`pointer-events-none fixed inset-0 z-0 overflow-hidden ${className}`}>
-        <div className="absolute inset-0 border-4 border-fuchsia-500/40 shadow-[inset_0_0_50px_rgba(217,70,239,0.35)]" />
+        <div className="absolute inset-0 border-2 border-fuchsia-500/40" />
       </div>
     );
   }
@@ -266,7 +266,7 @@ export const ScreenFXOverlay = memo(function ScreenFXOverlay({ fxId: customFxId,
   if (activeFxId === 'fx_hypnotic_portal') {
     return (
       <div className={`pointer-events-none fixed inset-0 z-0 overflow-hidden ${className}`}>
-        <div className="absolute inset-0 border-4 border-violet-600/50 shadow-[inset_0_0_50px_rgba(139,92,246,0.4)]" />
+        <div className="absolute inset-0 border-2 border-red-600/40" />
       </div>
     );
   }
@@ -275,7 +275,7 @@ export const ScreenFXOverlay = memo(function ScreenFXOverlay({ fxId: customFxId,
   if (activeFxId === 'fx_slime_hazard') {
     return (
       <div className={`pointer-events-none fixed inset-0 z-0 overflow-hidden ${className}`}>
-        <div className="absolute inset-0 border-4 border-lime-400/50 shadow-[inset_0_0_45px_rgba(132,204,22,0.4)] animate-pulse" />
+        <div className="absolute inset-0 border-2 border-lime-400/40" />
       </div>
     );
   }
@@ -284,7 +284,7 @@ export const ScreenFXOverlay = memo(function ScreenFXOverlay({ fxId: customFxId,
   if (activeFxId === 'fx_neon_pulse') {
     return (
       <div className={`pointer-events-none fixed inset-0 z-0 overflow-hidden ${className}`}>
-        <div className="absolute inset-0 border-4 border-pink-500/40 shadow-[inset_0_0_40px_rgba(236,72,153,0.35)] animate-pulse" />
+        <div className="absolute inset-0 border-2 border-pink-500/40" />
       </div>
     );
   }
@@ -293,7 +293,7 @@ export const ScreenFXOverlay = memo(function ScreenFXOverlay({ fxId: customFxId,
   if (activeFxId === 'fx_quantum_realm') {
     return (
       <div className={`pointer-events-none fixed inset-0 z-0 overflow-hidden ${className}`}>
-        <div className="absolute inset-0 border-4 border-teal-400/40 shadow-[inset_0_0_40px_rgba(20,184,166,0.35)]" />
+        <div className="absolute inset-0 border-2 border-teal-400/40" />
       </div>
     );
   }
@@ -302,7 +302,7 @@ export const ScreenFXOverlay = memo(function ScreenFXOverlay({ fxId: customFxId,
   if (activeFxId === 'fx_solar_flare') {
     return (
       <div className={`pointer-events-none fixed inset-0 z-0 overflow-hidden ${className}`}>
-        <div className="absolute inset-0 border-4 border-amber-500/50 shadow-[inset_0_0_50px_rgba(245,158,11,0.4)]" />
+        <div className="absolute inset-0 border-2 border-amber-500/40" />
       </div>
     );
   }
@@ -311,7 +311,7 @@ export const ScreenFXOverlay = memo(function ScreenFXOverlay({ fxId: customFxId,
   if (activeFxId === 'fx_abyssal_deep') {
     return (
       <div className={`pointer-events-none fixed inset-0 z-0 overflow-hidden ${className}`}>
-        <div className="absolute inset-0 border-4 border-blue-600/40 shadow-[inset_0_0_45px_rgba(37,99,235,0.35)]" />
+        <div className="absolute inset-0 border-2 border-blue-600/40" />
       </div>
     );
   }
@@ -320,7 +320,7 @@ export const ScreenFXOverlay = memo(function ScreenFXOverlay({ fxId: customFxId,
   if (activeFxId === 'fx_aurora_borealis') {
     return (
       <div className={`pointer-events-none fixed inset-0 z-0 overflow-hidden ${className}`}>
-        <div className="absolute inset-0 border-4 border-emerald-400/40 shadow-[inset_0_0_50px_rgba(52,211,153,0.35)] animate-pulse" />
+        <div className="absolute inset-0 border-2 border-emerald-400/40" />
       </div>
     );
   }

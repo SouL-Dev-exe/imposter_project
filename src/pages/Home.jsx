@@ -1,12 +1,30 @@
+/**
+ * Home.jsx — Main Landing Screen.
+ * Tactical AAA game design: clean, dark, no emoji, no glow, Lucide icons.
+ */
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
+import { 
+  Wifi, 
+  Users, 
+  Zap, 
+  AlertTriangle, 
+  FolderLock, 
+  ShieldCheck, 
+  Radio, 
+  Eye, 
+  EyeOff,
+  CheckCircle2
+} from 'lucide-react';
 import { useGameStore } from '../store/gameStore';
 import { useAuthStore } from '../store/authStore';
 import { useLanguageStore } from '../store/languageStore';
 import { AuthModal } from '../components/ui/AuthModal';
 import Navbar from '../components/Navbar';
 import Button from '../components/ui/Button';
+
+const spring = { type: 'spring', stiffness: 400, damping: 28 };
 
 export default function Home() {
   const navigate = useNavigate();
@@ -35,119 +53,145 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-full w-full flex flex-col bg-transparent text-zinc-100 relative overflow-x-hidden font-mono selection:bg-red-600 selection:text-black">
+    <div className="min-h-full w-full flex flex-col bg-transparent text-zinc-100 relative overflow-x-hidden font-sans selection:bg-red-600 selection:text-white">
       {/* Top Navbar */}
       <Navbar />
 
       {/* Main Terminal View */}
-      <main className="flex-1 flex flex-col w-full max-w-md mx-auto relative z-10 pb-20 px-4 pt-6 space-y-6">
+      <main className="flex-1 flex flex-col w-full max-w-md mx-auto relative z-10 pb-16 px-4 pt-6 space-y-6">
 
         {/* Zone 1: Intelligence Header */}
-        <div className="flex flex-col items-center justify-center text-center space-y-2">
-          <div className="relative inline-block">
-            <h1 className="text-4xl sm:text-5xl font-black tracking-[0.2em] text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.2)]">
+        <div className="flex flex-col items-center justify-center text-center space-y-2 pt-2">
+          <motion.div 
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={spring}
+            className="flex flex-col items-center"
+          >
+            <span className="text-[11px] font-mono tracking-widest text-red-500 uppercase font-semibold">
+              TACTICAL DECEPTION PROTOCOL
+            </span>
+            <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-white mt-1">
               UNDERCOVER
             </h1>
-            <div className="absolute -bottom-1 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-red-600 to-transparent shadow-[0_0_8px_#dc2626]" />
-          </div>
+          </motion.div>
           
-          <div className="bg-red-950/30 border border-red-900/60 px-3 py-1 mt-2">
-            <p className="text-[10px] text-red-400 font-bold uppercase tracking-widest flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-ping" />
-              CLASSIFIED INTELLIGENCE &amp; DECEPTION PROTOCOL
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-zinc-900 border border-zinc-800 rounded-full mt-1">
+            <span className="w-2 h-2 rounded-full bg-emerald-500" />
+            <p className="text-[11px] text-zinc-400 font-mono tracking-wider uppercase">
+              System Ready · v2.4
             </p>
           </div>
         </div>
 
-        {/* Zone 2: Operational Frequency Toggle */}
-        <div className="flex w-full bg-zinc-950 border border-zinc-800 p-1 rounded-sm relative">
+        {/* Zone 2: Mode Selector (Online vs Local) */}
+        <div className="flex w-full bg-zinc-950 border border-zinc-800 p-1 rounded-xl relative">
           <button
-            onClick={() => setIsOnlineMode(true)}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] sm:text-xs font-bold tracking-widest uppercase transition-all z-10 cursor-pointer ${
-              isOnlineMode ? 'text-white' : 'text-zinc-500 hover:text-zinc-300'
-            }`}
-          >
-            <span className={`w-1.5 h-1.5 rounded-full ${isOnlineMode ? 'bg-red-600 animate-pulse' : 'bg-zinc-600'}`} />
-            NETWORK FREQ
-          </button>
-          <button
+            type="button"
             onClick={() => setIsOnlineMode(false)}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] sm:text-xs font-bold tracking-widest uppercase transition-all z-10 cursor-pointer ${
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-semibold tracking-wide uppercase transition-colors z-10 cursor-pointer rounded-lg ${
               !isOnlineMode ? 'text-white' : 'text-zinc-500 hover:text-zinc-300'
             }`}
           >
-            <span>🔒</span>
-            LOCAL COVERT
+            <Users size={15} className={!isOnlineMode ? 'text-red-500' : 'text-zinc-500'} />
+            Local Pass &amp; Play
+          </button>
+          
+          <button
+            type="button"
+            onClick={() => setIsOnlineMode(true)}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-semibold tracking-wide uppercase transition-colors z-10 cursor-pointer rounded-lg ${
+              isOnlineMode ? 'text-white' : 'text-zinc-500 hover:text-zinc-300'
+            }`}
+          >
+            <Wifi size={15} className={isOnlineMode ? 'text-red-500' : 'text-zinc-500'} />
+            Online Room
           </button>
 
-          {/* Active indicator pill */}
+          {/* Active indicator pill with spring animation */}
           <motion.div
             layout
-            className="absolute top-1 bottom-1 w-[calc(50%-4px)] bg-red-950/60 border border-red-600 shadow-[0_0_15px_rgba(220,38,38,0.3)]"
-            animate={{ left: isOnlineMode ? '4px' : 'calc(50% + 2px)' }}
-            transition={{ type: 'spring', stiffness: 350, damping: 26 }}
+            className="absolute top-1 bottom-1 w-[calc(50%-4px)] bg-zinc-900 border border-zinc-700/70 rounded-lg shadow-sm"
+            animate={{ left: !isOnlineMode ? '4px' : 'calc(50% + 2px)' }}
+            transition={spring}
           />
         </div>
 
         {/* Zone 3: Mode Directives */}
         <div className="grid grid-cols-2 gap-3">
-          <div
+          <motion.div
+            whileHover={{ scale: 1.015 }}
+            whileTap={{ scale: 0.985 }}
+            transition={spring}
             onClick={() => setSelectedMode('conscious')}
-            className={`p-3 border rounded-sm cursor-pointer transition-all ${
+            className={`p-3.5 rounded-xl border cursor-pointer transition-colors ${
               selectedMode === 'conscious'
-                ? 'bg-zinc-950 border-red-600 shadow-[0_0_15px_rgba(220,38,38,0.25)]'
-                : 'bg-zinc-950/60 border-zinc-800 hover:border-zinc-700'
+                ? 'bg-zinc-900 border-red-600/80 text-white shadow-sm'
+                : 'bg-zinc-950/80 border-zinc-800/80 text-zinc-400 hover:border-zinc-700'
             }`}
           >
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-xs font-bold text-white uppercase tracking-wider">STANDARD</span>
-              {selectedMode === 'conscious' && <span className="text-red-500 text-xs">●</span>}
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-1.5">
+                <Eye size={14} className={selectedMode === 'conscious' ? 'text-red-500' : 'text-zinc-500'} />
+                Standard
+              </span>
+              {selectedMode === 'conscious' && (
+                <CheckCircle2 size={13} className="text-red-500" />
+              )}
             </div>
-            <p className="text-[10px] text-zinc-500 leading-tight">
-              Impostor consciously aware. Requires deception &amp; bluffing.
+            <p className="text-[11px] text-zinc-400 leading-relaxed">
+              Impostor knows they are rogue. Bluff and blend in.
             </p>
-          </div>
+          </motion.div>
 
-          <div
+          <motion.div
+            whileHover={{ scale: 1.015 }}
+            whileTap={{ scale: 0.985 }}
+            transition={spring}
             onClick={() => setSelectedMode('blind')}
-            className={`p-3 border rounded-sm cursor-pointer transition-all ${
+            className={`p-3.5 rounded-xl border cursor-pointer transition-colors ${
               selectedMode === 'blind'
-                ? 'bg-zinc-950 border-red-600 shadow-[0_0_15px_rgba(220,38,38,0.25)]'
-                : 'bg-zinc-950/60 border-zinc-800 hover:border-zinc-700'
+                ? 'bg-zinc-900 border-red-600/80 text-white shadow-sm'
+                : 'bg-zinc-950/80 border-zinc-800/80 text-zinc-400 hover:border-zinc-700'
             }`}
           >
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-xs font-bold text-white uppercase tracking-wider">BLIND OPS</span>
-              {selectedMode === 'blind' && <span className="text-red-500 text-xs">●</span>}
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-1.5">
+                <EyeOff size={14} className={selectedMode === 'blind' ? 'text-red-500' : 'text-zinc-500'} />
+                Blind Ops
+              </span>
+              {selectedMode === 'blind' && (
+                <CheckCircle2 size={13} className="text-red-500" />
+              )}
             </div>
-            <p className="text-[10px] text-zinc-500 leading-tight">
-              Impostor receives similar word. Unaware of rogue status.
+            <p className="text-[11px] text-zinc-400 leading-relaxed">
+              Impostor receives a close synonym. Nobody knows their role.
             </p>
-          </div>
+          </motion.div>
         </div>
 
         {/* Zone 4: Mission Launch Actions */}
-        <div className="space-y-3 pt-2">
+        <div className="space-y-3 pt-1">
           {hasActiveGame && (
             <Button
               variant="warning"
               fullWidth
               size="lg"
               onClick={handleResume}
-              icon="⚠️"
+              icon={AlertTriangle}
             >
-              RESUME ACTIVE OPERATION
+              Resume Active Match
             </Button>
           )}
 
           <Button
-            variant="danger"
+            variant="primary"
             fullWidth
             size="xl"
             onClick={handleStartOperation}
-            icon="⚡"
+            icon={Zap}
           >
-            {isOnlineMode ? 'INITIALIZE NETWORK SESSION' : 'COMMENCE LOCAL OPERATION'}
+            {isOnlineMode ? 'Create / Join Online Room' : 'Start Local Match'}
           </Button>
 
           <Button
@@ -155,16 +199,22 @@ export default function Home() {
             fullWidth
             size="md"
             onClick={() => navigate('/packs')}
-            icon="📁"
+            icon={FolderLock}
           >
-            CONFIDENTIAL CIPHER PACKS
+            Word Cipher Packs
           </Button>
         </div>
 
-        {/* Reticle dossier decorative footer */}
-        <div className="pt-4 border-t border-zinc-900 flex items-center justify-between text-[9px] text-zinc-600 uppercase tracking-widest">
-          <span>OPERATIONAL STATUS: READY</span>
-          <span>ENCRYPTION: AES-256</span>
+        {/* Clean footer status bar */}
+        <div className="pt-4 border-t border-zinc-900 flex items-center justify-between text-[11px] text-zinc-500 font-mono">
+          <span className="flex items-center gap-1.5">
+            <Radio size={12} className="text-zinc-400" />
+            Status: Operational
+          </span>
+          <span className="flex items-center gap-1.5">
+            <ShieldCheck size={12} className="text-zinc-400" />
+            Private Session
+          </span>
         </div>
       </main>
 

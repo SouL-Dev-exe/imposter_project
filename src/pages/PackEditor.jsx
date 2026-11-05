@@ -3,10 +3,39 @@
  * Create, edit, delete packs and word pairs.
  * Export packs as JSON, import JSON files from friends.
  * Publish to Supabase cloud so all players see them globally.
+ * Clean AAA game styling: no emoji, no glow, Lucide icons, spring animations.
  */
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  ArrowLeft, 
+  Plus, 
+  Trash2, 
+  Download, 
+  Upload, 
+  UploadCloud, 
+  Cloud, 
+  RotateCcw, 
+  FolderOpen, 
+  CheckCircle2, 
+  AlertCircle, 
+  X, 
+  Lock, 
+  Package, 
+  Target,
+  Zap,
+  Shield,
+  Eye,
+  Flame,
+  Dices,
+  Globe,
+  Puzzle,
+  Sparkles,
+  Cpu,
+  Crosshair,
+  Loader2 
+} from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Modal } from '../components/ui/Modal';
@@ -15,23 +44,62 @@ import { DEFAULT_PACKS } from '../data/defaultPacks';
 import Footer from '../components/Footer';
 
 // ─── Pack icon picker ─────────────────────────────────────────────────────────
-const ICONS = ['📦', '🎮', '🌟', '🔥', '🎯', '🧩', '🎪', '🦄', '🍀', '🎭', '🚀', '💎'];
+const PACK_ICONS = [
+  { id: 'package', icon: Package },
+  { id: 'target', icon: Target },
+  { id: 'zap', icon: Zap },
+  { id: 'shield', icon: Shield },
+  { id: 'eye', icon: Eye },
+  { id: 'flame', icon: Flame },
+  { id: 'dices', icon: Dices },
+  { id: 'globe', icon: Globe },
+  { id: 'puzzle', icon: Puzzle },
+  { id: 'sparkles', icon: Sparkles },
+  { id: 'cpu', icon: Cpu },
+  { id: 'crosshair', icon: Crosshair },
+];
+
+function PackInsignia({ icon, className = 'w-5 h-5 text-red-500' }) {
+  const emojiMap = {
+    '\uD83D\uDCE6': Package,
+    '\uD83C\uDFAF': Target,
+    '\u26A1': Zap,
+    '\uD83D\uDEE1\uFE0F': Shield,
+    '\uD83D\uDC41\uFE0F': Eye,
+    '\uD83D\uDD25': Flame,
+    '\uD83C\uDFB2': Dices,
+    '\uD83C\uDF10': Globe,
+    '\uD83E\uDDE9': Puzzle,
+    '\uD83D\uDE80': Sparkles,
+    '\uD83D\uDC8E': Sparkles,
+    '\uD83C\uDFAD': Eye,
+  };
+
+  const matched = PACK_ICONS.find((item) => item.id === icon);
+  const IconComp = matched?.icon || emojiMap[icon] || Package;
+
+  return (
+    <div className="w-9 h-9 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center shrink-0">
+      <IconComp className={className} />
+    </div>
+  );
+}
 
 function IconPicker({ value, onChange }) {
   return (
     <div className="flex flex-wrap gap-2">
-      {ICONS.map((icon) => (
+      {PACK_ICONS.map(({ id, icon: Icon }) => (
         <button
-          key={icon}
-          onClick={() => onChange(icon)}
-          className={`w-10 h-10 rounded-xl text-xl flex items-center justify-center transition-all
-            ${value === icon
-              ? 'bg-violet-600 scale-110 shadow-lg shadow-violet-900/50'
-              : 'bg-white/10 hover:bg-white/20'
-            }
-          `}
+          key={id}
+          type="button"
+          onClick={() => onChange(id)}
+          className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors cursor-pointer border ${
+            value === id
+              ? 'bg-red-600 border-red-500 text-white'
+              : 'bg-zinc-900 border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-zinc-100'
+          }`}
         >
-          {icon}
+          <Icon className="w-4 h-4" />
         </button>
       ))}
     </div>
@@ -46,7 +114,7 @@ function WordTag({ word, onDelete }) {
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.8 }}
-      className="inline-flex items-center gap-1.5 bg-white/10 hover:bg-white/15 text-white text-xs font-medium px-3 py-1.5 rounded-xl border border-white/10 transition-colors select-none group"
+      className="inline-flex items-center gap-1.5 bg-zinc-900 text-zinc-200 text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-800 transition-colors select-none group"
     >
       <span>{word}</span>
       {onDelete && (
@@ -56,10 +124,10 @@ function WordTag({ word, onDelete }) {
             e.stopPropagation();
             onDelete(word);
           }}
-          className="text-white/40 hover:text-red-400 hover:bg-white/20 rounded-full w-4 h-4 flex items-center justify-center text-xs transition-colors ml-0.5"
+          className="text-zinc-500 hover:text-red-400 rounded w-4 h-4 flex items-center justify-center text-xs transition-colors cursor-pointer"
           title="Remove word"
         >
-          ×
+          <X size={12} />
         </button>
       )}
     </motion.span>
@@ -94,32 +162,31 @@ function AddWordForm({ onAdd }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="w-full py-3 rounded-xl border border-dashed border-violet-500/40
-                   text-violet-400 text-sm font-bold hover:bg-violet-600/10 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+        className="w-full py-2.5 rounded-xl border border-dashed border-zinc-800
+                   text-zinc-400 text-xs font-semibold hover:border-zinc-700 hover:text-white transition-colors flex items-center justify-center gap-1.5 cursor-pointer font-sans"
       >
-        <span>+</span> Add Word
+        <Plus size={14} /> Add Word
       </button>
     );
   }
 
   return (
     <motion.div
-      className="bg-violet-900/20 border border-violet-500/30 rounded-xl p-4 space-y-3"
+      className="bg-zinc-900 border border-zinc-800 rounded-xl p-3.5 space-y-3 font-sans"
       initial={{ opacity: 0, height: 0 }}
       animate={{ opacity: 1, height: 'auto' }}
     >
       <div className="flex items-center justify-between">
-        <p className="text-violet-300 text-sm font-bold">New Word</p>
+        <p className="text-white text-xs font-bold">New Word Entry</p>
         <button
           type="button"
           onClick={() => setOpen(false)}
-          className="text-white/40 hover:text-white text-xs cursor-pointer"
+          className="text-zinc-500 hover:text-white text-xs cursor-pointer"
         >
           Close
         </button>
       </div>
       <div>
-        <label className="text-white/60 text-xs mb-1 block">Word</label>
         <input
           ref={inputRef}
           value={word}
@@ -127,8 +194,8 @@ function AddWordForm({ onAdd }) {
           onKeyDown={handleKeyDown}
           placeholder="e.g. قهوة / Coffee"
           autoFocus
-          className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white
-                     text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/30 placeholder-white/30"
+          className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-white
+                     text-xs focus:outline-none focus:border-red-600 placeholder-zinc-600 transition-colors"
         />
       </div>
       <div className="flex gap-2">
@@ -146,16 +213,16 @@ function AddWordForm({ onAdd }) {
 // ─── Cloud status badge ───────────────────────────────────────────────────────
 function CloudStatusBadge({ status }) {
   const cfg = {
-    loading: { text: 'Syncing…', cls: 'bg-blue-500/20 text-blue-400 border-blue-500/40' },
-    synced:  { text: '☁️ Cloud Synced', cls: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40' },
-    offline: { text: '📴 Offline Mode', cls: 'bg-amber-500/20 text-amber-400 border-amber-500/40' },
-    error:   { text: '⚠️ Sync Error', cls: 'bg-red-500/20 text-red-400 border-red-500/40' },
+    loading: { text: 'Syncing...', cls: 'bg-zinc-900 text-zinc-400 border-zinc-800' },
+    synced:  { text: 'Cloud Synced', cls: 'bg-emerald-950/40 text-emerald-400 border-emerald-800/40' },
+    offline: { text: 'Offline Mode', cls: 'bg-amber-950/40 text-amber-400 border-amber-800/40' },
+    error:   { text: 'Sync Error', cls: 'bg-red-950/40 text-red-400 border-red-800/40' },
     idle:    { text: '', cls: '' },
   }[status] || { text: '', cls: '' };
 
   if (!cfg.text) return null;
   return (
-    <span className={`text-xs px-2 py-0.5 rounded-full border ${cfg.cls}`}>{cfg.text}</span>
+    <span className={`text-[10px] font-mono px-2 py-0.5 rounded border ${cfg.cls}`}>{cfg.text}</span>
   );
 }
 
@@ -180,20 +247,19 @@ export default function PackEditor() {
   const [selectedPackId, setSelectedPackId] = useState(null);
   const [showNewPackModal, setShowNewPackModal] = useState(false);
   const [newPackName, setNewPackName] = useState('');
-  const [newPackIcon, setNewPackIcon] = useState('📦');
+  const [newPackIcon, setNewPackIcon] = useState('package');
   const [importError, setImportError] = useState('');
   const [importSuccess, setImportSuccess] = useState('');
-  const [publishStatus, setPublishStatus] = useState({}); // { [packId]: 'loading'|'success'|'error', message }
-  const [activeTab, setActiveTab] = useState('custom'); // 'custom' | 'cloud' | 'builtin'
+  const [publishStatus, setPublishStatus] = useState({});
+  const [activeTab, setActiveTab] = useState('custom');
 
   // Delete cloud pack state
-  const [deleteCloudTarget, setDeleteCloudTarget] = useState(null); // { supabaseId, packName }
+  const [deleteCloudTarget, setDeleteCloudTarget] = useState(null);
   const [deletePassword, setDeletePassword] = useState('');
   const [deleteError, setDeleteError] = useState('');
   const [isDeletingCloud, setIsDeletingCloud] = useState(false);
 
   const fileInputRef = useRef(null);
-
   const selectedPack = customPacks.find((p) => p.id === selectedPackId);
 
   const handleDeleteCloudPack = async () => {
@@ -216,7 +282,7 @@ export default function PackEditor() {
     setSelectedPackId(id);
     setShowNewPackModal(false);
     setNewPackName('');
-    setNewPackIcon('📦');
+    setNewPackIcon('package');
   };
 
   const handleImport = async (e) => {
@@ -240,7 +306,7 @@ export default function PackEditor() {
     setPublishStatus((s) => ({ ...s, [packId]: { state: 'loading' } }));
     const result = await publishPackToCloud(packId);
     if (result.success) {
-      setPublishStatus((s) => ({ ...s, [packId]: { state: 'success', message: '☁️ Published!' } }));
+      setPublishStatus((s) => ({ ...s, [packId]: { state: 'success', message: 'Published to Cloud!' } }));
       setTimeout(() => setPublishStatus((s) => ({ ...s, [packId]: null })), 3000);
     } else {
       setPublishStatus((s) => ({ ...s, [packId]: { state: 'error', message: result.error } }));
@@ -249,20 +315,25 @@ export default function PackEditor() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col px-4 py-6 max-w-lg mx-auto gap-4">
+    <div className="min-h-screen flex flex-col px-4 py-6 max-w-lg mx-auto gap-4 font-sans selection:bg-red-600 selection:text-white">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <button onClick={() => navigate('/')} className="text-white/40 hover:text-white transition-colors text-2xl">
-          ←
+        <button
+          type="button"
+          onClick={() => navigate('/')}
+          className="text-zinc-400 hover:text-white transition-colors p-1 rounded-lg hover:bg-zinc-900 cursor-pointer"
+        >
+          <ArrowLeft size={18} className="rtl:rotate-180" />
         </button>
         <div className="flex-1">
-          <h1 className="text-2xl font-black text-white">📦 Word Packs</h1>
-          <p className="text-white/40 text-xs">Create & manage your custom word sets</p>
+          <h1 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+            <FolderOpen size={18} className="text-red-500" />
+            <span>Word Cipher Packs</span>
+          </h1>
+          <p className="text-zinc-500 text-xs font-mono">Create &amp; manage custom word sets</p>
         </div>
-        {/* Cloud status */}
         <CloudStatusBadge status={cloudStatus} />
-        {/* Import button */}
-        <Button variant="secondary" size="sm" onClick={() => fileInputRef.current?.click()} icon="⬆️">
+        <Button variant="secondary" size="sm" onClick={() => fileInputRef.current?.click()} icon={Upload}>
           Import
         </Button>
         <input ref={fileInputRef} type="file" accept=".json" onChange={handleImport} className="hidden" />
@@ -272,178 +343,189 @@ export default function PackEditor() {
       <AnimatePresence>
         {importSuccess && (
           <motion.div
-            className="bg-emerald-500/20 border border-emerald-500/40 rounded-xl px-4 py-3 text-emerald-400 text-sm"
-            initial={{ opacity: 0, y: -10 }}
+            className="bg-emerald-950/30 border border-emerald-800/40 rounded-xl px-3.5 py-2.5 text-emerald-400 text-xs font-medium flex items-center gap-2"
+            initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
           >
-            ✅ {importSuccess}
+            <CheckCircle2 size={14} />
+            <span>{importSuccess}</span>
           </motion.div>
         )}
         {importError && (
           <motion.div
-            className="bg-red-500/20 border border-red-500/40 rounded-xl px-4 py-3 text-red-400 text-sm"
-            initial={{ opacity: 0, y: -10 }}
+            className="bg-red-950/30 border border-red-800/40 rounded-xl px-3.5 py-2.5 text-red-400 text-xs font-medium flex items-center gap-2"
+            initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
           >
-            ❌ {importError}
+            <AlertCircle size={14} />
+            <span>{importError}</span>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Tabs */}
-      <div className="flex rounded-xl bg-white/5 p-1 gap-1">
+      <div className="flex rounded-xl bg-zinc-900 p-1 border border-zinc-800 gap-1">
         {[
-          { id: 'custom', label: `My Packs (${customPacks.length})` },
-          { id: 'cloud', label: `☁️ Cloud (${cloudPacks.length})` },
+          { id: 'custom', label: `Custom (${customPacks.length})` },
+          { id: 'cloud', label: `Cloud (${cloudPacks.length})` },
           { id: 'builtin', label: `Built-in (${DEFAULT_PACKS.length})` },
         ].map((tab) => (
           <button
             key={tab.id}
+            type="button"
             onClick={() => { setActiveTab(tab.id); setSelectedPackId(null); }}
-            className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all
-              ${activeTab === tab.id
-                ? 'bg-violet-600 text-white shadow-lg'
-                : 'text-white/50 hover:text-white'
-              }
-            `}
+            className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+              activeTab === tab.id
+                ? 'bg-red-600 text-white'
+                : 'text-zinc-400 hover:text-white'
+            }`}
           >
             {tab.label}
           </button>
         ))}
       </div>
 
-      {/* ── My Packs tab ── */}
+      {/* My Packs tab */}
       {activeTab === 'custom' && (
         <div className="space-y-3">
           {customPacks.length === 0 ? (
-            <div className="text-center py-12 text-white/30 space-y-2">
-              <div className="text-5xl">📭</div>
-              <p className="font-bold">No custom packs yet</p>
-              <p className="text-xs">Create your first pack or import one!</p>
+            <div className="text-center py-10 text-zinc-500 space-y-1.5 bg-zinc-950 border border-zinc-900 rounded-xl">
+              <FolderOpen size={32} className="mx-auto text-zinc-600" />
+              <p className="font-semibold text-xs text-zinc-400">No custom packs yet</p>
+              <p className="text-[11px] font-mono">Create your first pack or import one from JSON.</p>
             </div>
           ) : (
             customPacks.map((pack) => {
               const ps = publishStatus[pack.id];
+              const isSelected = selectedPackId === pack.id;
               return (
-                <Card
+                <div
                   key={pack.id}
-                  className={`p-4 cursor-pointer transition-all
-                    ${selectedPackId === pack.id ? 'border-violet-500 bg-violet-600/10' : ''}
-                  `}
-                  onClick={() => setSelectedPackId(selectedPackId === pack.id ? null : pack.id)}
-                  animate={false}
+                  className={`p-3.5 rounded-xl border cursor-pointer transition-colors ${
+                    isSelected
+                      ? 'border-red-600/70 bg-red-950/20'
+                      : 'bg-zinc-950 border-zinc-850 hover:border-zinc-750'
+                  }`}
+                  onClick={() => setSelectedPackId(isSelected ? null : pack.id)}
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-3xl">{pack.icon}</span>
+                    <PackInsignia icon={pack.icon} />
                     <div className="flex-1 min-w-0">
-                      <p className="text-white font-bold">{pack.name}</p>
-                      <p className="text-white/40 text-xs">{getPackWords(pack).length} words</p>
+                      <p className="text-white font-bold text-sm truncate">{pack.name}</p>
+                      <p className="text-zinc-500 font-mono text-[10px]">{getPackWords(pack).length} words</p>
                     </div>
-                    <div className="flex gap-2 items-center">
-                      {/* Publish to cloud */}
+                    <div className="flex gap-1.5 items-center">
                       <button
+                        type="button"
                         onClick={(e) => { e.stopPropagation(); handlePublish(pack.id); }}
                         disabled={ps?.state === 'loading'}
                         title="Publish to Cloud"
-                        className={`text-sm transition-all px-2 py-0.5 rounded-lg border
-                          ${ps?.state === 'success'
-                            ? 'text-emerald-400 border-emerald-500/40 bg-emerald-500/10'
+                        className={`text-xs px-2 py-1 rounded-lg border transition-colors flex items-center gap-1 cursor-pointer ${
+                          ps?.state === 'success'
+                            ? 'text-emerald-400 border-emerald-800 bg-emerald-950/30'
                             : ps?.state === 'error'
-                            ? 'text-red-400 border-red-500/40 bg-red-500/10'
-                            : 'text-blue-400 border-blue-500/40 bg-blue-500/10 hover:bg-blue-500/20'
-                          }
-                          ${ps?.state === 'loading' ? 'opacity-50 cursor-not-allowed' : ''}
-                        `}
+                            ? 'text-red-400 border-red-800 bg-red-950/30'
+                            : 'text-zinc-300 border-zinc-800 bg-zinc-900 hover:border-zinc-700'
+                        } ${ps?.state === 'loading' ? 'opacity-50 cursor-not-allowed' : ''}`}
                       >
-                        {ps?.state === 'loading' ? '⏳' : ps?.state === 'success' ? '✅' : ps?.state === 'error' ? '❌' : '☁️'}
+                        {ps?.state === 'loading' ? <Loader2 size={12} className="animate-spin" /> : <UploadCloud size={12} />}
                       </button>
                       <button
+                        type="button"
                         onClick={(e) => { e.stopPropagation(); exportPack(pack.id); }}
-                        className="text-violet-400 hover:text-violet-300 transition-colors text-sm"
+                        className="text-zinc-400 hover:text-white p-1 rounded hover:bg-zinc-900 transition-colors"
                         title="Export"
                       >
-                        ⬇️
+                        <Download size={14} />
                       </button>
                       <button
-                        onClick={(e) => { e.stopPropagation(); if (window.confirm(`Delete "${pack.name}"?`)) { deletePack(pack.id); if (selectedPackId === pack.id) setSelectedPackId(null); } }}
-                        className="text-white/30 hover:text-red-400 transition-colors text-sm"
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (window.confirm(`Delete "${pack.name}"?`)) {
+                            deletePack(pack.id);
+                            if (selectedPackId === pack.id) setSelectedPackId(null);
+                          }
+                        }}
+                        className="text-zinc-500 hover:text-red-400 p-1 rounded hover:bg-zinc-900 transition-colors"
                         title="Delete"
                       >
-                        🗑️
+                        <Trash2 size={14} />
                       </button>
                     </div>
                   </div>
-                  {/* Publish feedback inline */}
                   {ps?.message && (
-                    <p className={`text-xs mt-1.5 font-medium ${ps.state === 'success' ? 'text-emerald-400' : 'text-red-400'}`}>
+                    <p className={`text-[11px] mt-1.5 font-mono ${ps.state === 'success' ? 'text-emerald-400' : 'text-red-400'}`}>
                       {ps.message}
                     </p>
                   )}
-                </Card>
+                </div>
               );
             })
           )}
 
-          {/* Create new pack */}
           <Button
             variant="secondary"
             fullWidth
             size="lg"
             onClick={() => setShowNewPackModal(true)}
-            icon="+"
+            icon={Plus}
           >
-            Create New Pack
+            Create New Cipher Pack
           </Button>
         </div>
       )}
 
-      {/* ── Cloud Packs tab ── */}
+      {/* Cloud Packs tab */}
       {activeTab === 'cloud' && (
         <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <p className="text-white/40 text-xs">Global packs created by all players</p>
+          <div className="flex items-center justify-between text-xs font-mono">
+            <p className="text-zinc-500">Global community packs</p>
             <button
+              type="button"
               onClick={() => syncCloudPacks()}
               disabled={cloudStatus === 'loading'}
-              className="text-xs text-blue-400 hover:text-blue-300 transition-colors disabled:opacity-50"
+              className="text-red-400 hover:text-red-300 transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-50"
             >
-              {cloudStatus === 'loading' ? '⏳ Syncing…' : '🔄 Refresh'}
+              <RotateCcw size={12} />
+              <span>Refresh</span>
             </button>
           </div>
 
           {cloudStatus === 'loading' && cloudPacks.length === 0 ? (
-            <div className="text-center py-12 text-white/30 space-y-2">
-              <div className="text-5xl animate-pulse">☁️</div>
-              <p className="font-bold">Loading cloud packs…</p>
+            <div className="text-center py-10 text-zinc-500 space-y-1.5 bg-zinc-950 border border-zinc-900 rounded-xl">
+              <Cloud size={32} className="mx-auto text-zinc-600 animate-pulse" />
+              <p className="font-semibold text-xs text-zinc-400">Loading cloud packs...</p>
             </div>
           ) : cloudPacks.length === 0 ? (
-            <div className="text-center py-12 text-white/30 space-y-2">
-              <div className="text-5xl">☁️</div>
-              <p className="font-bold">No cloud packs yet</p>
-              <p className="text-xs">
-                {cloudStatus === 'offline'
-                  ? 'No internet connection. Showing cached data.'
-                  : 'Publish your own packs to see them here!'}
-              </p>
+            <div className="text-center py-10 text-zinc-500 space-y-1.5 bg-zinc-950 border border-zinc-900 rounded-xl">
+              <Cloud size={32} className="mx-auto text-zinc-600" />
+              <p className="font-semibold text-xs text-zinc-400">No cloud packs found</p>
             </div>
           ) : (
             cloudPacks.map((pack) => (
-              <Card
+              <div
                 key={pack.id}
-                className={`p-4 cursor-pointer ${selectedPackId === pack.id ? 'border-blue-500 bg-blue-600/10' : ''}`}
+                className={`p-3.5 rounded-xl border cursor-pointer transition-colors ${
+                  selectedPackId === pack.id
+                    ? 'border-red-600/70 bg-red-950/20'
+                    : 'bg-zinc-950 border-zinc-850 hover:border-zinc-750'
+                }`}
                 onClick={() => setSelectedPackId(selectedPackId === pack.id ? null : pack.id)}
-                animate={false}
               >
                 <div className="flex items-center gap-3">
-                  <span className="text-3xl">{pack.icon}</span>
-                  <div className="flex-1">
-                    <p className="text-white font-bold">{pack.name}</p>
-                    <p className="text-white/40 text-xs">{getPackWords(pack).length} words · Cloud</p>
+                  <PackInsignia icon={pack.icon} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white font-bold text-sm truncate">{pack.name}</p>
+                    <p className="text-zinc-500 font-mono text-[10px]">{getPackWords(pack).length} words · Cloud</p>
                   </div>
-                  <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full border border-blue-500/30">☁️ Global</span>
+                  <span className="text-[10px] font-mono bg-zinc-900 text-zinc-400 px-2 py-0.5 rounded border border-zinc-800">
+                    Global
+                  </span>
                   <button
+                    type="button"
                     onClick={(e) => {
                       e.stopPropagation();
                       setDeleteCloudTarget({ supabaseId: pack.supabaseId, packName: pack.name });
@@ -451,119 +533,70 @@ export default function PackEditor() {
                       setDeleteError('');
                     }}
                     title="Delete Cloud Pack (Admin)"
-                    className="p-1.5 text-white/30 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors text-sm"
+                    className="p-1 text-zinc-500 hover:text-red-400 transition-colors"
                   >
-                    🗑️
+                    <Trash2 size={14} />
                   </button>
                 </div>
-                <AnimatePresence>
-                  {selectedPackId === pack.id && (
-                    <motion.div
-                      className="mt-3 space-y-1.5"
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                    >
-                      <div className="flex flex-wrap gap-1.5 pt-1 pb-1">
-                        {getPackWords(pack).map((w, idx) => (
-                          <span
-                            key={idx}
-                            className="bg-white/10 text-white/90 text-xs px-2.5 py-1 rounded-lg border border-white/5"
-                          >
-                            {w}
-                          </span>
-                        ))}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </Card>
+              </div>
             ))
           )}
         </div>
       )}
 
-      {/* ── Built-in tab ── */}
+      {/* Built-in tab */}
       {activeTab === 'builtin' && (
         <div className="space-y-3">
           {DEFAULT_PACKS.map((pack) => (
-            <Card
+            <div
               key={pack.id}
-              className={`p-4 cursor-pointer ${selectedPackId === pack.id ? 'border-violet-500 bg-violet-600/10' : ''}`}
+              className={`p-3.5 rounded-xl border cursor-pointer transition-colors ${
+                selectedPackId === pack.id
+                  ? 'border-red-600/70 bg-red-950/20'
+                  : 'bg-zinc-950 border-zinc-850 hover:border-zinc-700'
+              }`}
               onClick={() => setSelectedPackId(selectedPackId === pack.id ? null : pack.id)}
-              animate={false}
             >
               <div className="flex items-center gap-3">
-                <span className="text-3xl">{pack.icon}</span>
-                <div className="flex-1">
-                  <p className="text-white font-bold">{pack.name}</p>
-                  <p className="text-white/40 text-xs">
+                <PackInsignia icon={pack.icon} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-white font-bold text-sm truncate">{pack.name}</p>
+                  <p className="text-zinc-500 font-mono text-[10px]">
                     {getPackWords(pack).length} words · Read-only
                   </p>
                 </div>
-                <span className="text-xs bg-violet-500/20 text-violet-400 px-2 py-0.5 rounded-full">Built-in</span>
+                <span className="text-[10px] font-mono bg-zinc-900 text-zinc-400 px-2 py-0.5 rounded border border-zinc-800">
+                  Built-in
+                </span>
               </div>
-              <AnimatePresence>
-                {selectedPackId === pack.id && (
-                  <motion.div
-                    className="mt-3 space-y-1.5"
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                  >
-                    {pack.pairs && pack.pairs.length > 0 ? (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-1 pb-1">
-                        {pack.pairs.map((p, idx) => (
-                          <div
-                            key={idx}
-                            className="flex items-center justify-between bg-white/10 text-white/90 text-xs px-2.5 py-1.5 rounded-lg border border-white/5"
-                          >
-                            <span className="font-semibold text-violet-300">{p.civilian || p.wordA}</span>
-                            <span className="text-white/30 text-[10px]">vs</span>
-                            <span className="font-semibold text-pink-300">{p.undercover || p.wordB}</span>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="flex flex-wrap gap-1.5 pt-1 pb-1">
-                        {getPackWords(pack).map((w, idx) => (
-                          <span
-                            key={idx}
-                            className="bg-white/10 text-white/90 text-xs px-2.5 py-1 rounded-lg border border-white/5"
-                          >
-                            {w}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </Card>
+            </div>
           ))}
         </div>
       )}
 
-      {/* ── Pack word editor (custom tab only) ── */}
+      {/* Pack word editor (custom tab only) */}
       <AnimatePresence>
         {selectedPack && activeTab === 'custom' && (
           <motion.div
-            className="bg-white/5 border border-violet-500/30 rounded-2xl p-4 space-y-4"
-            initial={{ opacity: 0, y: 20 }}
+            className="bg-zinc-950 border border-zinc-800 rounded-xl p-4 space-y-3.5"
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
+            exit={{ opacity: 0, y: 15 }}
           >
             <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-white font-bold text-lg">
-                  {selectedPack.icon} {selectedPack.name}
-                </h3>
-                <p className="text-white/40 text-xs">
-                  {getPackWords(selectedPack).length} words in this pack
-                </p>
+              <div className="flex items-center gap-3">
+                <PackInsignia icon={selectedPack.icon} />
+                <div>
+                  <h3 className="text-white font-bold text-sm">
+                    {selectedPack.name}
+                  </h3>
+                  <p className="text-zinc-500 text-[10px] font-mono">
+                    {getPackWords(selectedPack).length} words in this set
+                  </p>
+                </div>
               </div>
-              <div className="flex gap-2">
-                <Button variant="secondary" size="sm" onClick={() => exportPack(selectedPack.id)} icon="⬇️">
+              <div className="flex gap-1.5">
+                <Button variant="secondary" size="sm" onClick={() => exportPack(selectedPack.id)} icon={Download}>
                   Export
                 </Button>
                 <Button
@@ -571,7 +604,7 @@ export default function PackEditor() {
                   size="sm"
                   onClick={() => handlePublish(selectedPack.id)}
                   disabled={publishStatus[selectedPack.id]?.state === 'loading'}
-                  icon="☁️"
+                  icon={UploadCloud}
                 >
                   Publish
                 </Button>
@@ -579,14 +612,13 @@ export default function PackEditor() {
             </div>
 
             {/* Words tag list */}
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {getPackWords(selectedPack).length === 0 ? (
-                <div className="text-center py-8 border border-dashed border-white/10 rounded-xl">
-                  <p className="text-white/40 text-sm">No words yet in this pack.</p>
-                  <p className="text-white/20 text-xs mt-1">Add words using the button below</p>
+                <div className="text-center py-6 border border-dashed border-zinc-800 rounded-xl">
+                  <p className="text-zinc-500 text-xs">No words in this pack yet.</p>
                 </div>
               ) : (
-                <div className="flex flex-wrap gap-2 p-3 bg-black/20 border border-white/10 rounded-xl min-h-[60px] max-h-64 overflow-y-auto">
+                <div className="flex flex-wrap gap-1.5 p-2.5 bg-zinc-900 border border-zinc-850 rounded-xl max-h-56 overflow-y-auto">
                   {getPackWords(selectedPack).map((word, idx) => (
                     <WordTag
                       key={`${word}-${idx}`}
@@ -604,25 +636,25 @@ export default function PackEditor() {
       </AnimatePresence>
 
       {/* New Pack Modal */}
-      <Modal isOpen={showNewPackModal} onClose={() => setShowNewPackModal(false)} title="Create New Pack">
+      <Modal isOpen={showNewPackModal} onClose={() => setShowNewPackModal(false)} title="Create Cipher Pack">
         <div className="space-y-4">
           <div>
-            <label className="text-white/60 text-xs uppercase tracking-wider block mb-2">Pack Name</label>
+            <label className="text-zinc-400 text-xs uppercase font-mono block mb-1.5">Pack Name</label>
             <input
               value={newPackName}
               onChange={(e) => setNewPackName(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleCreatePack()}
               placeholder="e.g. Office Edition"
-              className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white
-                         placeholder-white/30 focus:outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/30"
+              className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3.5 py-2.5 text-white text-xs
+                         placeholder-zinc-600 focus:outline-none focus:border-red-600 transition-colors"
               autoFocus
             />
           </div>
           <div>
-            <label className="text-white/60 text-xs uppercase tracking-wider block mb-2">Icon</label>
+            <label className="text-zinc-400 text-xs uppercase font-mono block mb-1.5">Icon</label>
             <IconPicker value={newPackIcon} onChange={setNewPackIcon} />
           </div>
-          <div className="flex gap-3 pt-2">
+          <div className="flex gap-2 pt-2">
             <Button variant="primary" onClick={handleCreatePack} disabled={!newPackName.trim()} fullWidth>
               Create Pack
             </Button>
@@ -641,38 +673,38 @@ export default function PackEditor() {
             setDeleteError('');
           }
         }}
-        title="🔒 Delete Cloud Pack"
+        title="Delete Cloud Pack"
       >
-        <div className="space-y-4">
-          <p className="text-white/70 text-sm">
-            You are deleting <span className="font-bold text-white">"{deleteCloudTarget?.packName}"</span> from the global cloud database.
+        <div className="space-y-3.5">
+          <p className="text-zinc-400 text-xs">
+            Deleting <span className="font-bold text-white">"{deleteCloudTarget?.packName}"</span> from the global cloud database.
           </p>
           <div>
-            <label className="text-white/60 text-xs uppercase tracking-wider block mb-2">Admin Password Required</label>
+            <label className="text-zinc-500 text-[10px] font-mono uppercase block mb-1">Admin Passkey</label>
             <input
               type="password"
               value={deletePassword}
               onChange={(e) => setDeletePassword(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleDeleteCloudPack()}
               placeholder="Enter admin password..."
-              className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white
-                         placeholder-white/30 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/30 text-sm"
+              className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-white
+                         placeholder-zinc-600 focus:outline-none focus:border-red-600 text-xs"
               autoFocus
             />
           </div>
 
           {deleteError && (
-            <p className="text-red-400 text-xs font-semibold bg-red-500/10 border border-red-500/20 rounded-lg p-2.5">
-              ⚠️ {deleteError}
+            <p className="text-red-400 text-xs font-medium flex items-center gap-1.5">
+              <AlertCircle size={13} />
+              <span>{deleteError}</span>
             </p>
           )}
 
-          <div className="flex gap-3 pt-2">
+          <div className="flex gap-2 pt-2">
             <Button
-              variant="primary"
+              variant="danger"
               onClick={handleDeleteCloudPack}
               disabled={!deletePassword.trim() || isDeletingCloud}
-              className="!bg-red-600 hover:!bg-red-700"
               fullWidth
             >
               {isDeletingCloud ? 'Deleting...' : 'Delete Pack'}
@@ -692,7 +724,7 @@ export default function PackEditor() {
         </div>
       </Modal>
 
-      <Footer className="mt-8 mb-4" />
+      <Footer className="mt-4" />
     </div>
   );
 }

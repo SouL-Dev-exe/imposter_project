@@ -1,7 +1,23 @@
+/**
+ * OnlineLobby.jsx — Multiplayer room hosting and joining screen.
+ * Clean AAA game styling: no emoji, no glow, Lucide icons, spring animations.
+ */
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
+import { 
+  ArrowLeft, 
+  Crown, 
+  Users, 
+  LogOut, 
+  Mic, 
+  Play, 
+  Package, 
+  Wifi, 
+  Copy, 
+  Check 
+} from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { useAuthStore } from '../store/authStore';
 import { useMultiplayerStore } from '../store/multiplayerStore';
@@ -27,7 +43,6 @@ export default function OnlineLobby() {
 
   const isArabic = i18n?.language?.startsWith('ar');
 
-  // If user somehow gets here without a profile, kick them back & force fresh fetch
   useEffect(() => {
     if (!profile) {
       navigate('/');
@@ -41,7 +56,6 @@ export default function OnlineLobby() {
     }
   }, [profile, user, isGuest, roomId, navigate, fetchProfile, fetchRoomPlayers]);
 
-  // Clean up room instantly when host closes tab or refreshes browser
   useEffect(() => {
     if (!roomCode || !isHost) return;
     const handleBeforeUnload = () => leaveRoom();
@@ -51,7 +65,7 @@ export default function OnlineLobby() {
 
   const handleCreate = async () => {
     if (!profile?.username) {
-      setError(t('auth.play_as_guest'));
+      setError(t('auth.play_as_guest') || 'Sign in or set codename first');
       return;
     }
     setLoading(true);
@@ -64,7 +78,7 @@ export default function OnlineLobby() {
   const handleJoin = async () => {
     if (!joinCode.trim()) return;
     if (!profile?.username) {
-      setError(t('auth.play_as_guest'));
+      setError(t('auth.play_as_guest') || 'Sign in or set codename first');
       return;
     }
     setLoading(true);
@@ -82,38 +96,41 @@ export default function OnlineLobby() {
   // 1. Not in a room yet
   if (!roomCode) {
     return (
-      <div className="min-h-[100dvh] flex flex-col items-center justify-center p-4">
-        <Button variant="ghost" onClick={() => navigate('/')} className="absolute top-4 start-4" icon="⬅️">
-          {t('online.back')}
+      <div className="min-h-[100dvh] flex flex-col items-center justify-center p-4 font-sans selection:bg-red-600 selection:text-white">
+        <Button variant="ghost" onClick={() => navigate('/')} className="absolute top-4 start-4" icon={ArrowLeft}>
+          {t('online.back') || 'Back'}
         </Button>
 
         <motion.div
-          className="bg-gray-900 border border-white/10 rounded-3xl p-6 w-full max-w-sm space-y-8"
-          initial={{ opacity: 0, y: 20 }}
+          className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6 sm:p-8 w-full max-w-sm space-y-6 shadow-xl"
+          initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <div className="text-center space-y-2">
-            <h1 className="text-3xl font-black bg-gradient-to-r from-violet-400 to-pink-400 bg-clip-text text-transparent">
-              {t('online.title')}
+          <div className="text-center space-y-1.5">
+            <div className="w-12 h-12 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto text-red-500 mb-2">
+              <Wifi size={22} />
+            </div>
+            <h1 className="text-2xl font-bold text-white tracking-tight">
+              {t('online.title') || 'Online Operations'}
             </h1>
-            <p className="text-white/40 text-sm">{t('online.subtitle')}</p>
+            <p className="text-zinc-500 text-xs font-mono">{t('online.subtitle') || 'Host or connect to a covert match'}</p>
           </div>
 
           {error && (
-            <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-3 py-2 rounded-lg text-sm text-center">
+            <div className="bg-red-950/30 border border-red-900/50 text-red-400 px-3 py-2 rounded-lg text-xs text-center font-medium">
               {error}
             </div>
           )}
 
           <div className="space-y-3">
-            <Button variant="primary" fullWidth size="xl" onClick={handleCreate} disabled={loading} icon="👑">
-              {loading ? t('online.creating') : t('online.host_room')}
+            <Button variant="primary" fullWidth size="xl" onClick={handleCreate} disabled={loading} icon={Crown}>
+              {loading ? (t('online.creating') || 'Initializing Room...') : (t('online.host_room') || 'Host Classified Room')}
             </Button>
 
-            <div className="flex items-center gap-3 my-4">
-              <div className="h-px bg-white/10 flex-1" />
-              <span className="text-white/30 text-xs uppercase tracking-widest font-bold">{t('online.or')}</span>
-              <div className="h-px bg-white/10 flex-1" />
+            <div className="flex items-center gap-3 my-3">
+              <div className="h-px bg-zinc-850 flex-1" />
+              <span className="text-zinc-600 text-xs uppercase tracking-widest font-mono">{t('online.or') || 'OR'}</span>
+              <div className="h-px bg-zinc-850 flex-1" />
             </div>
 
             <div className="flex gap-2">
@@ -121,12 +138,12 @@ export default function OnlineLobby() {
                 type="text"
                 value={joinCode}
                 onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-                placeholder={t('online.room_code_placeholder')}
+                placeholder={t('online.room_code_placeholder') || 'ROOM CODE'}
                 maxLength={4}
-                className="flex-1 bg-white/5 border border-white/20 rounded-xl px-4 text-center font-black text-xl text-white uppercase tracking-widest focus:outline-none focus:border-violet-500"
+                className="flex-1 bg-zinc-900 border border-zinc-800 rounded-lg px-3 text-center font-mono font-bold text-lg text-white uppercase tracking-widest focus:outline-none focus:border-red-600 transition-colors"
               />
               <Button variant="secondary" onClick={handleJoin} disabled={loading || joinCode.length < 2}>
-                {t('online.join')}
+                {t('online.join') || 'Join'}
               </Button>
             </div>
           </div>
@@ -135,26 +152,25 @@ export default function OnlineLobby() {
     );
   }
 
-  // 2. In a room — Locked to 100dvh with internal scrolling
+  // 2. In a room
   return (
-    <div className="h-[100dvh] flex flex-col max-w-4xl w-full mx-auto overflow-hidden">
-
-      {/* ── Clean Header — Fix 2: no absolute positioning, no RTL collision ── */}
-      <header className="flex-none w-full bg-slate-900/90 border-b border-slate-800 px-4 py-3 flex items-center justify-between gap-2 z-20">
-
-        {/* Left: Room Code + Avatar Shop shortcut + Voice Chat */}
+    <div className="h-[100dvh] flex flex-col max-w-4xl w-full mx-auto overflow-hidden font-sans selection:bg-red-600 selection:text-white">
+      {/* Header */}
+      <header className="flex-none w-full bg-zinc-950 border-b border-zinc-900 px-4 py-2.5 flex items-center justify-between gap-2 z-20">
+        {/* Left */}
         <div className="flex items-center gap-2 shrink-0">
-          <div className="bg-slate-800 border border-slate-700/60 px-2.5 py-1 rounded-lg flex items-center gap-1.5">
-            <span className="text-[10px] text-slate-400">{t('online.room_code_label')}</span>
-            <span className="font-mono font-bold text-xs text-indigo-400 tracking-wider">
+          <div className="bg-zinc-900 border border-zinc-800 px-2.5 py-1 rounded-lg flex items-center gap-1.5 font-mono">
+            <span className="text-[10px] text-zinc-500 uppercase">{t('online.room_code_label') || 'Code:'}</span>
+            <span className="font-bold text-xs text-white tracking-wider">
               {roomCode || '----'}
             </span>
           </div>
-          {/* Current avatar / Store button — click to open SouL Store & Locker */}
+
           <button
+            type="button"
             onClick={() => setShowStore(true)}
-            title={isArabic ? 'متجر الأفاتار والملابس' : 'SouL Store & Locker'}
-            className="bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 rounded-lg p-1 transition cursor-pointer flex items-center gap-1.5"
+            title={isArabic ? 'متجر الأفاتار والملابس' : 'Armory & Store'}
+            className="bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 rounded-lg p-1 transition-colors cursor-pointer flex items-center gap-1.5"
           >
             <UserAvatar
               username={profile?.username || 'me'}
@@ -162,12 +178,11 @@ export default function OnlineLobby() {
               size="xs"
               showBadge={false}
             />
-            <span className="text-[11px] font-bold text-violet-300 hidden sm:inline">
-              {isArabic ? 'المتجر والملابس' : 'Store & Locker'}
+            <span className="text-xs font-semibold text-zinc-300 hidden sm:inline px-1">
+              Armory
             </span>
           </button>
 
-          {/* Real-time WebRTC Voice Chat */}
           <VoiceChat
             roomId={roomId}
             currentUser={{ id: user?.id || profile?.username, name: profile?.username }}
@@ -176,21 +191,23 @@ export default function OnlineLobby() {
           />
         </div>
 
-        {/* Right: Player Count + Leave Button */}
+        {/* Right */}
         <div className="flex items-center gap-2 shrink-0">
-          <span className="text-xs font-mono font-bold text-zinc-200 uppercase tracking-wider">
-            {t('online.players_count', { count: players.length })}
+          <span className="text-xs font-mono font-semibold text-zinc-400">
+            {t('online.players_count', { count: players.length }) || `${players.length} Players`}
           </span>
           <button
+            type="button"
             onClick={handleLeave}
-            className="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 px-2.5 py-1 text-xs font-mono font-semibold flex items-center gap-1 transition cursor-pointer"
+            className="bg-zinc-900 hover:bg-red-950/40 text-zinc-400 hover:text-red-400 border border-zinc-800 hover:border-red-900/50 px-2.5 py-1 text-xs font-semibold rounded-lg flex items-center gap-1 transition-colors cursor-pointer"
           >
-            🚪 <span className="hidden sm:inline">{t('online.leave_room')}</span>
+            <LogOut size={13} />
+            <span className="hidden sm:inline">{t('online.leave_room') || 'Leave'}</span>
           </button>
         </div>
       </header>
 
-      {/* Unified SouL Store & Locker Modal */}
+      {/* Store Modal */}
       {showStore && (
         <SouLStoreModal
           isOpen={showStore}
@@ -199,23 +216,20 @@ export default function OnlineLobby() {
         />
       )}
 
-      {/* Pad content area */}
+      {/* Content */}
       <div className="flex-1 flex flex-col p-3 sm:p-4 overflow-hidden min-h-0">
-
-        {/* Main Container */}
-        <div className="flex-1 flex flex-col md:flex-row gap-3 sm:gap-6 min-h-0 overflow-hidden">
-
-          {/* Left side: Players column with internal scroll & sticky actions */}
+        <div className="flex-1 flex flex-col md:flex-row gap-3 sm:gap-4 min-h-0 overflow-hidden">
+          {/* Players Column */}
           <div className="flex-1 flex flex-col min-h-0">
             <div className="flex-none mb-2">
-              <h2 className="text-lg sm:text-2xl font-mono font-black text-red-100 text-center md:text-start uppercase tracking-wider">
-                {t('online.players_count', { count: players.length })}
+              <h2 className="text-base font-bold text-white uppercase tracking-wider">
+                {t('online.players_count', { count: players.length }) || `Operative Roster (${players.length})`}
               </h2>
             </div>
 
-            {/* Player Grid - 10 fixed slots */}
-            <div className="flex-1 overflow-y-auto pr-1 min-h-0 scrollbar-thin scrollbar-thumb-slate-700">
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-2.5 w-full">
+            {/* Grid */}
+            <div className="flex-1 overflow-y-auto pr-1 min-h-0">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 w-full">
                 {Array.from({ length: 10 }).map((_, index) => {
                   const p = players[index];
                   const pUserId = p ? (p.userId || p.user_id || p.id) : null;
@@ -230,50 +244,49 @@ export default function OnlineLobby() {
                   return (
                     <div
                       key={p ? (p.id || p.playerId) : `empty-${index}`}
-                      className={`relative rounded-2xl border flex flex-col items-center justify-center gap-1 p-2.5 transition-all ${p
+                      className={`relative rounded-xl border flex flex-col items-center justify-center gap-1.5 p-2.5 transition-colors ${
+                        p
                           ? isInVoice
-                            ? 'bg-slate-800/95 border-emerald-500/50 shadow-md shadow-emerald-950/30 ring-1 ring-emerald-500/30'
-                            : 'bg-slate-800/90 border-indigo-500/40 shadow-md shadow-indigo-900/20'
-                          : 'bg-white/5 border-white/5 border-dashed opacity-50'
-                        }`}
-                      style={{ minHeight: '88px' }}
+                            ? 'bg-zinc-900 border-emerald-500/50'
+                            : 'bg-zinc-900/80 border-zinc-800'
+                          : 'bg-zinc-950/40 border-zinc-900 border-dashed opacity-40'
+                      }`}
+                      style={{ minHeight: '84px' }}
                     >
                       {p ? (
                         <>
-                          {/* Active Speaking / Voice Indicator */}
                           {isInVoice && (
                             <div
-                              className="absolute top-1.5 start-1.5 bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 px-1 py-0.5 rounded-md text-[10px] flex items-center gap-0.5 animate-pulse"
-                              title="متصل بالمحادثة الصوتية"
+                              className="absolute top-1.5 start-1.5 bg-emerald-950/40 border border-emerald-800/40 text-emerald-400 p-0.5 rounded text-[10px]"
+                              title="Voice active"
                             >
-                              <span>🎙️</span>
+                              <Mic size={10} />
                             </div>
                           )}
 
-                          {/* UserAvatar handles DiceBear URL, accessories & fallbacks */}
                           <UserAvatar
-                            username={p.name || p.username || 'Player'}
+                            username={p.name || p.username || 'Operative'}
                             avatarUrl={p.avatar_url}
                             size="sm"
                             showBadge={false}
-                            className="mb-0.5"
                           />
-                          <span className="text-xs font-bold text-white text-center truncate max-w-full px-1">
-                            {p.name || p.username || 'Player'}
+                          <span className="text-xs font-semibold text-white text-center truncate max-w-full px-1">
+                            {p.name || p.username || 'Operative'}
                           </span>
                           {p.is_host && (
-                            <span className="text-[9px] font-semibold text-amber-400 bg-amber-950/80 border border-amber-500/30 px-1.5 py-0.5 rounded-full">
-                              👑 Host
+                            <span className="text-[9px] font-mono font-bold text-amber-400 bg-amber-950/30 border border-amber-800/40 px-1.5 py-0.2 rounded flex items-center gap-0.5">
+                              <Crown size={9} />
+                              Host
                             </span>
                           )}
                           {p.userId === user?.id && (
-                            <span className="text-[9px] text-indigo-300 font-semibold">أنت</span>
+                            <span className="text-[9px] text-zinc-400 font-mono">You</span>
                           )}
                         </>
                       ) : (
                         <>
-                          <div className="w-10 h-10 rounded-full bg-white/5" />
-                          <span className="text-[10px] text-slate-500">انتظار...</span>
+                          <div className="w-8 h-8 rounded-full bg-zinc-900" />
+                          <span className="text-[10px] text-zinc-600 font-mono">Slot {index + 1}</span>
                         </>
                       )}
                     </div>
@@ -282,33 +295,34 @@ export default function OnlineLobby() {
               </div>
             </div>
 
-            {/* Host Action Controls — Fixed at bottom of player panel */}
+            {/* Host actions */}
             <div className="flex-none pt-2">
               {isHost && (
                 <div>
-                  <Button variant="primary" fullWidth size="lg" disabled={players.length < 3} icon="🚀">
-                    {t('online.start_game')}
+                  <Button variant="primary" fullWidth size="lg" disabled={players.length < 3} icon={Play}>
+                    {t('online.start_game') || 'Commence Operation'}
                   </Button>
                   {players.length < 3 && (
-                    <p className="text-white/40 text-xs text-center mt-1.5">{t('online.waiting_players')}</p>
+                    <p className="text-zinc-500 text-xs text-center mt-1 font-mono">
+                      {t('online.waiting_players') || 'Waiting for operatives (3 minimum)'}
+                    </p>
                   )}
                 </div>
               )}
               {!isHost && (
                 <div className="text-center py-1">
-                  <p className="text-violet-300 font-medium text-xs sm:text-sm animate-pulse">{t('online.waiting_host')}</p>
+                  <p className="text-zinc-400 font-mono text-xs">{t('online.waiting_host') || 'Awaiting host launch directive...'}</p>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Right side: Chat */}
-          <div className="w-full md:w-80 flex-none md:flex-1 flex flex-col h-[270px] md:h-full min-h-0">
+          {/* Right: Live Chat */}
+          <div className="w-full md:w-80 flex-none md:flex-1 flex flex-col h-[260px] md:h-full min-h-0">
             <LiveChat />
           </div>
-
         </div>
-      </div>{/* end: Pad content area */}
+      </div>
     </div>
   );
 }

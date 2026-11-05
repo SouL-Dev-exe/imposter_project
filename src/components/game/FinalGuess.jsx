@@ -1,13 +1,16 @@
 /**
  * FinalGuess.jsx — The impostor's last shot: pick the civilians' word to steal the win.
+ * Clean AAA game styling: no emoji, no glow, Lucide icons, spring animations.
  */
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Eye, Target, Trophy, XCircle, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { Button } from '../ui/Button';
-import { Corners, ClassifiedTag, PulseRing } from '../ui/HudFrame';
 import { evaluateFinalGuess, generateFinalGuessChoices } from '../../utils/gameLogic';
 import { useAudio } from '../../hooks/useAudio';
 import { useLanguageStore } from '../../store/languageStore';
+
+const spring = { type: 'spring', stiffness: 450, damping: 28 };
 
 export function FinalGuess({ eliminatedPlayer, secretWord, wordPair, onResult }) {
   const { t } = useLanguageStore();
@@ -46,32 +49,37 @@ export function FinalGuess({ eliminatedPlayer, secretWord, wordPair, onResult })
 
   return (
     <motion.div
-      className="relative space-y-6 text-center font-mono border border-red-900/60 bg-zinc-950 p-5 sm:p-6"
-      initial={{ opacity: 0, y: 20 }}
+      className="relative space-y-6 text-center font-sans border border-zinc-800 bg-zinc-950 p-6 rounded-2xl"
+      initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ type: 'spring', stiffness: 240, damping: 24 }}
+      transition={spring}
     >
-      <Corners />
       <AnimatePresence mode="wait">
         {!submitted ? (
-          <motion.div key="pick" className="space-y-6" exit={{ opacity: 0, scale: 0.96 }}>
+          <motion.div key="pick" className="space-y-5" exit={{ opacity: 0, scale: 0.96 }}>
             <div className="space-y-2">
-              <ClassifiedTag>Last chance</ClassifiedTag>
-              <div className="relative mx-auto w-20 h-20 flex items-center justify-center">
-                <PulseRing />
-                <span className="text-5xl">🕵️</span>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-950/40 border border-red-900/60 rounded-full text-xs text-red-400 font-mono uppercase">
+                <AlertTriangle size={13} />
+                Last Chance Protocol
+              </span>
+
+              <div className="w-16 h-16 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto text-red-500 mt-2">
+                <Eye size={32} />
               </div>
-              <h3 className="text-2xl font-black text-white uppercase tracking-widest break-words">{t('finalGuess.title')}</h3>
-              <p className="text-zinc-500 text-xs sm:text-sm break-words">
-                <span className="text-red-500 font-bold">
+
+              <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                {t('finalGuess.title') || 'Final Impostor Deduction'}
+              </h3>
+              <p className="text-zinc-400 text-xs leading-relaxed max-w-sm mx-auto">
+                <span className="text-red-400 font-semibold">
                   {t('finalGuess.caughtDesc', { name: eliminatedPlayer?.name || 'Impostor' })}
                 </span>
                 <br />
-                {t('finalGuess.selectInstruction')}
+                {t('finalGuess.selectInstruction') || 'Guess the civilians secret cipher to steal victory.'}
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-3" role="radiogroup">
+            <div className="grid grid-cols-2 gap-2.5" role="radiogroup">
               {choices.map((word, index) => {
                 const isSelected = selectedWord === word;
                 return (
@@ -80,38 +88,35 @@ export function FinalGuess({ eliminatedPlayer, secretWord, wordPair, onResult })
                     type="button"
                     role="radio"
                     aria-checked={isSelected}
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ type: 'spring', stiffness: 300, damping: 22, delay: index * 0.06 }}
-                    whileHover={{ scale: 1.04 }}
-                    whileTap={{ scale: 0.95 }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    transition={spring}
                     onClick={() => handleSelectChoice(word)}
-                    className={`relative p-3 border font-black text-base sm:text-lg flex flex-col items-center justify-center min-h-[84px] min-w-0 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 ${
+                    className={`relative p-3.5 border rounded-xl font-bold text-sm sm:text-base flex flex-col items-center justify-center min-h-[76px] cursor-pointer transition-colors ${
                       isSelected
-                        ? 'bg-red-600 border-red-300 text-white shadow-[0_0_30px_rgba(220,38,38,0.55)]'
-                        : 'bg-black border-zinc-800 text-zinc-100 hover:border-red-700 hover:bg-zinc-900'
+                        ? 'bg-red-950/30 border-red-600 text-white'
+                        : 'bg-zinc-900/60 border-zinc-800 text-zinc-300 hover:border-zinc-700'
                     }`}
                   >
-                    {isSelected && <Corners size="w-2 h-2" thick="border" color="border-white" />}
-                    <span className="text-[10px] opacity-60 font-medium uppercase tracking-[0.25em] mb-1">
-                      {t('finalGuess.option', { n: index + 1 })}
+                    <span className="text-[10px] text-zinc-500 font-mono uppercase tracking-wider mb-0.5">
+                      {t('finalGuess.option', { n: index + 1 }) || `Option ${index + 1}`}
                     </span>
-                    <span className="break-words max-w-full">{word}</span>
+                    <span className="truncate max-w-full">{word}</span>
                   </motion.button>
                 );
               })}
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-3 pt-1">
               <Button
-                variant="warning"
+                variant="primary"
                 fullWidth
                 onClick={() => handleSubmit(selectedWord)}
                 disabled={!selectedWord && !customWord.trim()}
                 size="xl"
-                icon="🎯"
+                icon={Target}
               >
-                {t('finalGuess.confirmChoice')}
+                {t('finalGuess.confirmChoice') || 'Confirm Secret Cipher'}
               </Button>
 
               <input
@@ -122,9 +127,9 @@ export function FinalGuess({ eliminatedPlayer, secretWord, wordPair, onResult })
                   setSelectedWord('');
                 }}
                 onKeyDown={(e) => e.key === 'Enter' && handleSubmit(customWord)}
-                placeholder={t('finalGuess.customWordPlaceholder')}
+                placeholder={t('finalGuess.customWordPlaceholder') || 'Or type custom guess...'}
                 maxLength={40}
-                className="w-full bg-black border border-zinc-800 px-4 py-2.5 text-sm text-white placeholder-zinc-600 text-center font-mono uppercase tracking-wider focus:outline-none focus:border-red-600 focus:shadow-[0_0_14px_rgba(220,38,38,0.3)] transition-all"
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2.5 text-xs text-white placeholder-zinc-500 text-center font-mono focus:outline-none focus:border-red-600 transition-colors"
               />
             </div>
           </motion.div>
@@ -132,32 +137,35 @@ export function FinalGuess({ eliminatedPlayer, secretWord, wordPair, onResult })
           <motion.div
             key="result"
             className="space-y-4 py-4"
-            initial={{ scale: 0.7, opacity: 0 }}
+            initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: 'spring', damping: 14, stiffness: 260 }}
+            transition={spring}
           >
-            <ClassifiedTag tone={isCorrect ? 'white' : 'red'}>{isCorrect ? 'Mission success' : 'Mission failed'}</ClassifiedTag>
-            <motion.div
-              className="text-7xl drop-shadow-[0_0_25px_rgba(220,38,38,0.7)]"
-              animate={isCorrect ? { rotate: [0, -8, 8, 0], scale: [1, 1.15, 1] } : { x: [0, -8, 8, -6, 6, 0] }}
-              transition={{ duration: 0.7 }}
-            >
-              {isCorrect ? '🏆' : '💀'}
-            </motion.div>
-            <h3 className={`text-3xl font-black uppercase tracking-widest break-words ${isCorrect ? 'text-white' : 'text-red-500'}`}>
-              {isCorrect ? t('finalGuess.impostorWins') : t('finalGuess.wrongChoice')}
+            <div className="w-16 h-16 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto">
+              {isCorrect ? (
+                <Trophy size={36} className="text-amber-400" />
+              ) : (
+                <XCircle size={36} className="text-red-500" />
+              )}
+            </div>
+
+            <h3 className={`text-2xl font-black tracking-tight ${isCorrect ? 'text-white' : 'text-red-400'}`}>
+              {isCorrect ? (t('finalGuess.impostorWins') || 'Cipher Cracked! Impostor Wins!') : (t('finalGuess.wrongChoice') || 'Incorrect Deduction!')}
             </h3>
-            <p className="text-zinc-300 text-sm break-words">
+
+            <p className="text-zinc-300 text-xs max-w-sm mx-auto leading-relaxed">
               {isCorrect ? (
                 <>
-                  {t('finalGuess.correctNotice', { choice: finalChoice })}
-                  <span className="text-xs text-zinc-500 mt-1 block">{t('finalGuess.stealsVictory')}</span>
+                  {t('finalGuess.correctNotice', { choice: finalChoice }) || `Correctly guessed "${finalChoice}"!`}
+                  <span className="text-zinc-500 block mt-1">{t('finalGuess.stealsVictory') || 'The impostor stole victory from the jaws of defeat!'}</span>
                 </>
               ) : (
                 <>
-                  {t('finalGuess.wrongNotice', { choice: finalChoice })}
+                  {t('finalGuess.wrongNotice', { choice: finalChoice }) || `Guessed "${finalChoice}".`}
                   <br />
-                  {t('finalGuess.secretWordWas', { word: secretWord })}
+                  <span className="text-zinc-400 mt-1 block">
+                    {t('finalGuess.secretWordWas', { word: secretWord }) || `The civilian word was "${secretWord}".`}
+                  </span>
                 </>
               )}
             </p>
@@ -167,3 +175,5 @@ export function FinalGuess({ eliminatedPlayer, secretWord, wordPair, onResult })
     </motion.div>
   );
 }
+
+export default FinalGuess;

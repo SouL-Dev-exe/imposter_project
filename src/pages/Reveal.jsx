@@ -1,10 +1,12 @@
 /**
  * Reveal.jsx — Pass-and-Play role reveal phase.
  * Players take turns viewing their secret role card on the same device.
+ * Clean, tactical UI: no emoji, no glow, Lucide icons.
  */
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, CheckCircle2, MessageSquare, ShieldCheck, Users } from 'lucide-react';
 import { RoleReveal } from '../components/game/RoleReveal';
 import { Button } from '../components/ui/Button';
 import { LanguageToggle } from '../components/ui/LanguageToggle';
@@ -43,42 +45,44 @@ export default function Reveal() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col px-4 py-6 max-w-lg mx-auto">
+    <div className="min-h-screen flex flex-col px-4 py-6 max-w-lg mx-auto font-sans selection:bg-red-600 selection:text-white">
       {/* Top Header with Progress and Language Toggle */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-3">
+      <div className="mb-6 space-y-3">
+        <div className="flex items-center justify-between">
           <button
+            type="button"
             onClick={() => navigate('/lobby')}
-            className="text-white/40 hover:text-white transition-colors text-sm"
+            className="text-zinc-400 hover:text-white transition-colors text-sm flex items-center gap-1.5 cursor-pointer"
           >
-            <span className="inline-block rtl:rotate-180">←</span> {strings.nav.back}
+            <ArrowLeft size={16} className="rtl:rotate-180" />
+            <span>{strings.nav?.back || 'Back to Lobby'}</span>
           </button>
           <LanguageToggle variant="chip" />
         </div>
 
-        <div className="flex items-center gap-2 mb-2">
-          <div className="flex gap-1 flex-1">
-            {players.map((p, i) => (
-              <div
-                key={p.id}
-                className={`h-1.5 flex-1 rounded-full transition-colors duration-500
-                  ${i < currentRevealIndex
-                    ? 'bg-violet-500'
-                    : i === currentRevealIndex
-                    ? 'bg-violet-300'
-                    : 'bg-white/20'
-                  }
-                `}
-              />
-            ))}
-          </div>
+        {/* Step progress pills */}
+        <div className="flex gap-1.5 w-full">
+          {players.map((p, i) => (
+            <div
+              key={p.id}
+              className={`h-1.5 flex-1 rounded-full transition-colors duration-300
+                ${i < currentRevealIndex
+                  ? 'bg-red-600'
+                  : i === currentRevealIndex
+                  ? 'bg-red-500/50'
+                  : 'bg-zinc-800'
+                }
+              `}
+            />
+          ))}
         </div>
-        <p className="text-white/40 text-xs text-center">
+
+        <p className="text-zinc-500 text-xs text-center font-mono">
           {allRevealed
-            ? strings.reveal.allViewed
-            : strings.reveal.viewedCount
-                .replace('{current}', currentRevealIndex + 1)
-                .replace('{total}', players.length)}
+            ? (strings.reveal?.allViewed || 'All Operatives Cleared')
+            : (strings.reveal?.viewedCount
+                ?.replace('{current}', currentRevealIndex + 1)
+                ?.replace('{total}', players.length) || `Operative ${currentRevealIndex + 1} of ${players.length}`)}
         </p>
       </div>
 
@@ -89,10 +93,10 @@ export default function Reveal() {
             <motion.div
               key={`reveal-${currentRevealIndex}`}
               className="w-full"
-              initial={{ x: 50, opacity: 0 }}
+              initial={{ x: 30, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
-              exit={{ x: -50, opacity: 0 }}
-              transition={{ duration: 0.3 }}
+              exit={{ x: -30, opacity: 0 }}
+              transition={{ duration: 0.25 }}
             >
               {currentPlayer && (
                 <RoleReveal
@@ -106,28 +110,36 @@ export default function Reveal() {
             <motion.div
               key="all-done"
               className="text-center space-y-6 w-full max-w-sm mx-auto"
-              initial={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
             >
-              <div className="text-7xl">🎉</div>
+              <div className="w-16 h-16 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto text-red-500">
+                <ShieldCheck size={36} />
+              </div>
+
               <div>
-                <h2 className="text-3xl font-black text-white mb-2">{strings.reveal.everyoneReady}</h2>
-                <p className="text-white/60 text-sm whitespace-pre-line">
-                  {strings.reveal.allSeenDesc.replace('{n}', players.length)}
+                <h2 className="text-2xl font-bold text-white mb-1.5 tracking-tight">
+                  {strings.reveal?.everyoneReady || 'All Operatives Ready'}
+                </h2>
+                <p className="text-zinc-400 text-xs leading-relaxed whitespace-pre-line">
+                  {strings.reveal?.allSeenDesc?.replace('{n}', players.length) ||
+                    `All ${players.length} operatives have reviewed their clearance. Proceed to the discussion and clue round.`}
                 </p>
               </div>
 
-              {/* Player roll summary */}
-              <div className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-2">
-                <p className="text-white/40 text-xs uppercase tracking-wider mb-3">{strings.reveal.playersLabel}</p>
+              {/* Player roster summary */}
+              <div className="bg-zinc-950 border border-zinc-900 rounded-xl p-4 space-y-2.5">
+                <p className="text-zinc-500 text-xs font-mono uppercase tracking-wider text-center">
+                  {strings.reveal?.playersLabel || 'Operative Roster'}
+                </p>
                 <div className="flex flex-wrap gap-2 justify-center">
                   {players.map((p) => (
                     <div
                       key={p.id}
-                      className="flex items-center gap-1.5 bg-white/10 rounded-full px-3 py-1"
+                      className="flex items-center gap-1.5 bg-zinc-900 border border-zinc-800 rounded-lg px-2.5 py-1"
                     >
-                      <span className="text-sm">✅</span>
-                      <span className="text-white text-sm font-medium">{p.name}</span>
+                      <CheckCircle2 size={13} className="text-emerald-400" />
+                      <span className="text-zinc-200 text-xs font-medium">{p.name}</span>
                     </div>
                   ))}
                 </div>
@@ -138,9 +150,9 @@ export default function Reveal() {
                 fullWidth
                 size="xl"
                 onClick={handleGoToClues}
-                icon="💬"
+                icon={MessageSquare}
               >
-                {strings.reveal.startClueRound}
+                {strings.reveal?.startClueRound || 'Start Clue Round'}
               </Button>
             </motion.div>
           )}

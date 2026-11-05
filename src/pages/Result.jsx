@@ -1,10 +1,26 @@
 /**
  * Result.jsx — Game result screen.
  * Shows the winner, reveals all roles, and handles the impostor final guess flow.
+ * Clean AAA game styling: no emoji, no glow, Lucide icons, spring animations.
  */
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Trophy, 
+  RotateCcw, 
+  Home, 
+  Share2, 
+  Coins, 
+  Eye, 
+  Shield, 
+  HelpCircle, 
+  Layers, 
+  ChevronDown, 
+  ChevronUp,
+  UserX,
+  Sparkles
+} from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { FinalGuess } from '../components/game/FinalGuess';
 import { LanguageToggle } from '../components/ui/LanguageToggle';
@@ -23,11 +39,13 @@ import { toast } from '../store/toastStore';
 import { vibrate, playVictorySound, playCoinSound } from '../utils/sfx';
 import { useMultiplayerStore } from '../store/multiplayerStore';
 
+const spring = { type: 'spring', stiffness: 450, damping: 28 };
+
 export default function Result() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isFinalGuessPhase = searchParams.get('phase') === 'final_guess';
-  const { t, isRTL } = useLanguageStore();
+  const { t } = useLanguageStore();
 
   const {
     players, winner, eliminatedPlayer, wordPair, gameMode,
@@ -39,11 +57,11 @@ export default function Result() {
   const [finalGuessResolved, setFinalGuessResolved] = useState(false);
   const [revealRoles, setRevealRoles] = useState(false);
 
-  const ROLE_LABELS = {
-    [ROLES.CIVILIAN]: { label: t('roles.civilian'), emoji: '👤', color: 'text-blue-400' },
-    [ROLES.IMPOSTOR]: { label: t('roles.impostor'), emoji: '🕵️', color: 'text-red-400' },
-    [ROLES.MR_WHITE]: { label: t('roles.mrWhite'), emoji: '❓', color: 'text-gray-400' },
-    [ROLES.FAKE_IMPOSTOR]: { label: t('roles.fake_impostor'), emoji: '🎭', color: 'text-amber-400' },
+  const ROLE_CONFIGS = {
+    [ROLES.CIVILIAN]: { label: t('roles.civilian') || 'Civilian', icon: Shield, color: 'text-zinc-200' },
+    [ROLES.IMPOSTOR]: { label: t('roles.impostor') || 'Impostor', icon: Eye, color: 'text-red-400' },
+    [ROLES.MR_WHITE]: { label: t('roles.mrWhite') || 'Mr. White', icon: HelpCircle, color: 'text-zinc-400' },
+    [ROLES.FAKE_IMPOSTOR]: { label: t('roles.fake_impostor') || 'Decoy Operative', icon: Layers, color: 'text-amber-400' },
   };
 
   const [rewardBreakdown, setRewardBreakdown] = useState(null);
@@ -54,16 +72,16 @@ export default function Result() {
   const globalEquipped = useEconomyStore((s) => s.equipped);
   const roomCode = useMultiplayerStore((s) => s.roomCode) || 'PARTY';
 
-  const undercoverPlayer = players.find((p) => p.role === 'impostor' || p.role === 'mrwhite');
-  const foolPlayer = players.find((p) => p.role === 'fake_impostor' || p.role === ROLES.FAKE_IMPOSTOR);
-  const mvpPlayer = (winner === 'civilians' ? players.find((p) => p.role === 'civilian' && !p.isEliminated) : undercoverPlayer) || players[0];
+  const undercoverPlayer = (players || []).find((p) => p.role === 'impostor' || p.role === 'mrwhite');
+  const foolPlayer = (players || []).find((p) => p.role === 'fake_impostor' || p.role === ROLES.FAKE_IMPOSTOR);
+  const mvpPlayer = (winner === 'civilians' ? (players || []).find((p) => p.role === 'civilian' && !p.isEliminated) : undercoverPlayer) || players?.[0];
 
   useEffect(() => {
     if (!players || players.length === 0) {
       navigate('/');
       return;
     }
-    // Play win/lose audio if we have a winner
+
     if (winner === 'civilians') {
       setTimeout(() => playWin(), 300);
       setShowVictoryModal(true);
@@ -72,7 +90,6 @@ export default function Result() {
       setShowVictoryModal(true);
     }
 
-    // Record SouL Coins match reward outcome once winner is declared
     if (winner && !showFinalGuess && !rewardBreakdown) {
       const isVictory = winner === 'civilians' || winner === 'impostors';
       const isImpostor = winner === 'impostors';
@@ -85,10 +102,8 @@ export default function Result() {
       });
 
       setRewardBreakdown(res);
-      // Automatically present match rewards summary modal
       setShowRewardsModal(true);
 
-      // Trigger victory haptics and SFX
       vibrate([100, 50, 100]);
       if (isVictory) {
         playVictorySound();
@@ -96,12 +111,10 @@ export default function Result() {
         playCoinSound();
       }
 
-      // 1. Toast: Player earns SC (+150 SC!)
       if (res.totalSC > 0) {
         toast.coin(res.totalSC, isVictory ? 'Victory Rewards' : 'Match Rewards');
       }
 
-      // 2. Toast: Player levels up in SouL Pass
       if (res.leveledUp) {
         setTimeout(() => {
           toast.levelUp(res.newLevel);
@@ -131,34 +144,31 @@ export default function Result() {
     navigate('/');
   };
 
-  // Determine win info
   const winnerInfo = {
     civilians: {
-      emoji: '🎊',
-      title: t('result.civiliansWin'),
-      subtitle: t('result.civiliansSubtitle'),
-      gradient: 'from-blue-600 to-cyan-600',
-      glow: 'shadow-blue-900/50',
+      icon: Shield,
+      title: t('result.civiliansWin') || 'Civilians Victorious',
+      subtitle: t('result.civiliansSubtitle') || 'Infiltrator eliminated by consensus.',
+      badgeColor: 'border-zinc-700 bg-zinc-900',
     },
     impostors: {
-      emoji: '🏆',
-      title: t('result.impostorWins'),
-      subtitle: t('result.impostorSubtitle'),
-      gradient: 'from-red-700 to-rose-700',
-      glow: 'shadow-red-900/50',
+      icon: Trophy,
+      title: t('result.impostorWins') || 'Impostor Victory',
+      subtitle: t('result.impostorSubtitle') || 'Cover intact. Deception successful.',
+      badgeColor: 'border-red-600/60 bg-red-950/30',
     },
   };
 
   const info = winner ? winnerInfo[winner] : null;
 
   return (
-    <div className="min-h-screen flex flex-col px-4 py-6 max-w-lg mx-auto gap-5">
+    <div className="min-h-screen flex flex-col px-4 py-6 max-w-lg mx-auto gap-4 font-sans selection:bg-red-600 selection:text-white">
       {/* Top action bar */}
       <div className="flex justify-end">
         <LanguageToggle variant="chip" />
       </div>
 
-      {/* Final Guess Phase (before winner is decided) */}
+      {/* Final Guess Phase */}
       {isFinalGuessPhase && !finalGuessResolved && (
         <AnimatePresence>
           {showFinalGuess && (
@@ -168,15 +178,15 @@ export default function Result() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
+              <div className="absolute inset-0 bg-black/85 backdrop-blur-sm" />
               <motion.div
-                className="relative w-full max-w-lg bg-gray-900 border border-white/10 rounded-t-3xl p-6 pb-10"
+                className="relative w-full max-w-lg bg-zinc-950 border border-zinc-800 rounded-t-3xl p-6 pb-10"
                 initial={{ y: '100%' }}
                 animate={{ y: 0 }}
                 exit={{ y: '100%' }}
-                transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+                transition={spring}
               >
-                <div className="w-12 h-1.5 bg-white/20 rounded-full mx-auto mb-6" />
+                <div className="w-12 h-1 bg-zinc-700 rounded-full mx-auto mb-5" />
                 <FinalGuess
                   eliminatedPlayer={eliminatedPlayer}
                   secretWord={wordPair?.wordA}
@@ -189,116 +199,116 @@ export default function Result() {
         </AnimatePresence>
       )}
 
-      {/* Fake Impostor Victory Banner */}
+      {/* Decoy Operative (Fake Impostor) Victory Banner */}
       {winner === 'fake_impostor' && (
-        <div className="p-6 rounded-2xl bg-gradient-to-r from-amber-500/20 to-purple-600/20 border border-amber-500/40 text-center mb-6">
-          <div className="text-5xl mb-2">🎭</div>
-          <h2 className="text-2xl font-bold text-amber-400">
-            {t('result.fakeImpostorWin')}
+        <div className="p-5 rounded-2xl bg-amber-950/20 border border-amber-500/40 text-center mb-2">
+          <Layers size={36} className="mx-auto mb-2 text-amber-400" />
+          <h2 className="text-xl font-bold text-amber-400">
+            {t('result.fakeImpostorWin') || 'Decoy Operative Wins!'}
           </h2>
-          <p className="text-sm text-slate-300 mt-1">
-            {t('result.fakeImpostorWinDesc')}
+          <p className="text-xs text-zinc-300 mt-1">
+            {t('result.fakeImpostorWinDesc') || 'Successfully deceived the group into voting them out!'}
           </p>
         </div>
       )}
 
-      {/* Winner reveal */}
+      {/* Winner reveal card */}
       {winner && winner !== 'fake_impostor' && info && (
         <motion.div
-          className={`rounded-3xl bg-gradient-to-br ${info.gradient} p-1 shadow-2xl ${info.glow} relative overflow-hidden`}
-          initial={{ scale: 0.8, opacity: 0 }}
+          className={`rounded-2xl border ${info.badgeColor} p-6 text-center space-y-3 relative overflow-hidden`}
+          initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: 'spring', damping: 20, stiffness: 200, delay: 0.1 }}
+          transition={spring}
         >
           <ScreenFXOverlay />
-          <div className="bg-gray-950/80 rounded-3xl p-6 text-center space-y-3 relative z-10">
-            <div className="flex justify-center my-2">
-              <UserAvatar size="xl" />
-            </div>
-            <motion.div
-              className="text-4xl"
-              animate={{ rotate: [0, -10, 10, -10, 10, 0] }}
-              transition={{ duration: 0.8, delay: 0.3 }}
-            >
-              {info.emoji}
-            </motion.div>
-            <h1 className="text-3xl font-black text-white">{info.title}</h1>
-            <p className="text-white/60 text-sm">{info.subtitle}</p>
-
-            {/* Glowing Title Badge */}
-            {globalEquipped?.title && (
-              <div className="pt-2 flex justify-center">
-                <span className="text-xs font-black px-3 py-1 rounded-full border border-amber-400/60 bg-amber-400/20 text-amber-300 shadow-[0_0_15px_rgba(245,158,11,0.5)] flex items-center gap-1.5 uppercase tracking-wider">
-                  <span>🏆</span>
-                  <span>[{getStoreItem(globalEquipped.title)?.name || globalEquipped.title}]</span>
-                </span>
-              </div>
-            )}
+          <div className="flex justify-center my-1">
+            <UserAvatar size="xl" />
           </div>
+          <div className="w-14 h-14 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto text-red-500">
+            <Trophy size={28} />
+          </div>
+          <div>
+            <h1 className="text-2xl font-black text-white tracking-tight">{info.title}</h1>
+            <p className="text-zinc-400 text-xs mt-0.5">{info.subtitle}</p>
+          </div>
+
+          {globalEquipped?.title && (
+            <div className="pt-1 flex justify-center">
+              <span className="text-[11px] font-mono font-bold px-3 py-1 rounded-full border border-zinc-800 bg-zinc-900 text-zinc-200 flex items-center gap-1.5 uppercase">
+                <Trophy size={12} className="text-amber-400" />
+                <span>[{getStoreItem(globalEquipped.title)?.name || globalEquipped.title}]</span>
+              </span>
+            </div>
+          )}
         </motion.div>
       )}
 
-      {/* Word reveal */}
+      {/* Secret Word reveal */}
       {wordPair && (
         <motion.div
-          className="bg-white/5 border border-white/10 rounded-2xl p-5 text-center space-y-3"
-          initial={{ opacity: 0, y: 20 }}
+          className="bg-zinc-950 border border-zinc-900 rounded-xl p-4 text-center space-y-3"
+          initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
+          transition={{ delay: 0.15 }}
         >
-          <p className="text-white/40 text-xs uppercase tracking-wider">{t('result.secretWords')}</p>
-          <div className="flex items-center justify-center gap-4">
+          <p className="text-zinc-500 text-xs font-mono uppercase tracking-wider">{t('result.secretWords') || 'Secret Cipher Words'}</p>
+          <div className="flex items-center justify-center gap-6">
             <div className="text-center">
-              <p className="text-white/40 text-xs mb-1">{t('result.civilians')}</p>
-              <p className="text-2xl font-black text-blue-400">{wordPair.wordA}</p>
+              <p className="text-zinc-500 text-xs mb-1 font-mono">{t('result.civilians') || 'Civilians'}</p>
+              <p className="text-xl font-bold text-white">{wordPair.wordA}</p>
             </div>
-            <div className="text-white/20 text-xl">vs</div>
+            <div className="text-zinc-700 text-sm font-mono">VS</div>
             <div className="text-center">
-              <p className="text-white/40 text-xs mb-1">{t('result.impostor')}</p>
-              <p className="text-2xl font-black text-red-400">
-                {gameMode === 'blind' ? wordPair.wordB : t('result.none')}
+              <p className="text-zinc-500 text-xs mb-1 font-mono">{t('result.impostor') || 'Impostor'}</p>
+              <p className="text-xl font-bold text-red-400">
+                {gameMode === 'blind' ? wordPair.wordB : (t('result.none') || 'None (Bluff)')}
               </p>
             </div>
           </div>
-          <p className="text-white/30 text-xs">{t('result.categoryPrefix', { category: wordPair.category })}</p>
         </motion.div>
       )}
 
-      {/* Role reveal button */}
+      {/* Role list toggle */}
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5 }}
+        className="bg-zinc-950 border border-zinc-900 rounded-xl overflow-hidden"
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
       >
         <button
-          onClick={() => setRevealRoles((r) => !r)}
-          className="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-white/60
-                     hover:bg-white/10 hover:text-white transition-all text-sm font-medium"
+          type="button"
+          onClick={() => setRevealRoles(!revealRoles)}
+          className="w-full p-4 flex items-center justify-between text-start text-xs font-semibold text-zinc-300 hover:text-white transition-colors cursor-pointer"
         >
-          {revealRoles ? t('result.hideRoles') : t('result.revealRoles')}
+          <span className="flex items-center gap-2">
+            <Eye size={15} className="text-red-500" />
+            <span>{revealRoles ? (t('result.hideRoles') || 'Hide Operative Clearances') : (t('result.revealAllRoles') || 'Reveal All Operative Clearances')}</span>
+          </span>
+          {revealRoles ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </button>
 
         <AnimatePresence>
           {revealRoles && (
             <motion.div
-              className="mt-3 space-y-2"
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="px-4 pb-4 space-y-2 border-t border-zinc-900"
             >
-              {players.map((p, i) => {
-                const roleCfg = ROLE_LABELS[p.role] || ROLE_LABELS[ROLES.CIVILIAN];
-                const playerName = p.username || p.name;
+              {(players || []).map((p, i) => {
+                const roleCfg = ROLE_CONFIGS[p.role] || ROLE_CONFIGS[ROLES.CIVILIAN];
+                const RoleIcon = roleCfg.icon;
                 const titleId = p.equipped?.title || 'title_novice';
-                const titleItem = getStoreItem(titleId) || { name: 'Novice', icon: '🌱', accent: '#3b82f6' };
+                const titleItem = getStoreItem(titleId) || { name: 'Novice', accent: '#dc2626' };
+                const playerName = p.username || p.name;
 
                 return (
                   <motion.div
-                    key={p.id || i}
-                    className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl px-4 py-3"
-                    initial={{ opacity: 0, x: isRTL ? 20 : -20 }}
+                    key={p.id || playerName}
+                    className="flex items-center justify-between p-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800/80 gap-3"
+                    initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.07 }}
+                    transition={{ delay: i * 0.04 }}
                   >
                     <UserAvatar
                       username={playerName}
@@ -308,30 +318,30 @@ export default function Result() {
                     />
                     <div className="flex-1 min-w-0 text-start">
                       <div className="flex items-center gap-1.5">
-                        <p className="text-white font-bold">{playerName}</p>
+                        <p className="text-white font-semibold text-xs truncate">{playerName}</p>
                         <span
-                          className="text-[9px] font-extrabold px-1.5 py-0.2 rounded border shadow-sm"
+                          className="text-[9px] font-mono px-1 rounded uppercase font-bold"
                           style={{
-                            color: titleItem.accent || '#3b82f6',
-                            borderColor: `${titleItem.accent || '#3b82f6'}50`,
-                            backgroundColor: `${titleItem.accent || '#3b82f6'}20`,
+                            color: titleItem.accent || '#f87171',
+                            backgroundColor: `${titleItem.accent || '#dc2626'}15`,
                           }}
                         >
-                          {titleItem.icon} [{titleItem.name}]
+                          [{titleItem.name}]
                         </span>
                       </div>
-                      <p className={`text-xs ${roleCfg.color}`}>{roleCfg.label}</p>
+                      <div className="flex items-center gap-1 mt-0.5">
+                        <RoleIcon size={12} className={roleCfg.color} />
+                        <span className={`text-[11px] font-mono ${roleCfg.color}`}>{roleCfg.label}</span>
+                      </div>
                     </div>
-                    <div className="text-end">
-                      <p className="text-white/70 text-sm font-medium">
-                        {p.role === ROLES.IMPOSTOR && gameMode === 'blind'
-                          ? wordPair?.wordB
-                          : p.role === ROLES.CIVILIAN
-                          ? wordPair?.wordA
-                          : p.role === ROLES.FAKE_IMPOSTOR || p.role === 'fake_impostor'
-                          ? wordPair?.wordB
-                          : '—'}
-                      </p>
+                    <div className="text-end font-mono text-xs text-zinc-400">
+                      {p.role === ROLES.IMPOSTOR && gameMode === 'blind'
+                        ? wordPair?.wordB
+                        : p.role === ROLES.CIVILIAN
+                        ? wordPair?.wordA
+                        : p.role === ROLES.FAKE_IMPOSTOR || p.role === 'fake_impostor'
+                        ? wordPair?.wordB
+                        : '—'}
                     </div>
                   </motion.div>
                 );
@@ -343,24 +353,24 @@ export default function Result() {
 
       {/* Actions */}
       <motion.div
-        className="space-y-3 pt-2"
-        initial={{ opacity: 0, y: 20 }}
+        className="space-y-2.5 pt-1"
+        initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.6 }}
+        transition={{ delay: 0.25 }}
       >
         {rewardBreakdown && (
           <button
             type="button"
             onClick={() => setShowRewardsModal(true)}
-            className="w-full py-3.5 px-4 rounded-2xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 text-amber-300 font-bold text-sm flex items-center justify-between transition-all shadow-lg shadow-amber-500/10 cursor-pointer"
+            className="w-full py-3 px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-200 font-semibold text-xs flex items-center justify-between transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-2">
-              <span className="text-xl">🪙</span>
+              <Coins size={16} className="text-amber-400" />
               <span>Match Rewards: +{rewardBreakdown.totalSC} SC</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-xs text-purple-300 font-bold">+{rewardBreakdown.xpGained} XP</span>
-              <span className="text-xs bg-amber-400 text-black px-2 py-0.5 rounded-full font-black">View</span>
+              <span className="text-[11px] text-zinc-400 font-mono">+{rewardBreakdown.xpGained} XP</span>
+              <span className="text-[10px] bg-amber-400 text-black px-2 py-0.5 rounded font-bold font-mono">View</span>
             </div>
           </button>
         )}
@@ -369,17 +379,18 @@ export default function Result() {
         <button
           type="button"
           onClick={() => setShowShareCard(true)}
-          className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-purple-600/30 via-pink-600/30 to-amber-600/30 hover:from-purple-600/40 hover:via-pink-600/40 hover:to-amber-600/40 border border-purple-500/40 text-white font-black text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-purple-900/20 cursor-pointer"
+          className="w-full py-3 px-4 rounded-xl bg-zinc-950 hover:bg-zinc-900 border border-zinc-800 text-zinc-200 font-semibold text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer"
         >
-          <span>📸</span>
-          <span>بارطاجي ملخص الجولة f-Story 🚀</span>
+          <Share2 size={15} className="text-red-500" />
+          <span>Share Match Recap</span>
         </button>
 
-        <Button variant="primary" fullWidth size="xl" onClick={handlePlayAgain} icon="🔄">
-          {t('result.playAgain')}
+        <Button variant="primary" fullWidth size="xl" onClick={handlePlayAgain} icon={RotateCcw}>
+          {t('result.playAgain') || 'Play Again'}
         </Button>
-        <Button variant="ghost" fullWidth size="md" onClick={handleHome}>
-          {t('result.home')}
+
+        <Button variant="ghost" fullWidth size="md" onClick={handleHome} icon={Home}>
+          {t('result.home') || 'Return to Main Menu'}
         </Button>
       </motion.div>
 

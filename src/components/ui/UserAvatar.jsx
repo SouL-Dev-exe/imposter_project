@@ -73,7 +73,7 @@ const UserAvatar = memo(function UserAvatar({
     >
       {/* ── Layer 2: Floating Crest (crown/halo/horns above circle) ── */}
       {accMeta.crest && (
-        <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 z-20 text-xs sm:text-sm animate-bounce drop-shadow-[0_0_8px_rgba(255,255,255,0.8)] pointer-events-none select-none">
+        <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 z-20 text-xs sm:text-sm animate-bounce pointer-events-none select-none">
           {accMeta.crest}
         </span>
       )}

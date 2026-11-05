@@ -1,11 +1,11 @@
 /**
  * LeaderboardModal.jsx
- * Global Supabase Leaderboard — real-time top 100 players ranked by SouL Coins.
- * Fetches from public.profiles via useEconomyStore.fetchLeaderboard().
- * Displays each player's live UserAvatar style and equipped Title badge.
+ * Global Supabase Leaderboard — Real-time top 100 operatives ranked by SouL Coins.
+ * Rebuilt with elite tactical obsidian aesthetic, zero emojis, Lucide icons, and spring physics.
  */
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Trophy, Coins, X, Award, Crown, AlertCircle, Loader2, Sparkles } from 'lucide-react';
 import { useEconomyStore } from '../../store/economyStore';
 import { getEconomicRank, STORE_ITEMS } from '../../data/economyCatalog';
 import UserAvatar from '../ui/UserAvatar';
@@ -16,18 +16,16 @@ function getItemById(id) {
 
 function TitleDisplay({ titleId }) {
   const item = titleId ? getItemById(titleId) : null;
-  if (!item) return <span className="text-white/30 text-[11px]">Novice</span>;
+  if (!item) return <span className="text-zinc-500 text-[11px] font-mono">RECRUIT</span>;
   return (
     <span
-      className="text-[11px] font-bold flex items-center gap-1"
-      style={{ color: item.accent || '#a78bfa' }}
+      className="text-[11px] font-mono font-medium flex items-center gap-1"
+      style={{ color: item.accent || '#f43f5e' }}
     >
-      {item.icon} [{item.name}]
+      [{item.name}]
     </span>
   );
 }
-
-const RANK_MEDALS = { 1: '🥇', 2: '🥈', 3: '🥉' };
 
 export default function LeaderboardModal({ isOpen, onClose }) {
   const fetchLeaderboard = useEconomyStore((s) => s.fetchLeaderboard);
@@ -43,11 +41,11 @@ export default function LeaderboardModal({ isOpen, onClose }) {
     setError('');
     fetchLeaderboard()
       .then((data) => {
-        setEntries(data);
+        setEntries(data || []);
         setLoading(false);
       })
       .catch(() => {
-        setError('Could not load leaderboard. Check your connection.');
+        setError('Failed to establish secure link to operative registry.');
         setLoading(false);
       });
   }, [isOpen, fetchLeaderboard]);
@@ -56,94 +54,112 @@ export default function LeaderboardModal({ isOpen, onClose }) {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
         <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          initial={{ opacity: 0, scale: 0.96, y: 14 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="relative w-full max-w-xl bg-gray-900 border border-white/10 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+          exit={{ opacity: 0, scale: 0.96, y: 14 }}
+          transition={{ type: 'spring', stiffness: 500, damping: 32 }}
+          className="relative w-full max-w-xl bg-zinc-950 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
         >
+          {/* Top Crimson Accent Line */}
+          <div className="h-0.5 w-full bg-red-600" />
+
           {/* Header */}
-          <div className="p-5 border-b border-white/10 bg-gradient-to-r from-yellow-950/60 via-gray-900 to-amber-950/60 flex items-center justify-between">
+          <div className="px-5 py-4 border-b border-zinc-800/80 bg-zinc-900/40 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-2xl shadow-lg shadow-amber-500/20">
-                🏆
+              <div className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-700/60 flex items-center justify-center text-red-500">
+                <Trophy className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="text-xl font-black text-white">Global Leaderboard</h2>
-                <p className="text-white/40 text-xs">Top 100 players ranked by SouL Coins</p>
+                <h2 className="text-base font-semibold text-zinc-100 flex items-center gap-2">
+                  Global Operative Standings
+                </h2>
+                <p className="text-xs text-zinc-400 font-mono">TOP 100 CLASSIFIED ROSTER</p>
               </div>
             </div>
             <button
+              type="button"
               onClick={onClose}
-              className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-white/50 hover:text-white flex items-center justify-center text-sm transition-colors cursor-pointer"
+              className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-100 hover:border-zinc-700 flex items-center justify-center transition cursor-pointer"
             >
-              ✕
+              <X className="w-4 h-4" />
             </button>
           </div>
 
-          {/* My Rank Quick Banner */}
-          <div className="px-5 py-3 bg-white/[0.03] border-b border-white/5 flex items-center justify-between text-xs text-white/60">
+          {/* Operative Balance Bar */}
+          <div className="px-5 py-2.5 bg-zinc-900/20 border-b border-zinc-800/60 flex items-center justify-between text-xs text-zinc-400 font-mono">
             <span className="flex items-center gap-1.5">
-              <span>🪙</span> Your balance: <strong className="text-amber-300 font-bold">{soulCoins.toLocaleString()} SC</strong>
+              <Coins className="w-3.5 h-3.5 text-zinc-400" />
+              Your Assets: <strong className="text-zinc-100 font-semibold">{soulCoins.toLocaleString()} SC</strong>
             </span>
-            <span className="flex items-center gap-1.5">
-              {entries.length > 0 ? (
-                <span>Top <strong className="text-white font-bold">{entries.length}</strong> players loaded</span>
-              ) : null}
+            <span>
+              {entries.length > 0 && (
+                <span>Roster: <strong className="text-zinc-100">{entries.length}</strong> Agents</span>
+              )}
             </span>
           </div>
 
-          {/* Table */}
-          <div className="overflow-y-auto flex-1 p-5 space-y-2">
+          {/* Table / List */}
+          <div className="overflow-y-auto flex-1 p-4 space-y-2">
             {loading && (
-              <div className="flex flex-col items-center justify-center py-20 text-white/40 space-y-3">
-                <div className="w-10 h-10 rounded-full border-2 border-amber-500/40 border-t-amber-400 animate-spin" />
-                <p className="text-sm font-medium">Loading leaderboard from Supabase...</p>
+              <div className="flex flex-col items-center justify-center py-20 text-zinc-500 space-y-3">
+                <Loader2 className="w-7 h-7 text-red-500 animate-spin" />
+                <p className="text-xs font-mono tracking-wider">RETRIEVING INTEL...</p>
               </div>
             )}
 
             {!loading && error && (
-              <div className="text-center py-12 text-red-400 text-sm font-medium">
-                <div className="text-3xl mb-2">🚫</div>
-                {error}
+              <div className="text-center py-14 text-red-400 space-y-2">
+                <AlertCircle className="w-8 h-8 mx-auto text-red-500" />
+                <p className="text-xs font-mono">{error}</p>
               </div>
             )}
 
             {!loading && !error && entries.length === 0 && (
-              <div className="text-center py-12 text-white/30 space-y-2">
-                <div className="text-4xl">🏜️</div>
-                <p className="font-bold">No ranked players yet.</p>
-                <p className="text-xs">Complete matches to appear on the global board!</p>
+              <div className="text-center py-14 text-zinc-500 space-y-2">
+                <Trophy className="w-8 h-8 mx-auto text-zinc-700" />
+                <p className="font-medium text-xs text-zinc-400">NO CLASSIFIED RECORDS YET</p>
+                <p className="text-[11px] text-zinc-600">Deploy into combat missions to log field data.</p>
               </div>
             )}
 
             {!loading && !error && entries.map((entry) => {
               const rank = getEconomicRank(entry.soulCoins);
-              const medal = RANK_MEDALS[entry.rank];
+              const isTop1 = entry.rank === 1;
+              const isTop2 = entry.rank === 2;
+              const isTop3 = entry.rank === 3;
 
               return (
                 <motion.div
                   key={entry.id}
-                  initial={{ opacity: 0, x: -16 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: Math.min(entry.rank * 0.04, 1.2) }}
-                  className={`flex items-center gap-3 p-3.5 rounded-2xl border transition-all ${
-                    entry.rank <= 3
-                      ? 'bg-gradient-to-r from-amber-500/10 via-white/[0.03] to-transparent border-amber-500/30'
-                      : 'bg-white/[0.03] border-white/8 hover:border-white/15'
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: Math.min(entry.rank * 0.02, 0.4) }}
+                  className={`flex items-center gap-3 p-3 rounded-xl border transition-colors ${
+                    isTop1
+                      ? 'bg-zinc-900/90 border-amber-500/40 text-amber-100'
+                      : isTop2
+                      ? 'bg-zinc-900/60 border-zinc-600/50 text-zinc-100'
+                      : isTop3
+                      ? 'bg-zinc-900/40 border-amber-700/40 text-zinc-100'
+                      : 'bg-zinc-900/20 border-zinc-800/80 hover:border-zinc-700 text-zinc-200'
                   }`}
                 >
                   {/* Rank position */}
-                  <div className="w-8 text-center shrink-0">
-                    {medal ? (
-                      <span className="text-lg">{medal}</span>
+                  <div className="w-7 text-center shrink-0 flex items-center justify-center">
+                    {isTop1 ? (
+                      <Crown className="w-4 h-4 text-amber-400" />
+                    ) : isTop2 ? (
+                      <Award className="w-4 h-4 text-zinc-300" />
+                    ) : isTop3 ? (
+                      <Award className="w-4 h-4 text-amber-600" />
                     ) : (
-                      <span className="text-xs font-black text-white/40">#{entry.rank}</span>
+                      <span className="text-xs font-mono font-medium text-zinc-500">#{entry.rank}</span>
                     )}
                   </div>
 
-                  {/* Dynamic UserAvatar */}
+                  {/* Operative Avatar */}
                   <div className="relative shrink-0">
                     <UserAvatar
                       username={entry.username}
@@ -152,34 +168,30 @@ export default function LeaderboardModal({ isOpen, onClose }) {
                       avatarUrl={entry.avatar_url}
                       size="sm"
                     />
-                    <span
-                      className={`absolute -bottom-0.5 -end-0.5 text-[10px] px-1 py-0 rounded-full border font-black z-20 ${rank.color} ${rank.border} ${rank.bg}`}
-                    >
-                      {rank.icon}
-                    </span>
                   </div>
 
                   {/* Username & Equipped Title */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-white font-bold text-sm truncate">{entry.username}</p>
+                    <p className="text-zinc-100 font-medium text-xs truncate">{entry.username}</p>
                     <TitleDisplay titleId={entry.equippedTitle} />
                   </div>
 
                   {/* Level & SC */}
-                  <div className="shrink-0 text-end">
-                    <p className="text-amber-400 font-black text-sm tabular-nums">
-                      🪙 {entry.soulCoins.toLocaleString()}
+                  <div className="shrink-0 text-end font-mono">
+                    <p className="text-zinc-100 font-semibold text-xs flex items-center justify-end gap-1">
+                      <Coins className="w-3 h-3 text-red-500" />
+                      {entry.soulCoins.toLocaleString()}
                     </p>
-                    <p className="text-white/40 text-[10px]">Lvl {entry.seasonLevel} · {rank.name}</p>
+                    <p className="text-zinc-500 text-[10px]">LVL {entry.seasonLevel} · {rank.name}</p>
                   </div>
                 </motion.div>
               );
             })}
           </div>
 
-          {/* Footer */}
-          <div className="p-4 border-t border-white/10 bg-white/[0.02] text-center text-[11px] text-white/30">
-            Data sourced from Supabase profiles in real-time. Updates after each match.
+          {/* Footer note */}
+          <div className="p-3 border-t border-zinc-800/80 bg-zinc-900/20 text-center text-[10px] text-zinc-500 font-mono">
+            ENCRYPTED SECURE REGISTRY · LIVE SYNCHRONIZATION
           </div>
         </motion.div>
       </div>

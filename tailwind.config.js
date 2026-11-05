@@ -12,48 +12,46 @@ export default {
         mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
       },
       colors: {
-        // Redefined tactical palette: Noir & Crimson HUD
-        tactical: {
-          base: '#050505',
-          panel: '#09090b',
+        game: {
+          bg: '#000000',
+          surface: '#09090b',
+          panel: '#111113',
           border: '#27272a',
-          red: '#dc2626',
-          crimson: '#991b1b',
-        },
-        violet: {
-          50: '#fef2f2',
-          100: '#fee2e2',
-          200: '#fecaca',
-          300: '#fca5a5',
-          400: '#f87171',
-          500: '#ef4444',
-          600: '#dc2626',
-          700: '#b91c1c',
-          800: '#991b1b',
-          900: '#7f1d1d',
-          950: '#450a0a',
+          'border-light': '#3f3f46',
+          accent: '#dc2626',
+          'accent-hover': '#b91c1c',
+          muted: '#71717a',
         },
       },
       animation: {
-        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-        'spin-slow': 'spin 8s linear infinite',
-        'bounce-slow': 'bounce 2s infinite',
-        'laser-scan': 'scan 4s linear infinite',
+        'fade-up': 'fadeUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) both',
+        'fade-in': 'fadeIn 0.2s ease-out both',
+        'slide-right': 'slideRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) both',
       },
       keyframes: {
-        scan: {
-          '0%': { transform: 'translateY(-100%)' },
-          '100%': { transform: 'translateY(1000%)' },
+        fadeUp: {
+          '0%': { opacity: '0', transform: 'translateY(10px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        slideRight: {
+          '0%': { opacity: '0', transform: 'translateX(-8px)' },
+          '100%': { opacity: '1', transform: 'translateX(0)' },
         },
       },
       backdropBlur: {
         xs: '2px',
       },
       boxShadow: {
-        'glow-red': '0 0 25px rgba(220, 38, 38, 0.5)',
-        'glow-red-sm': '0 0 10px rgba(220, 38, 38, 0.4)',
-        'glow-white': '0 0 20px rgba(255, 255, 255, 0.2)',
-        'tactical': '0 0 0 1px rgba(220, 38, 38, 0.2), 0 8px 30px rgba(0, 0, 0, 0.9)',
+        'game-card': '0 1px 3px rgba(0,0,0,0.5), 0 1px 2px rgba(0,0,0,0.6)',
+        'game-modal': '0 20px 60px rgba(0,0,0,0.9)',
+        'game-dropdown': '0 8px 24px rgba(0,0,0,0.8)',
+      },
+      transitionTimingFunction: {
+        'game': 'cubic-bezier(0.16, 1, 0.3, 1)',
       },
     },
   },

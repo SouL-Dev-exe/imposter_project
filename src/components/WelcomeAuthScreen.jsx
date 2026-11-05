@@ -1,9 +1,10 @@
 /**
  * WelcomeAuthScreen.jsx — First-time welcome gate.
- * Uses useTranslation() for all user-facing strings.
+ * Clean AAA game styling: no emoji, no glow, Lucide icons, spring animations.
  */
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Shield, Play, LogIn, UserPlus } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import AuthModal from './ui/AuthModal';
 
@@ -23,67 +24,68 @@ export default function WelcomeAuthScreen() {
   };
 
   return (
-    <div className="min-h-[85vh] flex flex-col items-center justify-center p-4 relative select-none">
-      {/* Background Glows */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-80 h-80 bg-purple-600/15 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-indigo-600/15 rounded-full blur-3xl" />
-      </div>
-
-      <div className="max-w-md w-full bg-slate-900/90 border border-slate-800 p-6 sm:p-8 rounded-3xl text-center shadow-2xl space-y-6 backdrop-blur-xl relative z-10">
+    <div className="min-h-[80vh] flex flex-col items-center justify-center p-4 relative select-none font-sans">
+      <div className="max-w-md w-full bg-zinc-950 border border-zinc-800 p-6 sm:p-8 rounded-2xl text-center shadow-xl space-y-6 relative z-10">
         {/* Game Badge */}
         <div className="space-y-2">
-          <div className="text-6xl animate-bounce">🕵️‍♂️</div>
-          <h1 className="text-3xl font-black text-white tracking-wide">Undercover</h1>
-          <p className="text-slate-400 text-sm">اختر طريقة الدخول للبدء باللعب فوراً</p>
+          <div className="w-14 h-14 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto text-red-500">
+            <Shield size={28} />
+          </div>
+          <h1 className="text-3xl font-black text-white tracking-tight">UNDERCOVER</h1>
+          <p className="text-zinc-400 text-xs font-mono">
+            Tactical Deception &amp; Intelligence Protocol
+          </p>
         </div>
 
         {/* OPTION 1: Play as Guest */}
-        <form onSubmit={handleGuestSubmit} className="space-y-3 bg-slate-950/60 p-4 rounded-2xl border border-slate-800 text-start">
-          <label className="block text-xs font-bold text-slate-300">
-            1. {t('auth.play_as_guest')}
+        <form onSubmit={handleGuestSubmit} className="space-y-3 bg-zinc-900/60 p-4 rounded-xl border border-zinc-800 text-start">
+          <label className="block text-xs font-semibold text-zinc-300">
+            1. {t('auth.play_as_guest') || 'Quick Pass & Play (Guest)'}
           </label>
           <input
             type="text"
-            placeholder={t('auth.guest_name_placeholder')}
+            placeholder={t('auth.guest_name_placeholder') || 'Enter temporary call-sign...'}
             value={guestName}
             onChange={(e) => setGuestName(e.target.value)}
-            className="w-full p-3 bg-slate-800 text-white rounded-xl border border-slate-700 text-center focus:outline-none focus:border-purple-500 text-sm placeholder:text-slate-500 font-medium"
+            className="w-full p-2.5 bg-zinc-950 text-white rounded-lg border border-zinc-800 text-center focus:outline-none focus:border-red-600 text-xs placeholder:text-zinc-500 font-mono"
             maxLength={20}
           />
           <button
             type="submit"
-            className="w-full py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 font-bold text-white rounded-xl shadow-lg shadow-purple-600/20 transition active:scale-95 text-sm cursor-pointer"
+            className="w-full py-2.5 bg-red-600 hover:bg-red-500 active:bg-red-700 font-bold text-white rounded-lg transition-colors text-xs flex items-center justify-center gap-1.5 cursor-pointer uppercase tracking-wider"
           >
-            🎮 {t('auth.play_as_guest')}
+            <Play size={13} />
+            <span>{t('auth.play_as_guest') || 'Start Playing as Guest'}</span>
           </button>
         </form>
 
         <div className="relative my-2">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-slate-800"></div>
+            <div className="w-full border-t border-zinc-850"></div>
           </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-slate-900 px-3 text-slate-500 font-bold">أو لحفظ تقدمك</span>
+          <div className="relative flex justify-center text-xs uppercase font-mono">
+            <span className="bg-zinc-950 px-3 text-zinc-500 text-[10px]">Or connect operative ID</span>
           </div>
         </div>
 
         {/* OPTIONS 2 & 3: Login or Create Account */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2.5">
           <button
             type="button"
             onClick={() => openModal('login')}
-            className="py-3 bg-slate-800 hover:bg-slate-750 border border-slate-700 text-white font-bold rounded-xl transition text-sm flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+            className="py-2.5 bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 text-zinc-200 font-semibold rounded-lg transition-colors text-xs flex items-center justify-center gap-1.5 cursor-pointer"
           >
-            🔑 2. {t('auth.login')}
+            <LogIn size={13} />
+            <span>{t('auth.login') || 'Sign In'}</span>
           </button>
 
           <button
             type="button"
             onClick={() => openModal('signup')}
-            className="py-3 bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/30 text-emerald-400 font-bold rounded-xl transition text-sm flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+            className="py-2.5 bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 text-zinc-200 font-semibold rounded-lg transition-colors text-xs flex items-center justify-center gap-1.5 cursor-pointer"
           >
-            ✨ 3. {t('auth.signup')}
+            <UserPlus size={13} />
+            <span>{t('auth.signup') || 'Register'}</span>
           </button>
         </div>
       </div>

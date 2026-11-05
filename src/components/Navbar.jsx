@@ -1,10 +1,10 @@
 /**
- * Navbar.jsx — Noir Tactical HUD Top Navigation
- * Monospace classified aesthetics, black obsidian canvas, sharp red reticles.
+ * Navbar.jsx — Premium game navigation bar
+ * No emoji, no glow, Lucide icons, clean Inter font.
  */
 import { useState, lazy, Suspense } from 'react';
-import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
+import { Package, MoreVertical, User, LogIn, Coins } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useEconomyStore } from '../store/economyStore';
 import AuthModal from './ui/AuthModal';
@@ -14,8 +14,9 @@ const OperativeMenuModal = lazy(() => import('./OperativeMenuModal'));
 const SouLStoreModal = lazy(() => import('./economy/SouLStoreModal'));
 const ProfileModal = lazy(() => import('./ui/ProfileModal'));
 
+const spring = { type: 'spring', stiffness: 500, damping: 30 };
+
 export default function Navbar() {
-  const { t } = useTranslation();
   const { profile } = useAuthStore();
   const { soulCoins, equippedAvatarStyle, equipped } = useEconomyStore();
 
@@ -34,23 +35,15 @@ export default function Navbar() {
 
   return (
     <>
-      <header className="w-full bg-black/95 border-b border-zinc-800 px-3 sm:px-4 py-2 flex items-center justify-between gap-3 shadow-[0_4px_25px_rgba(0,0,0,0.8)] shrink-0 z-40 relative font-mono">
-        {/* Subtle Top Red Accent Line */}
-        <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-transparent via-red-600/80 to-transparent pointer-events-none" />
+      <header className="w-full bg-zinc-950 border-b border-zinc-900 px-4 py-2.5 flex items-center justify-between gap-3 shrink-0 z-40 relative">
 
-        {/* Left: Call-sign & Avatar Card */}
-        <div 
+        {/* Left: Avatar + user info */}
+        <button
           onClick={() => openProfile('loadout')}
-          className="flex items-center gap-2.5 shrink-0 cursor-pointer group p-1 -m-1"
-          role="button"
-          tabIndex={0}
-          title="Open Operative Dossier"
+          className="flex items-center gap-2.5 shrink-0 group outline-none focus-visible:ring-2 focus-visible:ring-red-600 rounded-lg p-1 -m-1"
+          title="Open Profile"
         >
-          <div className="relative w-9 h-9 border border-zinc-700 bg-zinc-950 flex items-center justify-center p-0.5 group-hover:border-red-600 transition-colors">
-            {/* Viewfinder Corners */}
-            <div className="absolute top-0 left-0 w-1.5 h-1.5 border-t border-l border-red-600" />
-            <div className="absolute bottom-0 right-0 w-1.5 h-1.5 border-b border-r border-red-600" />
-            
+          <div className="relative w-8 h-8 rounded-lg overflow-hidden border border-zinc-800 group-hover:border-zinc-700 transition-colors bg-zinc-900 flex items-center justify-center shrink-0">
             {profile ? (
               <UserAvatar
                 username={profile?.username}
@@ -59,88 +52,78 @@ export default function Navbar() {
                 size="xs"
               />
             ) : (
-              <span className="text-sm">🕵️</span>
+              <User size={16} className="text-zinc-500" />
             )}
           </div>
 
-          <div className="flex flex-col text-left">
-            <span className="text-xs font-bold text-zinc-100 tracking-wider group-hover:text-red-400 transition-colors">
-              {profile?.username || 'UNKNOWN AGENT'}
+          <div className="flex flex-col items-start">
+            <span className="text-xs font-semibold text-zinc-100 group-hover:text-white transition-colors leading-tight">
+              {profile?.username || 'Guest'}
             </span>
-            <div className="flex items-center gap-1.5">
-              <span className="text-[9px] text-red-500 font-extrabold uppercase tracking-widest">
-                LVL {profile?.stats?.level || 1}
-              </span>
-              <span className="text-[8px] text-zinc-600 font-bold hidden sm:inline">
-                // SEC-CLEARANCE
-              </span>
-            </div>
+            <span className="text-[10px] text-zinc-500 leading-tight font-mono">
+              Lvl {profile?.stats?.level || 1}
+            </span>
           </div>
+        </button>
+
+        {/* Center: Brand */}
+        <div className="hidden md:block absolute left-1/2 -translate-x-1/2 select-none pointer-events-none">
+          <span className="text-sm font-black tracking-widest text-white">UNDERCOVER</span>
         </div>
 
-        {/* Center: Title Brand */}
-        <div className="hidden md:flex flex-col items-center select-none pointer-events-none">
-          <div className="flex items-center gap-2">
-            <span className="w-1.5 h-1.5 bg-red-600 animate-pulse" />
-            <span className="text-sm font-black tracking-[0.25em] text-white">UNDERCOVER</span>
-            <span className="w-1.5 h-1.5 bg-red-600 animate-pulse" />
-          </div>
-          <span className="text-[8px] text-zinc-500 tracking-[0.35em] uppercase font-semibold">
-            TOP SECRET PROTOCOL
-          </span>
-        </div>
-
-        {/* Right: Black Funds, Armory, Terminal 3-Dots */}
-        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+        {/* Right: Controls */}
+        <div className="flex items-center gap-1.5 shrink-0">
           {profile ? (
             <>
-              {/* Black Funds Pill */}
+              {/* Coin balance */}
               <motion.button
-                type="button"
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.96 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
+                transition={spring}
                 onClick={() => setIsShopOpen(true)}
-                className="flex items-center gap-1.5 bg-zinc-950 border border-zinc-800 hover:border-red-600/70 px-2.5 py-1 transition-all cursor-pointer shadow-sm group"
-                title={`${coinsBalance} Black Funds`}
+                className="flex items-center gap-1.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 rounded-lg px-2.5 py-1.5 transition-colors cursor-pointer"
+                title={`${coinsBalance.toLocaleString()} Black Funds`}
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-red-600 group-hover:shadow-[0_0_8px_#dc2626] transition-shadow" />
-                <span className="font-bold tracking-wider text-amber-400 text-xs tabular-nums">
+                <div className="w-2 h-2 rounded-full bg-red-600 shrink-0" />
+                <span className="font-mono font-semibold text-amber-400 text-xs tabular-nums">
                   {coinsBalance.toLocaleString()}
                 </span>
-                <span className="text-[9px] text-zinc-500 font-bold hidden sm:inline">BF</span>
               </motion.button>
 
-              {/* Armory Icon Button */}
+              {/* Store */}
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                transition={spring}
                 onClick={() => setIsShopOpen(true)}
-                className="w-8 h-8 flex items-center justify-center border border-zinc-800 bg-zinc-950 hover:border-red-600 hover:text-red-400 text-zinc-300 transition-all cursor-pointer shadow-sm"
-                title="Armory // Black Market"
+                className="w-8 h-8 flex items-center justify-center rounded-lg border border-zinc-800 hover:border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer"
+                title="Store"
               >
-                <span className="text-xs">📦</span>
+                <Package size={15} />
               </motion.button>
 
-              {/* Terminal Flyout Toggle */}
+              {/* Menu */}
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                transition={spring}
                 onClick={() => setIsMenuOpen(true)}
-                className="w-8 h-8 flex items-center justify-center border border-zinc-800 bg-zinc-950 hover:border-red-600 text-zinc-300 hover:text-white transition-all cursor-pointer shadow-sm"
-                title="Operative Menu"
+                className="w-8 h-8 flex items-center justify-center rounded-lg border border-zinc-800 hover:border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer"
+                title="Menu"
               >
-                <span className="text-base leading-none">⋮</span>
+                <MoreVertical size={15} />
               </motion.button>
             </>
           ) : (
             <motion.button
-              type="button"
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.96 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              transition={spring}
               onClick={() => setIsAuthOpen(true)}
-              className="bg-red-600 hover:bg-red-500 text-white border border-red-500 px-3.5 py-1.5 text-xs font-bold uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(220,38,38,0.4)] cursor-pointer"
+              className="flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors cursor-pointer"
             >
-              AUTHORIZE
+              <LogIn size={15} />
+              Sign In
             </motion.button>
           )}
         </div>

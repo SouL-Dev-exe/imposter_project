@@ -1,16 +1,11 @@
 /**
  * EconomyHeaderBadge.jsx
  * Persistent header bar badge displaying SouL Coins balance, Season Level & Economic Tier.
- * Renders interactive launcher buttons for:
- *  - 🪙 SouL Coins Counter
- *  - 🛒 SouL Store
- *  - 🏆 Leaderboard
- *  - 🔥 Streak Badge
- *  - 🎁 Daily Reward / Crates
- *  - ⚙️ Settings
+ * Clean AAA game styling: no emoji, no glow, Lucide icons, spring animations.
  */
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { Coins, Package, Gift, Flame, Trophy, Shield, User } from 'lucide-react';
 import { useEconomyStore } from '../../store/economyStore';
 import { useAuthStore } from '../../store/authStore';
 import { getEconomicRank } from '../../data/economyCatalog';
@@ -22,6 +17,8 @@ import DailyQuestsModal from './DailyQuestsModal';
 import LeaderboardModal from './LeaderboardModal';
 import ProfileModal from '../ui/ProfileModal';
 
+const spring = { type: 'spring', stiffness: 500, damping: 30 };
+
 export default function EconomyHeaderBadge({ className = '' }) {
   const [storeOpen, setStoreOpen] = useState(false);
   const [passOpen, setPassOpen] = useState(false);
@@ -31,7 +28,7 @@ export default function EconomyHeaderBadge({ className = '' }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   const { profile } = useAuthStore();
-  const username = profile?.username || 'Player';
+  const username = profile?.username || 'Operative';
 
   const {
     soulCoins,
@@ -42,135 +39,115 @@ export default function EconomyHeaderBadge({ className = '' }) {
     claimedPassTiers,
     dailyQuests,
     weeklyQuests,
-    streakRewardPending,
-    clearStreakNotification,
     equippedAvatarStyle,
     equipped,
   } = useEconomyStore();
 
   const rank = getEconomicRank(totalCoinsEarned);
 
-  // Notification badges
   const unclaimedPassCount = unlockedPassTiers.filter((lvl) => !claimedPassTiers.includes(lvl)).length;
   const claimableQuestsCount =
     dailyQuests.filter((q) => q.progress >= q.target && !q.claimed).length +
     weeklyQuests.filter((q) => q.progress >= q.target && !q.claimed).length;
 
-
   return (
     <>
-      <div className={`flex items-center gap-1.5 sm:gap-2 text-xs select-none ${className}`}>
-        {/* 1. Dynamic User Avatar Header Button */}
+      <div className={`flex items-center gap-1.5 sm:gap-2 text-xs select-none font-sans ${className}`}>
+        {/* 1. Avatar shortcut */}
         <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
+          transition={spring}
           onClick={() => setSettingsOpen(true)}
           title={`${username} · Settings & Profile`}
-          className="flex items-center gap-1.5 bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/10 hover:border-violet-500/50 rounded-full p-0.5 pe-2.5 text-white font-bold transition-all shadow-sm cursor-pointer"
+          className="flex items-center gap-1.5 bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 rounded-lg p-1 pe-2 text-white font-semibold transition-colors cursor-pointer"
         >
           <UserAvatar
             username={username}
             avatarStyle={equippedAvatarStyle}
             equipped={equipped}
-            size="sm"
+            size="xs"
           />
-          <span className="hidden sm:inline text-xs font-extrabold max-w-[80px] truncate">{username}</span>
+          <span className="hidden sm:inline text-xs font-semibold max-w-[80px] truncate">{username}</span>
         </motion.button>
 
-        {/* 2. 🪙 SouL Coins Counter */}
+        {/* 2. Coins Counter */}
+        <motion.button
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
+          transition={spring}
+          onClick={() => setStoreOpen(true)}
+          title="Credits · Open Armory"
+          className="flex items-center gap-1.5 bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 rounded-lg px-2.5 py-1 text-amber-400 font-mono font-bold transition-colors cursor-pointer"
+        >
+          <Coins size={13} className="text-amber-400" />
+          <span className="tabular-nums">{soulCoins.toLocaleString()}</span>
+        </motion.button>
+
+        {/* 3. Store Button */}
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
+          transition={spring}
           onClick={() => setStoreOpen(true)}
-          title="SouL Coins · Click to open Store"
-          className="flex items-center gap-1 bg-black/40 hover:bg-black/60 backdrop-blur-md border border-amber-500/30 hover:border-amber-500/60 rounded-full px-2.5 py-1 text-amber-400 font-bold transition-all shadow-sm cursor-pointer"
+          title="Store"
+          className="p-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 text-zinc-400 hover:text-white transition-colors cursor-pointer flex items-center gap-1"
         >
-          <span className="text-sm">🪙</span>
-          <span className="tabular-nums font-black">{soulCoins.toLocaleString()}</span>
+          <Package size={14} />
+          <span className="hidden md:inline font-semibold text-xs">Store</span>
         </motion.button>
 
-        {/* 3. 🛒 SouL Store Quick Access Button */}
+        {/* 4. Season Level */}
         <motion.button
-          whileHover={{ scale: 1.08 }}
-          whileTap={{ scale: 0.92 }}
-          onClick={() => setStoreOpen(true)}
-          title="SouL Store"
-          className="p-1.5 sm:px-2 rounded-full bg-black/40 hover:bg-amber-500/20 border border-white/10 hover:border-amber-500/40 text-white/80 hover:text-white transition-all shadow-sm cursor-pointer flex items-center gap-1"
-        >
-          <span className="text-sm">🛒</span>
-          <span className="hidden md:inline font-bold text-[11px]">Store</span>
-        </motion.button>
-
-        {/* 4. Season Level & Rank Badge (Click opens Pass) */}
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
+          transition={spring}
           onClick={() => setPassOpen(true)}
-          title={`Level ${seasonLevel} (${rank.name}) · Click to open SouL Pass`}
-          className="relative hidden sm:flex items-center gap-1.5 bg-black/40 hover:bg-black/60 backdrop-blur-md border border-violet-500/30 hover:border-violet-500/60 rounded-full px-2.5 py-1 text-white font-bold transition-all shadow-sm cursor-pointer"
+          title={`Level ${seasonLevel} (${rank.name}) · Battle Pass`}
+          className="relative hidden sm:flex items-center gap-1.5 bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 rounded-lg px-2 py-1 text-zinc-300 font-mono font-bold transition-colors cursor-pointer"
         >
-          <span className="text-xs">{rank.icon}</span>
-          <span className="text-[11px] font-black text-violet-300">Lvl {seasonLevel}</span>
+          <Shield size={12} className="text-red-500" />
+          <span className="text-[11px] text-zinc-300">Lvl {seasonLevel}</span>
 
           {unclaimedPassCount > 0 && (
-            <span className="absolute -top-1 -end-1 w-4 h-4 bg-amber-400 text-black text-[9px] font-black rounded-full flex items-center justify-center animate-bounce shadow">
+            <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
               {unclaimedPassCount}
             </span>
           )}
         </motion.button>
 
-        {/* 5. 🎁 Daily Reward / Mystery Crates */}
+        {/* 5. Crates */}
         <motion.button
-          whileHover={{ scale: 1.08 }}
-          whileTap={{ scale: 0.92 }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          transition={spring}
           onClick={() => setCratesOpen(true)}
-          title="Mystery Crates & Daily Rewards"
-          className="relative p-1.5 sm:px-2 rounded-full bg-black/40 hover:bg-[#a855f7]/20 border border-white/10 hover:border-[#a855f7]/40 text-white/80 hover:text-white transition-all shadow-sm cursor-pointer flex items-center justify-center"
+          title="Mystery Crates"
+          className="relative p-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 text-zinc-400 hover:text-white transition-colors cursor-pointer flex items-center justify-center"
         >
-          <span className="text-sm">🎁</span>
+          <Gift size={14} />
           {cratesCount > 0 && (
-            <span className="absolute -top-1 -end-1 w-4 h-4 bg-purple-500 text-white text-[9px] font-black rounded-full flex items-center justify-center animate-pulse shadow">
+            <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
               {cratesCount}
             </span>
           )}
         </motion.button>
 
-        {/* 6. 🔥 Streak Badge / Daily Quests */}
+        {/* 6. Daily Quests */}
         <motion.button
-          whileHover={{ scale: 1.08 }}
-          whileTap={{ scale: 0.92 }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          transition={spring}
           onClick={() => setQuestsOpen(true)}
-          title="Daily Streak & Quests"
-          className="relative p-1.5 sm:px-2 rounded-full bg-black/40 hover:bg-amber-500/20 border border-white/10 hover:border-amber-500/40 text-white/80 hover:text-white transition-all shadow-sm cursor-pointer flex items-center justify-center"
+          title="Daily Quests"
+          className="relative p-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 text-zinc-400 hover:text-white transition-colors cursor-pointer flex items-center justify-center"
         >
-          <span className="text-sm">🔥</span>
+          <Flame size={14} />
           {claimableQuestsCount > 0 && (
-            <span className="absolute -top-1 -end-1 w-4 h-4 bg-emerald-400 text-black text-[9px] font-black rounded-full flex items-center justify-center animate-pulse shadow">
+            <span className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
               {claimableQuestsCount}
             </span>
           )}
-        </motion.button>
-
-        {/* 7. 🏆 Global Leaderboard Button */}
-        <motion.button
-          whileHover={{ scale: 1.08 }}
-          whileTap={{ scale: 0.92 }}
-          onClick={() => setLeaderboardOpen(true)}
-          title="Global Leaderboard"
-          className="p-1.5 sm:px-2 rounded-full bg-black/40 hover:bg-yellow-500/20 border border-white/10 hover:border-yellow-500/40 text-white/80 hover:text-white transition-all shadow-sm cursor-pointer flex items-center justify-center"
-        >
-          <span className="text-sm">🏆</span>
-        </motion.button>
-
-        {/* 8. ⚙️ Settings Button */}
-        <motion.button
-          whileHover={{ scale: 1.08 }}
-          whileTap={{ scale: 0.92 }}
-          onClick={() => setSettingsOpen(true)}
-          title="Settings"
-          className="p-1.5 sm:px-2 rounded-full bg-black/40 hover:bg-white/20 border border-white/10 hover:border-white/30 text-white/80 hover:text-white transition-all shadow-sm cursor-pointer flex items-center justify-center"
-        >
-          <span className="text-sm">⚙️</span>
         </motion.button>
       </div>
 
@@ -181,25 +158,6 @@ export default function EconomyHeaderBadge({ className = '' }) {
       <DailyQuestsModal isOpen={questsOpen} onClose={() => setQuestsOpen(false)} />
       <LeaderboardModal isOpen={leaderboardOpen} onClose={() => setLeaderboardOpen(false)} />
       <ProfileModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} defaultTab="settings" />
-
-      {/* Daily Streak Login Reward Toast */}
-      {streakRewardPending && (
-        <div className="fixed bottom-6 start-1/2 -translate-x-1/2 z-50 animate-bounce">
-          <div className="flex items-center gap-3 p-3.5 px-5 bg-gradient-to-r from-amber-600 via-orange-500 to-amber-600 text-white font-bold rounded-2xl shadow-2xl border border-white/20 text-xs">
-            <span className="text-xl">🔥</span>
-            <div>
-              <p className="text-sm font-black">Day {streakRewardPending.day} Streak Reward Claimed!</p>
-              <p className="text-white/80 text-[11px] font-medium">{streakRewardPending.label}</p>
-            </div>
-            <button
-              onClick={clearStreakNotification}
-              className="ms-2 px-2.5 py-1 bg-black/30 hover:bg-black/50 rounded-lg text-white text-[11px] transition-colors cursor-pointer"
-            >
-              Nice!
-            </button>
-          </div>
-        </div>
-      )}
     </>
   );
 }

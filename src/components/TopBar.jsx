@@ -1,4 +1,9 @@
+/**
+ * TopBar.jsx — Tactical top bar with status, language toggle, and armory access.
+ * Clean AAA game styling: no emoji, no glow, Lucide icons.
+ */
 import React from 'react';
+import { Shield, Globe } from 'lucide-react';
 import UserAvatar from './ui/UserAvatar';
 import { useLanguageStore } from '../store/languageStore';
 import i18n from '../i18n';
@@ -15,58 +20,48 @@ export default function TopBar({ profile, onOpenStore, toggleLanguage, currentLa
   const activeLang = currentLang || language;
 
   return (
-    <header className="w-full bg-zinc-950/90 border-b border-red-900/40 px-3 py-2 flex items-center justify-between gap-2 shadow-[0_0_15px_rgba(185,28,28,0.15)] relative z-50 backdrop-blur-md">
-      
-      {/* 1. LOGO ET TITRE (GAUCHE) */}
-      <div className="flex items-center gap-2 min-w-0 shrink">
-        {/* Encadrement rétro/spy */}
-        <div className="relative p-1 border border-red-600/40 bg-red-950/20 shrink-0">
-          <span className="text-sm block">🕵️</span>
-          <div className="absolute -top-0.5 -left-0.5 w-1 h-1 border-t border-l border-red-500" />
-          <div className="absolute -bottom-0.5 -right-0.5 w-1 h-1 border-b border-r border-red-500" />
+    <header className="w-full bg-zinc-950 border-b border-zinc-900 px-3.5 py-2 flex items-center justify-between gap-2 relative z-50 font-sans">
+      {/* 1. Brand Title */}
+      <div className="flex items-center gap-2.5 min-w-0">
+        <div className="w-7 h-7 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-red-500 shrink-0">
+          <Shield size={15} />
         </div>
 
-        {/* Titre tronqué intelligemment sur mobile */}
         <div className="font-mono text-xs font-bold tracking-wider truncate">
-          <span className="text-red-500">CLASSIFIED</span>
-          <span className="hidden sm:inline text-zinc-500 font-normal ml-1">// UNDERCOVER</span>
+          <span className="text-white">UNDERCOVER</span>
+          <span className="hidden sm:inline text-zinc-500 font-normal ml-1.5">// PROTOCOL</span>
         </div>
       </div>
 
-      {/* 2. COMMANDES (DROITE) */}
+      {/* 2. Controls */}
       <div className="flex items-center gap-2 shrink-0">
-        
-        {/* Bouton de Langue */}
+        {/* Language button */}
         <button
           type="button"
           onClick={handleToggleLanguage}
-          className="flex items-center gap-1.5 bg-zinc-900/90 border border-zinc-800 hover:border-red-900/60 text-zinc-300 px-2.5 py-1 rounded-full text-xs font-mono transition-colors cursor-pointer"
+          className="flex items-center gap-1.5 bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-300 px-2.5 py-1 rounded-lg text-xs font-mono transition-colors cursor-pointer"
         >
-          <span className="text-xs">🌐</span>
+          <Globe size={13} className="text-zinc-400" />
           <span className="text-[11px] font-medium">
             {activeLang === 'ar' ? 'العربية' : 'EN'}
           </span>
         </button>
 
-        {/* Avatar du Joueur / Accès Armurerie */}
+        {/* User avatar / Store access */}
         <button
           type="button"
           onClick={onOpenStore}
-          className="relative p-0.5 border border-red-600/60 bg-zinc-900 hover:border-red-500 transition-all shrink-0 rounded-sm group cursor-pointer"
+          className="relative p-0.5 border border-zinc-800 hover:border-zinc-700 bg-zinc-900 transition-colors shrink-0 rounded-lg group cursor-pointer"
           title="Armory / Store"
         >
           <UserAvatar
             username={profile?.username}
             avatarUrl={profile?.avatar_url}
             size="xs"
+            showBadge={false}
           />
-          {/* Effet Viseur au survol */}
-          <div className="absolute inset-0 border border-red-500/0 group-hover:border-red-500/100 transition-all pointer-events-none" />
         </button>
-
       </div>
     </header>
   );
 }
-
-export { TopBar };

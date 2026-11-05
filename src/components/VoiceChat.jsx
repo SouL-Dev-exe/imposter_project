@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { Mic, MicOff, Sliders, PhoneOff, Volume2, Minus, Plus, X } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import UserAvatar from './ui/UserAvatar';
 
@@ -403,115 +404,120 @@ export default function VoiceChat({
       {!isInVoice ? (
         <button
           onClick={joinVoice}
-          className="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition shadow-sm active:scale-95 cursor-pointer"
-          title="انضمام للمحادثة الصوتية"
+          className="bg-zinc-900 hover:bg-zinc-800 text-zinc-100 border border-zinc-800 hover:border-zinc-700 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-mono font-medium flex items-center gap-1.5 transition active:scale-95 cursor-pointer"
+          title="Connect Voice Comms"
         >
-          <span>🎙️</span>
-          <span className="hidden sm:inline">انضمام للصوت</span>
+          <Mic className="w-3.5 h-3.5 text-red-500" />
+          <span className="hidden sm:inline">Comms Online</span>
         </button>
       ) : (
-        <div className="flex items-center gap-1 sm:gap-1.5 bg-slate-800/90 border border-slate-700/80 px-1.5 sm:px-2 py-1 rounded-xl shadow-inner">
+        <div className="flex items-center gap-1 sm:gap-1.5 bg-zinc-950 border border-zinc-800 px-1.5 sm:px-2 py-1 rounded-lg">
           {/* Mute Button */}
           <button
             onClick={toggleMute}
-            className={`px-2 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${isMuted
-                ? 'bg-red-500/20 text-red-400 border border-red-500/40 animate-pulse'
-                : 'bg-emerald-600 text-white hover:bg-emerald-500'
-              }`}
-            title={isMuted ? 'إلغاء كتم الميكروفون' : 'كتم الميكروفون'}
+            className={`px-2 py-1 rounded-md text-xs font-mono transition flex items-center gap-1 cursor-pointer ${
+              isMuted
+                ? 'bg-red-950/60 text-red-400 border border-red-900/60'
+                : 'bg-zinc-900 text-zinc-100 hover:bg-zinc-800 border border-zinc-800'
+            }`}
+            title={isMuted ? 'Unmute microphone' : 'Mute microphone'}
           >
-            <span>{isMuted ? '🔇' : '🎙️'}</span>
-            <span className="hidden sm:inline">{isMuted ? 'مكتوم' : 'شغال'}</span>
+            {isMuted ? (
+              <MicOff className="w-3.5 h-3.5 text-red-400" />
+            ) : (
+              <Mic className="w-3.5 h-3.5 text-emerald-400" />
+            )}
+            <span className="hidden sm:inline text-[11px]">{isMuted ? 'Muted' : 'Live'}</span>
           </button>
 
           {/* Volume Settings Toggle Button */}
           <button
             onClick={() => setShowSettings((prev) => !prev)}
-            className={`px-2 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${showSettings
-                ? 'bg-indigo-600 text-white border border-indigo-400/50 shadow-sm'
-                : 'bg-slate-700/80 hover:bg-slate-700 text-indigo-300 border border-indigo-500/20'
-              }`}
-            title="التحكم بمستوى الصوت"
+            className={`px-2 py-1 rounded-md text-xs font-mono transition flex items-center gap-1 cursor-pointer ${
+              showSettings
+                ? 'bg-red-600 text-white'
+                : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800'
+            }`}
+            title="Audio Levels"
           >
-            <span>⚙️</span>
-            <span className="hidden sm:inline text-[11px]">الصوت</span>
+            <Sliders className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline text-[11px]">Mixer</span>
           </button>
 
           {/* Leave Button */}
           <button
             onClick={leaveVoice}
-            className="bg-slate-700/80 hover:bg-slate-700 text-rose-400 hover:text-rose-300 border border-rose-500/20 px-2 py-1 rounded-lg text-xs font-bold transition cursor-pointer"
-            title="مغادرة المحادثة الصوتية"
+            className="bg-zinc-900 hover:bg-zinc-850 text-red-400 hover:text-red-300 border border-zinc-800 hover:border-red-900/60 px-2 py-1 rounded-md text-xs transition cursor-pointer"
+            title="Disconnect Comms"
           >
-            <span>❌</span>
+            <PhoneOff className="w-3.5 h-3.5" />
           </button>
         </div>
       )}
 
       {/* Volume Controls Popover */}
       {isInVoice && showSettings && (
-        <div
-          className="fixed sm:absolute top-16 sm:top-full start-2 sm:start-0 sm:mt-2 z-50 w-[calc(100vw-1rem)] sm:w-80 max-w-sm bg-slate-900/98 backdrop-blur-md border border-slate-700/80 rounded-2xl shadow-2xl p-3.5 space-y-3 select-none text-right"
-          dir="rtl"
-        >
-          <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-            <h3 className="text-xs font-black text-indigo-300 flex items-center gap-1.5">
-              <span>🎛️</span>
-              <span>التحكم بمستوى الصوت</span>
+        <div className="fixed sm:absolute top-16 sm:top-full start-2 sm:start-0 sm:mt-2 z-50 w-[calc(100vw-1rem)] sm:w-80 max-w-sm bg-zinc-950 border border-zinc-800 rounded-xl shadow-2xl p-3.5 space-y-3 select-none text-left">
+          <div className="flex items-center justify-between pb-2 border-b border-zinc-800/80">
+            <h3 className="text-xs font-mono font-semibold text-zinc-100 flex items-center gap-1.5 uppercase tracking-wider">
+              <Sliders className="w-3.5 h-3.5 text-red-500" />
+              <span>Voice Comms Mixer</span>
             </h3>
             <button
               onClick={() => setShowSettings(false)}
-              className="text-slate-400 hover:text-white text-xs font-bold px-1.5 py-0.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 transition cursor-pointer"
+              className="text-zinc-500 hover:text-zinc-100 text-xs p-1 rounded-md bg-zinc-900 hover:bg-zinc-800 transition cursor-pointer border border-zinc-800"
             >
-              ✕
+              <X className="w-3.5 h-3.5" />
             </button>
           </div>
 
           {/* 1. Local Mic Volume */}
-          <div className="bg-slate-800/70 border border-slate-700/60 p-2.5 rounded-xl space-y-1.5">
+          <div className="bg-zinc-900/60 border border-zinc-800/80 p-2.5 rounded-lg space-y-1.5 font-mono">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-200 flex items-center gap-1">
-                🎙️ صوت المايك (My Mic):
+              <span className="text-xs text-zinc-300 flex items-center gap-1.5">
+                <Mic className="w-3.5 h-3.5 text-red-500" />
+                <span>My Transceiver:</span>
               </span>
               <div className="flex items-center gap-1.5">
                 <button
                   onClick={() => adjustMicVolume(-0.1)}
-                  className="w-7 h-7 bg-slate-700 hover:bg-slate-600 active:scale-95 text-white font-black rounded-lg text-sm transition flex items-center justify-center cursor-pointer"
-                  title="خفض صوت المايك"
+                  className="w-6 h-6 bg-zinc-800 hover:bg-zinc-700 active:scale-95 text-zinc-200 rounded text-xs transition flex items-center justify-center cursor-pointer border border-zinc-700"
+                  title="Lower mic input"
                 >
-                  -
+                  <Minus className="w-3 h-3" />
                 </button>
-                <span className="text-xs font-mono font-black text-indigo-400 w-10 text-center">
+                <span className="text-xs font-mono font-semibold text-zinc-100 w-10 text-center">
                   {Math.round(micVolume * 100)}%
                 </span>
                 <button
                   onClick={() => adjustMicVolume(0.1)}
-                  className="w-7 h-7 bg-slate-700 hover:bg-slate-600 active:scale-95 text-white font-black rounded-lg text-sm transition flex items-center justify-center cursor-pointer"
-                  title="رفع صوت المايك"
+                  className="w-6 h-6 bg-zinc-800 hover:bg-zinc-700 active:scale-95 text-zinc-200 rounded text-xs transition flex items-center justify-center cursor-pointer border border-zinc-700"
+                  title="Boost mic input"
                 >
-                  +
+                  <Plus className="w-3 h-3" />
                 </button>
               </div>
             </div>
           </div>
 
           {/* 2. Remote Players Volume List */}
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 font-mono">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-slate-300">
-                🔊 صوت اللاعبين (Players Volume):
+              <span className="text-[11px] text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Volume2 className="w-3 h-3 text-zinc-500" />
+                <span>Operative Channels:</span>
               </span>
-              <span className="text-[10px] text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded-md">
-                {otherPlayers.length} لاعب
+              <span className="text-[10px] text-zinc-500 bg-zinc-900 px-1.5 py-0.5 rounded border border-zinc-800">
+                {otherPlayers.length} online
               </span>
             </div>
 
             {otherPlayers.length === 0 ? (
-              <div className="text-center py-3 bg-slate-950/40 rounded-xl border border-slate-800/60 text-xs text-slate-500">
-                لا يوجد لاعبين آخرين في الغرفة حالياً.
+              <div className="text-center py-3 bg-zinc-900/40 rounded-lg border border-zinc-800/60 text-xs text-zinc-500">
+                No active operative frequencies in sector.
               </div>
             ) : (
-              <div className="flex flex-col gap-1.5 max-h-44 overflow-y-auto pr-0.5 scrollbar-thin scrollbar-thumb-slate-700">
+              <div className="flex flex-col gap-1.5 max-h-44 overflow-y-auto pr-0.5 scrollbar-thin scrollbar-thumb-zinc-800">
                 {otherPlayers.map((p) => {
                   const pId = String(p.user_id || p.userId || p.id);
                   const pName = p.player_name || p.name || p.username || 'Player';
@@ -521,10 +527,11 @@ export default function VoiceChat({
                   return (
                     <div
                       key={pId}
-                      className={`flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs border transition ${isConnected
-                          ? 'bg-slate-950/80 border-indigo-500/40'
-                          : 'bg-slate-950/40 border-slate-800/80 opacity-75'
-                        }`}
+                      className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs border transition ${
+                        isConnected
+                          ? 'bg-zinc-900/80 border-red-900/40'
+                          : 'bg-zinc-900/30 border-zinc-800/80 opacity-60'
+                      }`}
                     >
                       <div className="flex items-center gap-1.5 truncate max-w-[120px]">
                         <UserAvatar
@@ -533,31 +540,31 @@ export default function VoiceChat({
                           size="xs"
                           showBadge={false}
                         />
-                        <span className="font-bold text-slate-200 truncate" title={pName}>
+                        <span className="font-sans font-medium text-zinc-200 truncate" title={pName}>
                           {pName}
                         </span>
                         {isConnected && (
-                          <span className="text-[9px] text-emerald-400 font-bold">🎙️</span>
+                          <Mic className="w-3 h-3 text-red-500 shrink-0" />
                         )}
                       </div>
 
                       <div className="flex items-center gap-1.5">
                         <button
                           onClick={() => adjustPlayerVolume(pId, -0.1)}
-                          className="w-6 h-6 bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 font-black rounded-md text-xs transition flex items-center justify-center cursor-pointer"
-                          title="خفض الصوت"
+                          className="w-5 h-5 bg-zinc-800 hover:bg-zinc-700 active:scale-95 text-zinc-300 rounded text-xs transition flex items-center justify-center cursor-pointer"
+                          title="Lower output"
                         >
-                          -
+                          <Minus className="w-2.5 h-2.5" />
                         </button>
-                        <span className="text-[11px] font-mono font-bold text-amber-400 w-9 text-center">
+                        <span className="text-[11px] font-mono font-medium text-zinc-200 w-8 text-center">
                           {Math.round(vol * 100)}%
                         </span>
                         <button
                           onClick={() => adjustPlayerVolume(pId, 0.1)}
-                          className="w-6 h-6 bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 font-black rounded-md text-xs transition flex items-center justify-center cursor-pointer"
-                          title="رفع الصوت"
+                          className="w-5 h-5 bg-zinc-800 hover:bg-zinc-700 active:scale-95 text-zinc-300 rounded text-xs transition flex items-center justify-center cursor-pointer"
+                          title="Raise output"
                         >
-                          +
+                          <Plus className="w-2.5 h-2.5" />
                         </button>
                       </div>
                     </div>

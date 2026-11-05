@@ -1,7 +1,6 @@
 /**
  * DiscordIcon.jsx — SVG Discord icon & linked social button.
- * Discord Blurple: #5865F2
- * Points to https://discord.gg/XgVSFcvNM5
+ * Clean, no glow.
  */
 
 export function DiscordIcon({ className = 'w-5 h-5', ...props }) {
@@ -21,19 +20,19 @@ export function DiscordIcon({ className = 'w-5 h-5', ...props }) {
 
 export function DiscordLink({
   className = '',
-  iconClassName = 'w-5 h-5',
-  variant = 'icon', // 'icon' | 'button'
+  iconClassName = 'w-4 h-4',
+  variant = 'icon',
   showLabel = false,
   label = 'Discord',
 }) {
   const baseClasses =
-    'relative group inline-flex items-center justify-center transition-all duration-200 text-white/50 hover:text-[#5865F2] hover:drop-shadow-[0_0_10px_rgba(88,101,242,0.65)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#5865F2]';
+    'relative group inline-flex items-center justify-center transition-colors text-zinc-400 hover:text-[#5865F2] focus:outline-none';
 
   const variantClasses = {
-    icon: 'p-2 rounded-xl bg-white/5 hover:bg-[#5865F2]/15 border border-white/10 hover:border-[#5865F2]/40',
+    icon: 'p-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700',
     button:
-      'px-3 py-1.5 rounded-xl bg-white/5 hover:bg-[#5865F2]/15 border border-white/10 hover:border-[#5865F2]/40 text-xs font-semibold gap-2 shadow-sm',
-    inline: 'p-1 rounded-md hover:bg-[#5865F2]/10',
+      'px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-xs font-semibold gap-2',
+    inline: 'p-0.5',
   };
 
   return (
@@ -45,17 +44,10 @@ export function DiscordLink({
       title="Join our Discord Server"
       className={`${baseClasses} ${variantClasses[variant] || ''} ${className}`}
     >
-      <DiscordIcon
-        className={`${iconClassName} transition-transform duration-200 group-hover:scale-110`}
-      />
-      {showLabel && <span className="leading-none text-xs font-medium">{label}</span>}
-
-      {/* Floating tooltip */}
-      <span className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-gray-900/90 border border-white/10 px-2 py-1 text-[11px] font-medium text-white opacity-0 shadow-lg backdrop-blur-sm transition-opacity duration-200 group-hover:opacity-100 z-50">
-        Join our Discord Server
-      </span>
+      <DiscordIcon className={iconClassName} />
+      {showLabel && <span>{label}</span>}
     </a>
   );
 }
 
-export default DiscordLink;
+export default DiscordIcon;

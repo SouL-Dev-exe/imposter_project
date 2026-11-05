@@ -1,16 +1,19 @@
 /**
  * CrateOpeningModal.jsx
- * Mystery Crate (Loot Box) Engine with Anti-Duplicate Safeguard.
+ * Mystery Crate Engine with Anti-Duplicate Safeguard.
  * Cost: 1,000 SC (or 1 Free Crate).
  * Drop Probabilities: Common (50%), Rare (30%), Epic (15%), Legendary (5%).
- * Duplicate Protection: Automatically refunds 50% SC (+500 SC) with an animated banner.
+ * Clean AAA game styling: no emoji, no glow, Lucide icons, spring animations.
  */
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Package, X, Shield, Sparkles, Coins, Check } from 'lucide-react';
 import { useEconomyStore } from '../../store/economyStore';
 import { RARITIES } from '../../data/economyCatalog';
 import { playCrateOpenSound } from '../../utils/sfx';
 import { toast } from '../../store/toastStore';
+
+const spring = { type: 'spring', stiffness: 500, damping: 28 };
 
 export default function CrateOpeningModal({ isOpen, onClose }) {
   const [opening, setOpening] = useState(false);
@@ -28,7 +31,6 @@ export default function CrateOpeningModal({ isOpen, onClose }) {
     setUnboxedResult(null);
     playCrateOpenSound();
 
-    // Simulated thrilling suspense delay (1.5s)
     setTimeout(() => {
       const res = openCrate();
       setOpening(false);
@@ -40,7 +42,7 @@ export default function CrateOpeningModal({ isOpen, onClose }) {
           toast.success(`Unboxed ${res.item.name}!`, `${res.rarity.toUpperCase()} rarity reward`);
         }
       }
-    }, 1500);
+    }, 1200);
   };
 
   const handleReset = () => {
@@ -49,15 +51,17 @@ export default function CrateOpeningModal({ isOpen, onClose }) {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-lg">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md font-sans">
         <motion.div
-          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          initial={{ opacity: 0, scale: 0.94, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          className="relative w-full max-w-md bg-gray-900 border border-white/10 rounded-3xl shadow-2xl overflow-hidden flex flex-col p-6 text-center"
+          exit={{ opacity: 0, scale: 0.94, y: 15 }}
+          transition={spring}
+          className="relative w-full max-w-sm bg-zinc-950 border border-zinc-800 rounded-2xl shadow-xl overflow-hidden flex flex-col p-6 text-center space-y-4"
         >
           {/* Close button */}
           <button
+            type="button"
             onClick={() => {
               if (!opening) {
                 setUnboxedResult(null);
@@ -65,87 +69,84 @@ export default function CrateOpeningModal({ isOpen, onClose }) {
               }
             }}
             disabled={opening}
-            className="absolute top-4 end-4 w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-white/50 hover:text-white flex items-center justify-center text-sm transition-colors cursor-pointer disabled:opacity-30"
+            className="absolute top-3.5 right-3.5 w-7 h-7 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer disabled:opacity-30"
           >
-            ✕
+            <X size={15} />
           </button>
 
           {/* Title */}
-          <div className="mb-4">
-            <span className="text-[10px] font-extrabold uppercase tracking-widest text-amber-400 bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-full">
-              Mystery Loot Box
+          <div>
+            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-amber-400 bg-amber-950/30 border border-amber-900/50 px-2.5 py-0.5 rounded-full">
+              Field Asset Supply
             </span>
-            <h2 className="text-2xl font-black text-white mt-2">Epic SouL Crate</h2>
-            <p className="text-white/40 text-xs">
-              Unbox exclusive outfits, badges, emotes, and FX
+            <h2 className="text-xl font-bold text-white mt-1.5 tracking-tight">Tactical Supply Crate</h2>
+            <p className="text-zinc-500 text-xs font-mono mt-0.5">
+              Unlock exclusive outfits, badges, and surveillance FX
             </p>
           </div>
 
           {/* Crate Visual or Unboxed Result */}
-          <div className="my-6 min-h-[200px] flex items-center justify-center relative">
+          <div className="my-3 min-h-[160px] flex items-center justify-center relative">
             {!unboxedResult ? (
               <motion.div
                 animate={
                   opening
                     ? {
-                        rotate: [-6, 6, -6, 6, -10, 10, 0],
-                        scale: [1, 1.1, 1.05, 1.15, 1.2],
+                        rotate: [-5, 5, -5, 5, -8, 8, 0],
+                        scale: [1, 1.05, 1, 1.1, 1.15],
                       }
                     : {
-                        y: [0, -8, 0],
+                        y: [0, -6, 0],
                       }
                 }
                 transition={
                   opening
-                    ? { duration: 1.5, ease: 'easeInOut' }
-                    : { duration: 3, repeat: Infinity, ease: 'easeInOut' }
+                    ? { duration: 1.2, ease: 'easeInOut' }
+                    : { duration: 2.5, repeat: Infinity, ease: 'easeInOut' }
                 }
                 className="relative"
               >
-                {/* Glow backdrop */}
-                <div className="absolute inset-0 bg-gradient-to-r from-amber-500/30 to-purple-500/30 rounded-full blur-2xl -z-10" />
-
-                <div className="w-32 h-32 rounded-3xl bg-gradient-to-br from-amber-500/20 via-purple-600/30 to-pink-500/20 border-2 border-amber-400/50 flex items-center justify-center text-6xl shadow-2xl shadow-amber-500/30">
-                  🎁
+                <div className="w-24 h-24 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-red-500 shadow-md">
+                  <Package size={44} />
                 </div>
 
                 {opening && (
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs font-bold text-amber-300 animate-pulse"
+                    className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs font-mono font-bold text-amber-400"
                   >
-                    Unlocking Vault...
+                    Deciphering Vault...
                   </motion.div>
                 )}
               </motion.div>
             ) : (
               <motion.div
-                initial={{ scale: 0.5, opacity: 0, rotate: -15 }}
-                animate={{ scale: 1, opacity: 1, rotate: 0 }}
-                transition={{ type: 'spring', damping: 15 }}
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={spring}
                 className="w-full"
               >
-                {/* Unboxed card */}
                 <div
-                  className={`p-6 rounded-3xl border-2 ${
-                    RARITIES[unboxedResult.item.rarity]?.border || 'border-white/20'
-                  } bg-gradient-to-b from-white/[0.07] to-black/40 relative overflow-hidden shadow-2xl`}
+                  className={`p-4 rounded-xl border ${
+                    RARITIES[unboxedResult.item.rarity]?.border || 'border-zinc-700'
+                  } bg-zinc-900/60 relative overflow-hidden`}
                 >
                   {/* Duplicate Alert Banner */}
                   {unboxedResult.isDuplicate && (
                     <motion.div
-                      initial={{ y: -20, opacity: 0 }}
+                      initial={{ y: -10, opacity: 0 }}
                       animate={{ y: 0, opacity: 1 }}
-                      className="mb-3 p-2 bg-amber-500/20 border border-amber-500/40 rounded-xl text-amber-300 text-xs font-bold flex items-center justify-center gap-1.5"
+                      className="mb-2.5 p-1.5 bg-amber-950/30 border border-amber-800/40 rounded-lg text-amber-300 text-xs font-medium flex items-center justify-center gap-1.5 font-mono"
                     >
-                      <span>🛡️</span> Duplicate Owned! 50% Refund: +500 SC
+                      <Shield size={12} />
+                      <span>Duplicate Owned! 50% Refund: +500 SC</span>
                     </motion.div>
                   )}
 
-                  <div className="text-5xl mb-2">{unboxedResult.item.icon}</div>
+                  <div className="text-3xl mb-1">{unboxedResult.item.icon}</div>
                   <span
-                    className={`text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full border ${
+                    className={`text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded border ${
                       RARITIES[unboxedResult.item.rarity]?.color
                     } ${RARITIES[unboxedResult.item.rarity]?.border} ${
                       RARITIES[unboxedResult.item.rarity]?.bg
@@ -153,10 +154,10 @@ export default function CrateOpeningModal({ isOpen, onClose }) {
                   >
                     {RARITIES[unboxedResult.item.rarity]?.name}
                   </span>
-                  <h3 className="text-lg font-black text-white mt-2">
+                  <h3 className="text-base font-bold text-white mt-1.5">
                     {unboxedResult.item.name}
                   </h3>
-                  <p className="text-white/40 text-xs mt-1">{unboxedResult.item.desc}</p>
+                  <p className="text-zinc-400 text-xs mt-0.5 leading-relaxed">{unboxedResult.item.desc}</p>
                 </div>
               </motion.div>
             )}
@@ -164,76 +165,49 @@ export default function CrateOpeningModal({ isOpen, onClose }) {
 
           {/* Probabilities table */}
           {!unboxedResult && !opening && (
-            <div className="grid grid-cols-4 gap-1 p-2 bg-black/40 border border-white/5 rounded-2xl mb-4 text-[11px]">
+            <div className="grid grid-cols-4 gap-1 p-2 bg-zinc-900/50 border border-zinc-850 rounded-xl text-[10px] font-mono">
               <div>
-                <span className="text-slate-400 font-bold block">50%</span>
-                <span className="text-white/30 text-[9px]">Common</span>
+                <span className="text-zinc-300 font-bold block">50%</span>
+                <span className="text-zinc-500 text-[9px]">Common</span>
               </div>
               <div>
                 <span className="text-blue-400 font-bold block">30%</span>
-                <span className="text-white/30 text-[9px]">Rare</span>
+                <span className="text-zinc-500 text-[9px]">Rare</span>
               </div>
               <div>
-                <span className="text-purple-400 font-bold block">15%</span>
-                <span className="text-white/30 text-[9px]">Epic</span>
+                <span className="text-red-400 font-bold block">15%</span>
+                <span className="text-zinc-500 text-[9px]">Epic</span>
               </div>
               <div>
                 <span className="text-amber-400 font-bold block">5%</span>
-                <span className="text-white/30 text-[9px]">Legendary</span>
+                <span className="text-zinc-500 text-[9px]">Legendary</span>
               </div>
             </div>
           )}
 
-          {/* Action button */}
+          {/* Actions */}
           <div>
             {!unboxedResult ? (
               <button
+                type="button"
                 onClick={handleOpen}
                 disabled={!canOpen || opening}
-                className={`w-full py-3.5 rounded-2xl text-sm font-black transition-all flex items-center justify-center gap-2 ${
-                  canOpen && !opening
-                    ? 'bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 text-black shadow-xl shadow-amber-500/25 hover:scale-105 active:scale-95 cursor-pointer'
-                    : 'bg-white/5 text-white/30 border border-white/5 cursor-not-allowed'
-                }`}
+                className="w-full py-2.5 bg-red-600 hover:bg-red-500 active:bg-red-700 text-white font-semibold text-xs rounded-lg transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                <span>🎁</span>
+                <Package size={14} />
                 <span>
-                  {opening
-                    ? 'Opening Crate...'
-                    : cratesCount > 0
-                    ? `Open Free Crate (${cratesCount} available)`
-                    : 'Open Crate (1,000 SC)'}
+                  {cratesCount > 0 ? `Open Crate (${cratesCount} available)` : `Unlock · 1,000 SC`}
                 </span>
               </button>
             ) : (
-              <div className="flex gap-2">
-                <button
-                  onClick={handleReset}
-                  className="flex-1 py-3 rounded-2xl bg-white/10 hover:bg-white/15 text-white text-xs font-bold transition-all cursor-pointer"
-                >
-                  Open Another
-                </button>
-                <button
-                  onClick={() => {
-                    handleReset();
-                    onClose();
-                  }}
-                  className="flex-1 py-3 rounded-2xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold shadow-lg shadow-violet-600/30 transition-all cursor-pointer"
-                >
-                  Done
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={handleReset}
+                className="w-full py-2.5 bg-red-600 hover:bg-red-500 text-white font-semibold text-xs rounded-lg transition-colors cursor-pointer"
+              >
+                Open Another Crate
+              </button>
             )}
-          </div>
-
-          {/* Balance info footer */}
-          <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-[11px] text-white/40">
-            <span>
-              Balance: <strong className="text-amber-300">{soulCoins.toLocaleString()} SC</strong>
-            </span>
-            <span>
-              Free Crates: <strong className="text-purple-300">{cratesCount}</strong>
-            </span>
           </div>
         </motion.div>
       </div>

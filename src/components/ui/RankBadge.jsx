@@ -2,6 +2,7 @@ import React from 'react';
 
 /**
  * RankBadge — Renders crisp vector SVG badge graphics matching the player's rank tier.
+ * Clean AAA game styling: no glow, vector crispness.
  * @param {object} milestone - Player milestone object from getPlayerMilestone
  * @param {string} className - Optional tailwind sizing/positioning classes
  */
@@ -11,9 +12,9 @@ export default function RankBadge({ milestone, className = "w-8 h-8" }) {
   const type = milestone.badgeType || 'base-dot';
 
   return (
-    <div className={`relative flex items-center justify-center p-2 rounded-xl border ${milestone.bg} ${milestone.border} shadow-lg backdrop-blur-sm ${className}`}>
+    <div className={`relative flex items-center justify-center p-1.5 rounded-xl border ${milestone.bg} ${milestone.border} ${className}`}>
       <svg
-        className={`w-full h-full ${milestone.color} drop-shadow-[0_0_8px_currentColor] transition-all`}
+        className={`w-full h-full ${milestone.color} transition-all`}
         viewBox="0 0 24 24"
         fill="currentColor"
       >

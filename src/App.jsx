@@ -1,10 +1,11 @@
 /**
- * App.jsx — Root component with Classified Intelligence (Red & Black Spy Noir) Layout Wrapper.
- * Hash routing is required for GitHub Pages static hosting.
- * Pages are lazy-loaded for optimal initial bundle size.
+ * App.jsx — Root component for Undercover.
+ * Clean, tactical dark aesthetics. No emoji, no AI glow, Lucide icons.
+ * Hash routing required for GitHub Pages static hosting.
  */
 import { lazy, Suspense, useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Shield } from 'lucide-react';
 import { usePackStore } from './store/packStore';
 import { useAuthStore } from './store/authStore';
 import { useEconomyStore } from './store/economyStore';
@@ -12,7 +13,7 @@ import ToastContainer from './components/ToastContainer';
 import WelcomeAuthScreen from './components/WelcomeAuthScreen';
 import Navbar from './components/Navbar';
 
-// ─── Lazy-loaded page chunks ───────────────────────────────────────────────
+// Lazy-loaded page chunks
 const Home = lazy(() => import('./pages/Home'));
 const Lobby = lazy(() => import('./pages/Lobby'));
 const OnlineLobby = lazy(() => import('./pages/OnlineLobby'));
@@ -22,11 +23,11 @@ const Vote = lazy(() => import('./pages/Vote'));
 const Result = lazy(() => import('./pages/Result'));
 const PackEditor = lazy(() => import('./pages/PackEditor'));
 
-// ─── Minimal full-screen loader shown while chunks download ───────────────
 function PageLoader() {
   return (
-    <div className="min-h-[50vh] flex items-center justify-center">
-      <div className="w-10 h-10 rounded-full border-2 border-red-600/40 border-t-red-500 animate-spin" />
+    <div className="min-h-[50vh] flex flex-col items-center justify-center gap-3">
+      <div className="w-8 h-8 rounded-full border-2 border-zinc-800 border-t-red-600 animate-spin" />
+      <span className="text-xs text-zinc-500 font-mono tracking-wider uppercase">Loading</span>
     </div>
   );
 }
@@ -36,7 +37,6 @@ export default function App() {
   const initEconomy = useEconomyStore((s) => s.initEconomy);
   const { user, profile, isGuest, loading, initAuth } = useAuthStore();
 
-  // Fetch global cloud packs, init auth, then hydrate economy
   useEffect(() => {
     syncCloudPacks();
     initAuth().then(() => {
@@ -44,38 +44,37 @@ export default function App() {
     });
   }, []);
 
-  // 1. Loading State
   if (loading) {
     return (
-      <div className="min-h-screen bg-black text-zinc-100 bg-spy-radial bg-spy-grid relative flex flex-col items-center justify-center gap-4 font-mono">
-        <div className="h-0.5 w-full bg-gradient-to-r from-transparent via-red-600 to-transparent shadow-[0_0_10px_#dc2626] absolute top-0" />
-        <div className="text-4xl animate-bounce">🕵️‍♂️</div>
-        <div className="w-8 h-8 rounded-full border-2 border-red-600/30 border-t-red-500 animate-spin" />
-        <span className="text-xs text-red-400 font-mono tracking-widest uppercase">INITIALIZING CLASSIFIED PROTOCOLS...</span>
+      <div className="min-h-screen bg-black text-zinc-100 flex flex-col items-center justify-center gap-4 font-sans select-none">
+        <div className="relative flex items-center justify-center">
+          <div className="w-12 h-12 rounded-full border border-zinc-800 border-t-red-600 animate-spin" />
+          <Shield size={20} className="text-red-500 absolute" />
+        </div>
+        <span className="text-xs text-zinc-400 font-mono tracking-widest uppercase">
+          Initializing Operation
+        </span>
       </div>
     );
   }
 
-  // 2. Authentication Check: User logged in or playing as Guest
   const isAuthenticated = Boolean(user || isGuest || profile);
 
   return (
-    <div className="min-h-screen bg-black text-zinc-100 bg-spy-radial bg-spy-grid relative overflow-x-hidden font-mono selection:bg-red-600 selection:text-black flex flex-col">
-      {/* Red Laser Overhead Alert Bar */}
-      <div className="h-0.5 w-full bg-gradient-to-r from-transparent via-red-600 to-transparent shadow-[0_0_10px_#dc2626] shrink-0 z-50" />
+    <div className="min-h-screen bg-black text-zinc-100 bg-game-radial relative overflow-x-hidden font-sans selection:bg-red-600 selection:text-white flex flex-col">
+      {/* Subtle top accent divider */}
+      <div className="h-[1px] w-full bg-gradient-to-r from-transparent via-red-600/70 to-transparent shrink-0 z-50" />
 
       <ToastContainer />
 
-      {/* Active App View Container */}
-      <main className="max-w-7xl mx-auto px-4 py-6 w-full flex-1 flex flex-col">
+      {/* Main container */}
+      <main className="max-w-7xl mx-auto px-4 py-4 w-full flex-1 flex flex-col">
         {!isAuthenticated ? (
-          // First-Time Welcome Gate
           <div className="relative z-10 flex-1 flex flex-col">
             <Navbar />
             <WelcomeAuthScreen />
           </div>
         ) : (
-          // Direct Main Game Routes
           <HashRouter>
             <div className="relative z-10 flex-1 flex flex-col">
               <Suspense fallback={<PageLoader />}>
@@ -88,7 +87,6 @@ export default function App() {
                   <Route path="/vote" element={<Vote />} />
                   <Route path="/result" element={<Result />} />
                   <Route path="/packs" element={<PackEditor />} />
-                  {/* Catch-all */}
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
               </Suspense>
