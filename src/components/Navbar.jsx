@@ -8,6 +8,7 @@ import { Package, MoreVertical, User, LogIn, Coins } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useEconomyStore } from '../store/economyStore';
 import { useLanguageStore } from '../store/languageStore';
+import spyRoleLogo from './assets/SpyRole_ favicon.png';
 import AuthModal from './ui/AuthModal';
 import { UserAvatar } from './ui/UserAvatar';
 import LanguageToggle from './ui/LanguageToggle';
@@ -70,7 +71,12 @@ export default function Navbar() {
         </button>
 
         {/* Center: Brand */}
-        <div className="hidden md:block absolute left-1/2 -translate-x-1/2 select-none pointer-events-none">
+        <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center gap-2 select-none pointer-events-none">
+          <img
+            src={spyRoleLogo}
+            alt="SpyRole"
+            className="h-7 w-7 rounded-md object-contain border border-zinc-800"
+          />
           <span className="text-sm font-black tracking-widest text-white">UNDERCOVER</span>
         </div>
 
